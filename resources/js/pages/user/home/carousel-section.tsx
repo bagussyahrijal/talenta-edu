@@ -20,7 +20,7 @@ export default function CarouselSection() {
                     <CarouselItem className="px-4">
                         <a href="#program-kami">
                             <img
-                                src="/assets/images/carousel-1.webp"
+                                src="/assets/images/carousel-1.png"
                                 alt="Slide 1"
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
@@ -28,34 +28,34 @@ export default function CarouselSection() {
                         </a>
                     </CarouselItem>
                     <CarouselItem className="px-4">
-                        <Link href={route('course.index')}>
+                        <a href="#program-kami">
                             <img
-                                src="/assets/images/carousel-2.webp"
-                                alt="Slide 2"
+                                src="/assets/images/carousel-1.png"
+                                alt="Slide 1"
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
                             />
-                        </Link>
+                        </a>
                     </CarouselItem>
                     <CarouselItem className="px-4">
-                        <Link href={route('bootcamp.index')}>
+                        <a href="#program-kami">
                             <img
-                                src="/assets/images/carousel-3.webp"
-                                alt="Slide 3"
+                                src="/assets/images/carousel-1.png"
+                                alt="Slide 1"
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
                             />
-                        </Link>
+                        </a>
                     </CarouselItem>
                     <CarouselItem className="px-4">
-                        <Link href={route('webinar.index')}>
+                        <a href="#program-kami">
                             <img
-                                src="/assets/images/carousel-4.webp"
-                                alt="Slide 4"
+                                src="/assets/images/carousel-1.png"
+                                alt="Slide 1"
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
                             />
-                        </Link>
+                        </a>
                     </CarouselItem>
                 </CarouselContent>
                 <CarouselNavigation />

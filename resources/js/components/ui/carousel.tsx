@@ -201,7 +201,7 @@ function CarouselIndicator({
   return (
     <div
       className={cn(
-        'absolute bottom-4 z-10 flex w-full items-center justify-start ps-4',
+        'absolute bottom-4 z-10 flex w-auto items-center justify-center left-0 right-0 mx-auto',
         className
       )}
     >
@@ -215,8 +215,8 @@ function CarouselIndicator({
             className={cn(
               'h-2 w-2 rounded-full transition-opacity duration-300 hover:cursor-pointer',
               index === i
-                ? 'bg-secondary dark:bg-secondary'
-                : 'bg-secondary/50 dark:bg-secondary/50',
+                ? 'bg-primary dark:bg-primary'
+                : 'bg-white dark:bg-white',
               classNameButton
             )}
           />
@@ -300,7 +300,7 @@ function CarouselContent({
         x: disableDrag ? undefined : dragX,
       }}
       animate={{
-        translateX: `-${index * (100 / visibleItemsCount)}%`,
+        x: `-${index * (100 / visibleItemsCount)}%`,
       }}
       onDragEnd={disableDrag ? undefined : onDragEnd}
       transition={

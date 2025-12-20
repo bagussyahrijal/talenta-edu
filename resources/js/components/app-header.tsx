@@ -1,3 +1,5 @@
+'use client';
+
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Icon } from '@/components/icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +23,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { Album, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, Search, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { SearchCommand } from './search-command';
+import { NavigationMenuHeader } from './ui/nav-header';
 
 const serviceItems = [
     {
@@ -111,13 +114,13 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
             <div className="border-sidebar-border/80 bg-background fixed top-0 right-0 left-0 z-40 border-b shadow-xs">
                 <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                     <Link href="/" prefetch className="flex items-center space-x-2">
-                        <img src="/assets/images/logo-primary.png" alt="Aksademy" className="block w-32 fill-current dark:hidden" />
-                        <img src="/assets/images/logo-secondary.png" alt="Aksademy" className="hidden w-32 fill-current dark:block" />
+                        <img src="/assets/images/logo-primary.png" alt="Aksademy" className="block w-10 fill-current dark:hidden" />
+                        <img src="/assets/images/logo-secondary.png" alt="Aksademy" className="hidden w-10 fill-current dark:block" />
                     </Link>
 
-                    <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
+                    <div className="ml-auto hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch">
-                            <NavigationMenuList className="flex h-full items-stretch space-x-2">
+                            <NavigationMenuList className="flex h-full items-stretch space-x-2 gap-1">
                                 {/* Beranda */}
                                 <NavigationMenuItem className="relative flex h-full items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
@@ -128,7 +131,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 isHomepage && activeItemStyles,
                                             )}
                                         >
-                                            <Home className="mr-2 h-4 w-4" />
                                             Beranda
                                         </Link>
                                     </NavigationMenuLink>
@@ -137,7 +139,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     )}
                                 </NavigationMenuItem>
 
-                                {/* Layanan Mega Menu */}
+                                {/* Program & Layanan */}
                                 <NavigationMenuItem className="relative flex h-full items-center">
                                     <NavigationMenuTrigger
                                         className={cn('hover:bg-primary/5 dark:hover:bg-primary/40 h-9 px-3', isServicesActive && activeItemStyles)}
@@ -147,32 +149,16 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <NavigationMenuContent>
                                         <ul className="grid w-[600px] gap-3 p-4 md:grid-cols-[.75fr_1fr]">
                                             {/* Row Span - Bundling */}
-                                            <li className="row-span-3">
-                                                <NavigationMenuLink asChild>
-                                                    <Link
-                                                        href="/bundle"
-                                                        className={cn(
-                                                            'from-muted/50 to-muted flex h-full w-full flex-col justify-end rounded-md bg-gradient-to-b p-6 no-underline outline-hidden transition-all duration-200 select-none hover:shadow-md',
-                                                            page.url.startsWith('/bundle') && 'ring-primary ring-2',
-                                                        )}
-                                                    >
-                                                        <Icon iconNode={Album} className="text-primary mb-2 h-8 w-8" />
-                                                        <div className="mb-2 text-lg font-medium">Paket Bundling</div>
-                                                        <p className="text-muted-foreground text-sm leading-tight">
-                                                            Hemat lebih banyak dengan paket bundling berbagai produk edukasi kami
-                                                        </p>
-                                                    </Link>
-                                                </NavigationMenuLink>
-                                            </li>
+                                            
 
                                             {/* 3 Produk Utama */}
-                                            <ListItem href="/course" title="Kelas Online" icon={BookText}>
+                                            <ListItem href="/course" title="Kelas Online">
                                                 Belajar dengan video pembelajaran terstruktur dan materi lengkap
                                             </ListItem>
-                                            <ListItem href="/bootcamp" title="Bootcamp" icon={Presentation}>
+                                            <ListItem href="/bootcamp" title="Bootcamp">
                                                 Program intensif dengan mentor profesional dan project-based learning
                                             </ListItem>
-                                            <ListItem href="/webinar" title="Webinar" icon={MonitorPlay}>
+                                            <ListItem href="/webinar" title="Webinar">
                                                 Seminar online dengan topik terkini dan expert speaker
                                             </ListItem>
                                         </ul>
@@ -182,7 +168,29 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     )}
                                 </NavigationMenuItem>
 
-                                {/* Sertifikasi */}
+                                {/* Publikasi */}
+                                <NavigationMenuItem className="relative flex h-full items-center">
+                                    <NavigationMenuTrigger
+                                        className={cn('hover:bg-primary/5 dark:hover:bg-primary/40 h-9 px-3')}
+                                    >
+                                        Publikasi
+                                    </NavigationMenuTrigger>
+                                    <NavigationMenuContent>
+                                        <ul className="grid w-[600px] gap-3 p-4 md:grid-cols-[.75fr_1fr]">
+                                            <ListItem href="/galeri" title="Galeri">
+                                                Kumpulan foto kegiatan dan event
+                                            </ListItem>
+                                            <ListItem href="/alumni" title="Alumni">
+                                                Kisah sukses alumni setelah mengikuti program kami
+                                            </ListItem>
+                                            <ListItem href="/review" title="Review">
+                                                Testimoni dari peserta tentang pengalaman mereka
+                                            </ListItem>
+                                        </ul>
+                                    </NavigationMenuContent>
+                                </NavigationMenuItem>
+
+                                {/* Tentang Kami */}
                                 <NavigationMenuItem className="relative flex h-full items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                                         <Link
@@ -192,8 +200,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 page.url.startsWith('/certification') && activeItemStyles,
                                             )}
                                         >
-                                            <BriefcaseBusiness className="mr-2 h-4 w-4" />
-                                            Sertifikasi
+                                            Tentang Kami
                                         </Link>
                                     </NavigationMenuLink>
                                     {page.url.startsWith('/certification') && (
@@ -201,24 +208,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     )}
                                 </NavigationMenuItem>
 
-                                {/* Artikel */}
-                                <NavigationMenuItem className="relative flex h-full items-center">
-                                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                                        <Link
-                                            href="/article"
-                                            className={cn(
-                                                'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
-                                                page.url.startsWith('/article') && activeItemStyles,
-                                            )}
-                                        >
-                                            <FileText className="mr-2 h-4 w-4" />
-                                            Artikel
-                                        </Link>
-                                    </NavigationMenuLink>
-                                    {page.url.startsWith('/article') && (
-                                        <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
-                                    )}
-                                </NavigationMenuItem>
 
                                 {/* Profil Saya (if logged in) */}
                                 {auth.user && (
@@ -243,22 +232,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         </NavigationMenu>
                     </div>
 
-                    <div className="ml-auto flex items-center space-x-2">
-                        <div className="relative flex items-center space-x-1">
-                            <Button variant="outline" onClick={() => setSearchOpen(true)}>
-                                <Search className="!size-5 opacity-80 group-hover:opacity-100" />
-                                <p className="mr-4 hidden lg:block">Cari Produk...</p>
-                                <div className="hidden lg:block">
-                                    <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
-                                        <span className="text-xs">⌘</span>K
-                                    </kbd>{' '}
-                                    /{' '}
-                                    <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
-                                        <span className="text-xs">Ctrl</span>K
-                                    </kbd>
-                                </div>
-                            </Button>
-                        </div>
+                    <div className="ml-4 flex items-center space-x-2">
                         {auth.user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -370,7 +344,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             </p>
                                         </div>
                                     </Link>
-                                    {/* Sertifikasi di Mobile */}
+                                    {/* Tentang Kami di Mobile */}
                                     <Link
                                         href="/certification"
                                         onClick={() => setServicesOpen(false)}
@@ -389,7 +363,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             )}
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <p className="mb-1 text-sm leading-none font-medium">Sertifikasi</p>
+                                            <p className="mb-1 text-sm leading-none font-medium">Tentang Kami</p>
                                             <p className="text-muted-foreground line-clamp-2 text-xs">
                                                 Tingkatkan kredibilitas dengan sertifikasi profesional
                                             </p>
@@ -398,19 +372,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 </div>
                             </PopoverContent>
                         </Popover>
-
-                        <Link
-                            href="/article"
-                            className={cn(
-                                'flex flex-col items-center justify-center rounded-lg px-2 py-3 transition-colors duration-200',
-                                page.url.startsWith('/article')
-                                    ? 'text-primary bg-primary/10'
-                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-                            )}
-                        >
-                            <FileText className="mb-1 h-5 w-6" />
-                            <span className="text-center text-xs leading-none font-medium">Artikel</span>
-                        </Link>
 
                         {auth.user && (
                             <Link
@@ -442,3 +403,4 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         </>
     );
 }
+

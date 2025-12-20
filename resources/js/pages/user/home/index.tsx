@@ -11,6 +11,7 @@ import LatestProductsSection from './latest-products-section';
 import ProgramSection from './program-section';
 import TestimonySection from './testimony-section';
 import ToolsSection from './tools-section';
+import MentorSection from './mentor-section';
 
 interface Tool {
     id: string;
@@ -99,12 +100,10 @@ export default function Home({ tools, latestProducts, myProductIds, allProducts,
 
             <CarouselSection />
             <AboutSection />
-            <ProgramSection />
-            <ToolsSection tools={tools} />
             <LatestProductsSection latestProducts={latestProducts} myProductIds={myProductIds} />
             <TestimonySection />
+            <MentorSection />
             <FaqSection />
-            <CtaSection />
 
             {typeof window !== 'undefined' && window.innerWidth >= 1024 && <FakeNotifications products={allProducts} />}
 
