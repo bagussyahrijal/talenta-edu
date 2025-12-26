@@ -71,51 +71,46 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4" id="bootcamp">
-            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Bersiaplah Menjadi Talenta Digital dalam Hitungan Minggu.
-            </h2>
-            <p className="mx-auto mb-8 text-center text-gray-600 dark:text-gray-400">
-                Upgrade diri dengan mengikuti bootcamp intensif dalam beberapa pertemuan.
-            </p>
-            <div className="mb-4 flex">
-                <Input type="search" placeholder="Cari bootcamp..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
-            <div
-                className="mb-4 overflow-x-auto"
-                ref={categoryRef}
-                onMouseDown={handleMouseDown}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                style={{ scrollbarWidth: 'none', cursor: isDragging.current ? 'grabbing' : 'grab' }}
-            >
-                <div className="flex w-max flex-nowrap gap-2 select-none">
-                    <button
-                        type="button"
-                        onClick={() => setSelectedCategory(null)}
-                        className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${
-                            selectedCategory === null
-                                ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
-                                : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
-                        } `}
-                    >
-                        Semua Kategori
-                    </button>
-                    {categories.map((category) => (
+            <div className='flex flex-row items-center justify-between mb-4'>
+                <h1 className='text-5xl font-bold font-literata text-primary'>Bootcamp Program</h1>
+                <div
+                    className="overflow-x-auto"
+                    ref={categoryRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseLeave={handleMouseLeave}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    style={{ scrollbarWidth: 'none', cursor: isDragging.current ? 'grabbing' : 'grab' }}
+                >
+                    <div className="flex w-max flex-nowrap gap-2 select-none">
                         <button
-                            key={category.id}
                             type="button"
-                            onClick={() => setSelectedCategory(category.id)}
-                            className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${
-                                selectedCategory === category.id
+                            onClick={() => setSelectedCategory(null)}
+                            className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === null
                                     ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
                                     : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
-                            } `}
+                                } `}
                         >
-                            {category.name}
+                            Semua
                         </button>
-                    ))}
+                        {categories.map((category) => (
+                            <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => setSelectedCategory(category.id)}
+                                className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === category.id
+                                        ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
+                                        : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                    } `}
+                            >
+                                {category.name}
+                            </button>
+                        ))}
+                    </div>
                 </div>
+            </div>
+            <div className="mb-4 flex">
+                <Input type="search" placeholder="Cari bootcamp..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleBootcamps.length === 0 ? (
@@ -135,9 +130,8 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                             >
                                 <Spotlight className="bg-primary blur-2xl" size={284} />
                                 <div
-                                    className={`relative flex h-full w-full flex-col items-center justify-between rounded-lg transition-colors ${
-                                        hasAccess ? 'bg-zinc-100 dark:bg-zinc-900' : 'bg-sidebar dark:bg-zinc-800'
-                                    }`}
+                                    className={`relative flex h-full w-full flex-col items-center justify-between rounded-lg transition-colors ${hasAccess ? 'bg-zinc-100 dark:bg-zinc-900' : 'bg-sidebar dark:bg-zinc-800'
+                                        }`}
                                 >
                                     <div className="w-full overflow-hidden rounded-t-lg">
                                         <img
