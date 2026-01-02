@@ -16,45 +16,15 @@ class ToolSeeder extends Seeder
     {
         $tools = [
             [
-                'name' => 'VS Code',
-                'slug' => Str::slug('VS Code'),
-                'description' => 'IDE Code Editor',
+                'name' => 'Google Analytics',
+                'slug' => Str::slug('Google Analytics'),
+                'description' => 'Web Analytics Service',
                 'icon' => null,
             ],
             [
-                'name' => 'Git',
-                'slug' => Str::slug('Git'),
-                'description' => 'Version Control System',
-                'icon' => null,
-            ],
-            [
-                'name' => 'Figma',
-                'slug' => Str::slug('Figma'),
-                'description' => 'Design Tool',
-                'icon' => null,
-            ],
-            [
-                'name' => 'PHP',
-                'slug' => Str::slug('PHP'),
-                'description' => 'Programming Language',
-                'icon' => null,
-            ],
-            [
-                'name' => 'Laravel',
-                'slug' => Str::slug('Laravel'),
-                'description' => 'Web Application Framework',
-                'icon' => null,
-            ],
-            [
-                'name' => 'MySQL',
-                'slug' => Str::slug('MySQL'),
-                'description' => 'Database Management System',
-                'icon' => null,
-            ],
-            [
-                'name' => 'React JS',
-                'slug' => Str::slug('React JS'),
-                'description' => 'Frontend Development',
+                'name' => 'QuickBooks',
+                'slug' => Str::slug('QuickBooks'),
+                'description' => 'Accounting Software',
                 'icon' => null,
             ],
             [

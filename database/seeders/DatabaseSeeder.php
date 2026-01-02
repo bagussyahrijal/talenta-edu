@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             'phone_number' => '085142505794',
             'bio' => "Aksara Teknologi Mandiri's Affiliate",
             'password' => bcrypt('aksara2025'),
-            'affiliate_code' => 'ATM2025',
+            'affiliate_code' => 'TAL2025',
             'affiliate_status' => 'Active',
             'commission' => 15,
         ]);

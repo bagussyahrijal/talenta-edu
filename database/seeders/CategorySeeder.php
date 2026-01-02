@@ -14,27 +14,7 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $tools = [
-            [
-                'name' => 'Web Development',
-                'slug' => Str::slug('Web Development'),
-            ],
-            [
-                'name' => 'Mobile Development',
-                'slug' => Str::slug('Mobile Development'),
-            ],
-            [
-                'name' => 'Data Science',
-                'slug' => Str::slug('Data Science'),
-            ],
-            [
-                'name' => 'UI/UX Design',
-                'slug' => Str::slug('UI/UX Design'),
-            ],
-            [
-                'name' => 'Cloud Computing',
-                'slug' => Str::slug('Cloud Computing'),
-            ],
+        $categories = [
             [
                 'name' => 'Digital Marketing',
                 'slug' => Str::slug('Digital Marketing'),
@@ -49,8 +29,8 @@ class CategorySeeder extends Seeder
             ],
         ];
 
-        foreach ($tools as $tool) {
-            Category::firstOrCreate(['name' => $tool['name']], $tool);
+        foreach ($categories as $category) {
+            Category::firstOrCreate(['name' => $category['name']], $category);
         }
     }
 }
