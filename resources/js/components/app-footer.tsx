@@ -14,10 +14,10 @@ export default function AppFooter() {
                             <img src="/assets/images/logo-primary-2.png" alt="Talenta Logo" className="h-12" />
                         </div>
                         <p className="mb-6 text-sm leading-relaxed text-gray-700">
-                            memungkinkan
+                            Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja
                         </p>
                         <div>
-                            <h5 className="mb-2 font-bold text-gray-900">CV. Talenta Skill</h5>
+                            <h5 className="mb-2 font-semibold text-gray-900">CV. Talenta Skill</h5>
                             <p className="text-sm text-gray-700">
                                 Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo<br />
                                 Kota Batu Prov. Jawa Timur, 65324
@@ -52,28 +52,27 @@ export default function AppFooter() {
                                 </li>
                             </ul>
                         </div>
-                        {/* Column 3: Company Links (duplicate) */}
                         <div>
                             <h4 className="mb-6 text-lg font-bold text-gray-900">Company</h4>
                             <ul className="space-y-3">
                                 <li>
+                                    <Link href="/bootcamp" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
+                                        Bootcamp
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/webinar" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
+                                        Webinar
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link href="/course" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
+                                        Kelas Online
+                                    </Link>
+                                </li>
+                                <li>
                                     <Link href="/" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Beranda
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/program" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Program & Layanan
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/publication" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Publikasi
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/about" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        About Us
+                                        Bundling Class
                                     </Link>
                                 </li>
                             </ul>
@@ -84,17 +83,17 @@ export default function AppFooter() {
                             <ul className="space-y-3">
                                 <li>
                                     <Link href="/" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Beranda
+                                        Syarat & Ketentuan
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/program" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Program & Layanan
+                                        Kebijakan Privasi
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/publication" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Publikasi
+                                        Artikel & Blog
                                     </Link>
                                 </li>
                                 <li>
