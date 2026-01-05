@@ -20,6 +20,9 @@ interface Bootcamp {
     start_date: string;
     end_date: string;
     category: Category;
+    user: {
+        name: string;
+    };
 }
 
 interface BootcampProps {

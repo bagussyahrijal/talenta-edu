@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Magnetic } from '@/components/ui/magnetic';
 import { Spotlight } from '@/components/ui/spotlight';
 import { Link } from '@inertiajs/react';
-import { Calendar, GalleryVerticalEnd } from 'lucide-react';
+import { Calendar, GalleryVerticalEnd, Search, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 type Category = {
@@ -22,6 +22,9 @@ interface Bootcamp {
     start_date: string;
     end_date: string;
     category: Category;
+    user: {
+        name: string;
+    };
 }
 
 interface BootcampProps {
@@ -74,7 +77,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
             <div className='flex flex-row items-center justify-between mb-4'>
                 <h1 className='text-5xl font-bold font-literata text-primary'>Bootcamp Program</h1>
                 <div
-                    className="overflow-x-auto bg-primary p-2 rounded-xl" 
+                    className="overflow-x-auto bg-primary p-2 rounded-xl"
                     ref={categoryRef}
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}
@@ -87,8 +90,8 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                             type="button"
                             onClick={() => setSelectedCategory(null)}
                             className={`rounded-xl px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === null
-                                    ? 'to-primary text-primary border-primary bg-white'
-                                    : 'hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                ? 'to-primary text-primary border-primary bg-white'
+                                : 'hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                                 } `}
                         >
                             Semua
@@ -99,8 +102,8 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                 type="button"
                                 onClick={() => setSelectedCategory(category.id)}
                                 className={`rounded-xl  px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === category.id
-                                        ? 'to-primary text-primary border-primary bg-white'
-                                        : ' hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                    ? 'to-primary text-primary border-primary bg-white'
+                                    : ' hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                                     } `}
                             >
                                 {category.name}
@@ -109,8 +112,11 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                     </div>
                 </div>
             </div>
-            <div className="mb-4 flex">
-                <Input type="search" placeholder="Cari bootcamp..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <div className="relative mb-4 flex">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <Search size={20} />
+                </span>
+                <Input type="search" placeholder="Cari Program bootcamp..." value={search} onChange={(e) => setSearch(e.target.value)} className='px-4 py-6 pl-10' />
             </div>
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleBootcamps.length === 0 ? (
@@ -123,58 +129,83 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                         const hasAccess = myBootcampIds.includes(bootcamp.id);
 
                         return (
-                            <Link
-                                key={bootcamp.id}
-                                href={hasAccess ? `profile/my-bootcamps/${bootcamp.slug}` : `/bootcamp/${bootcamp.slug}`}
-                                className="relative overflow-hidden rounded-xl bg-zinc-300/30 p-[2px] dark:bg-zinc-700/30"
-                            >
-                                <Spotlight className="bg-primary blur-2xl" size={284} />
-                                <div
-                                    className={`relative flex h-full w-full flex-col items-center justify-between rounded-lg transition-colors ${hasAccess ? 'bg-zinc-100 dark:bg-zinc-900' : 'bg-sidebar dark:bg-zinc-800'
-                                        }`}
-                                >
-                                    <div className="w-full overflow-hidden rounded-t-lg">
+                            <Link key={bootcamp.id} href={hasAccess ? `profile/my-bootcamps/${bootcamp.slug}` : `/bootcamp/${bootcamp.slug}`} className="group h-full rounded-xl hover:shadow-sm hover:shadow-primary border-1 border-primary">
+                                <div className="relative h-full overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-100 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white before:to-primary-2 before:via-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:z-[-1]">
+                                    {/* Image Section */}
+                                    <div className="relative h-48 w-full overflow-hidden">
                                         <img
                                             src={bootcamp.thumbnail ? `/storage/${bootcamp.thumbnail}` : '/assets/images/placeholder.png'}
                                             alt={bootcamp.title}
-                                            className="h-48 w-full rounded-t-lg object-cover"
+                                            className="h-full w-full object-cover transition-transform duration-300"
                                         />
-                                        <h2 className="mx-4 mt-2 text-lg font-semibold">{bootcamp.title}</h2>
-                                    </div>
-                                    <div className="w-full p-4 text-left">
-                                        {hasAccess ? (
-                                            <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
-                                        ) : bootcamp.price === 0 ? (
-                                            <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
-                                        ) : (
-                                            <div className="">
-                                                {bootcamp.strikethrough_price > 0 && (
-                                                    <p className="text-sm text-red-500 line-through">
-                                                        Rp {bootcamp.strikethrough_price.toLocaleString('id-ID')}
-                                                    </p>
-                                                )}
-                                                <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                                    Rp {bootcamp.price.toLocaleString('id-ID')}
-                                                </p>
-                                            </div>
+                                        {/* Category Badge - Top Right */}
+                                        {bootcamp.category && (
+                                            <span className="absolute top-3 right-3 rounded-full bg-gray-100/70 border border-primary px-3 py-1 text-xs text-black dark:bg-gray-700 dark:text-black">
+                                                {bootcamp.category.name}
+                                            </span>
                                         )}
-                                        <div className="mt-2 flex justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar size="18" />
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {new Date(bootcamp.start_date).toLocaleDateString('id-ID', {
-                                                        day: 'numeric',
-                                                        month: 'long',
-                                                        year: 'numeric',
-                                                    })}{' '}
-                                                    -{' '}
-                                                    {new Date(bootcamp.end_date).toLocaleDateString('id-ID', {
-                                                        day: 'numeric',
-                                                        month: 'long',
-                                                        year: 'numeric',
-                                                    })}
-                                                </p>
-                                            </div>
+                                    </div>
+                                    {/* Content Section */}
+                                    <div className="flex flex-col p-4">
+                                        {/* Title */}
+                                        <h2 className="group-hover:text-white mb-1 line-clamp-2 text-xl font-semibold text-gray-900 dark:text-white font-literata">
+                                            {bootcamp.title}
+                                        </h2>
+                                        {/* Price */}
+                                        <div className="mb-3">
+                                            {hasAccess ? (
+                                                <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
+                                            ) : bootcamp.price === 0 ? (
+                                                <span className="text-green-600 dark:text-green-400 text-xl font-bold">Gratis</span>
+                                            ) : (
+                                                <>
+                                                    {bootcamp.strikethrough_price > 0 && (
+                                                        <p className="text-sm text-red-500 line-through">
+                                                            Rp {bootcamp.strikethrough_price.toLocaleString('id-ID')}
+                                                        </p>
+                                                    )}
+                                                    <p className="group-hover:text-white text-2xl font-literata font-semibold text-gray-900 dark:text-white">
+                                                        Rp {bootcamp.price.toLocaleString('id-ID')}
+                                                    </p>
+                                                </>
+                                            )}
+                                        </div>
+                                        {/* Date/Time Info */}
+                                        <div className="group-hover:text-white mb-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                            <Calendar size={16} />
+                                            <span>
+                                                {bootcamp.start_date && (
+                                                    <>
+                                                        {new Date(bootcamp.start_date).toLocaleDateString('id-ID', {
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric',
+                                                        })}
+                                                    </>
+                                                )}
+                                                {bootcamp.end_date && (
+                                                    <>
+                                                        {' - '}
+                                                        {new Date(bootcamp.end_date).toLocaleDateString('id-ID', {
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric',
+                                                        })}
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className='group-hover:text-white flex flex-row items-center justify-center mr-auto gap-2 text-sm text-gray-600 dark:text-gray-400'>
+                                            <Users size={16} />
+                                            <span>10/10</span>
+                                        </div>
+                                        <div>
+                                            <p className="mb-3 group-hover:text-white mt-2 line-clamp-3 text-gray-700 dark:text-gray-300 text-sm">
+                                                Mentor by <span className='text-primary font-semibold group-hover:text-white '> {bootcamp.user.name} </span>
+                                            </p>
+                                        </div>
+                                        <div className='text-center text-primary group-hover:text-white group-hover:border-white border-1 border-primary rounded-lg py-1'>
+                                            Mulai Belajar
                                         </div>
                                     </div>
                                 </div>
@@ -185,11 +216,9 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
             </div>
             {visibleCount < filteredBootcamp.length && (
                 <div className="mb-8 flex justify-center">
-                    <Magnetic>
-                        <Button type="button" className="mt-8 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
-                        </Button>
-                    </Magnetic>
+                    <Button type="button" className="mt-8 hover:cursor-pointer text-lg px-16 bg-primary py-6 border border-white shadow-xl hover:scale-105 transition-all duration-300 hover:text-white" onClick={() => setVisibleCount((prev) => prev + 6)}>
+                        Lihat Lebih Banyak
+                    </Button>
                 </div>
             )}
         </section>
