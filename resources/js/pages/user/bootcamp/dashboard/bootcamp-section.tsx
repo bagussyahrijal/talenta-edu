@@ -74,7 +74,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
             <div className='flex flex-row items-center justify-between mb-4'>
                 <h1 className='text-5xl font-bold font-literata text-primary'>Bootcamp Program</h1>
                 <div
-                    className="overflow-x-auto"
+                    className="overflow-x-auto bg-primary p-2 rounded-xl" 
                     ref={categoryRef}
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}
@@ -86,9 +86,9 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                         <button
                             type="button"
                             onClick={() => setSelectedCategory(null)}
-                            className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === null
-                                    ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
-                                    : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                            className={`rounded-xl px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === null
+                                    ? 'to-primary text-primary border-primary bg-white'
+                                    : 'hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                                 } `}
                         >
                             Semua
@@ -98,9 +98,9 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                 key={category.id}
                                 type="button"
                                 onClick={() => setSelectedCategory(category.id)}
-                                className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === category.id
-                                        ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
-                                        : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                className={`rounded-xl  px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === category.id
+                                        ? 'to-primary text-primary border-primary bg-white'
+                                        : ' hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                                     } `}
                             >
                                 {category.name}

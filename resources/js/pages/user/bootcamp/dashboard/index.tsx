@@ -34,7 +34,7 @@ export default function Bootcamp({ categories, bootcamps, myBootcampIds }: Bootc
             <Head title="Bootcamp" />
 
             <HeroSection />
-            <FeatureSection />
+            {/* <FeatureSection /> */}
             <BootcampSection categories={categories} bootcamps={bootcamps} myBootcampIds={myBootcampIds} />
         </UserLayout>
     );
