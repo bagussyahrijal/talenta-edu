@@ -8,10 +8,18 @@ use App\Models\Invoice;
 use Illuminate\Http\Request;
 use App\Models\EnrollmentBundle;
 use App\Http\Controllers\Controller;
+use App\Services\TripayService;
 use Illuminate\Support\Facades\Auth;
 
 class BundleController extends Controller
 {
+    protected $tripayService;
+
+    public function __construct(TripayService $tripayService)
+    {
+        $this->tripayService = $tripayService;
+    }
+
     public function index()
     {
         $bundles = Bundle::with(['bundleItems.bundleable'])
@@ -219,7 +227,8 @@ class BundleController extends Controller
         $bundle->strikethrough_price = $totalOriginalPrice;
 
         $hasAccess = false;
-        $pendingInvoiceUrl = null;
+        $pendingInvoice = null;
+        $transactionDetail = null;
         $userId = Auth::id();
 
         $hasAccess = EnrollmentBundle::whereHas('invoice', function ($query) use ($userId) {
@@ -230,7 +239,7 @@ class BundleController extends Controller
             ->exists();
 
         if (!$hasAccess) {
-            $pendingInvoice = Invoice::where('user_id', $userId)
+            $invoice = Invoice::where('user_id', $userId)
                 ->where('status', 'pending')
                 ->whereHas('bundleEnrollments', function ($query) use ($bundle) {
                     $query->where('bundle_id', $bundle->id);
@@ -242,15 +251,50 @@ class BundleController extends Controller
                 ->latest()
                 ->first();
 
-            if ($pendingInvoice && $pendingInvoice->invoice_url) {
-                $pendingInvoiceUrl = $pendingInvoice->invoice_url;
+            if ($invoice) {
+                $pendingInvoice = [
+                    'id' => $invoice->id,
+                    'invoice_code' => $invoice->invoice_code,
+                    'status' => $invoice->status,
+                    'amount' => $invoice->amount,
+                    'payment_method' => $invoice->payment_method,
+                    'payment_channel' => $invoice->payment_channel,
+                    'va_number' => $invoice->va_number,
+                    'qr_code_url' => $invoice->qr_code_url,
+                    'bank_name' => $invoice->bank_name ?? null,
+                    'created_at' => $invoice->created_at,
+                    'expires_at' => $invoice->expires_at,
+                ];
+
+                if ($invoice->payment_reference) {
+                    try {
+                        $tripayDetail = $this->tripayService->detailTransaction($invoice->payment_reference);
+                        if (isset($tripayDetail->data)) {
+                            $transactionDetail = [
+                                'reference' => $tripayDetail->data->reference ?? null,
+                                'payment_name' => $tripayDetail->data->payment_name ?? null,
+                                'pay_code' => $tripayDetail->data->pay_code ?? null,
+                                'instructions' => $tripayDetail->data->instructions ?? [],
+                                'status' => $tripayDetail->data->status ?? 'PENDING',
+                                'paid_at' => $tripayDetail->data->paid_at ?? null,
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::warning('Failed to fetch Tripay details', [
+                            'invoice_code' => $invoice->invoice_code,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
             }
         }
 
         return Inertia::render('user/bundling/checkout/index', [
             'bundle' => $bundle,
             'hasAccess' => $hasAccess,
-            'pendingInvoiceUrl' => $pendingInvoiceUrl,
+            'pendingInvoice' => $pendingInvoice,
+            'transactionDetail' => $transactionDetail,
+            'channels' => $this->tripayService->getPaymentChannels(),
             'referralInfo' => $this->getReferralInfo(),
         ]);
     }
@@ -276,7 +320,7 @@ class BundleController extends Controller
     {
         return [
             'code' => session('referral_code'),
-            'hasActive' => session('referral_code') && session('referral_code') !== 'ATM2025',
+            'hasActive' => session('referral_code') && session('referral_code') !== 'TAL2025',
         ];
     }
 }

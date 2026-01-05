@@ -24,7 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'google_id',
         'github_id',
-        'referred_by_user_id',
+        // 'referred_by_user_id',
         'name',
         'email',
         'phone_number',
@@ -75,10 +75,10 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new CustomVerifyEmailNotification());
     }
 
-    public function referrer()
-    {
-        return $this->belongsTo(User::class, 'referred_by_user_id');
-    }
+    // public function referrer()
+    // {
+    //     return $this->belongsTo(User::class, 'referred_by_user_id');
+    // }
 
     public function courses()
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
 use App\Models\Bootcamp;
 use App\Models\Bundle;
 use App\Models\Course;
@@ -27,15 +28,13 @@ class HomeController extends Controller
 
         $tools = Tool::all();
 
-        // Ambil promotion yang aktif
         $activePromotion = Promotion::where('is_active', true)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->latest()
             ->first();
 
-        // Ambil data dari ketiga model
-        $courses = Course::with(['category'])
+        $courses = Course::with(['category', 'user'])
             ->where('status', 'published')
             ->orderBy('created_at', 'desc')
             ->take(6)
@@ -50,12 +49,16 @@ class HomeController extends Controller
                     'price' => $course->price,
                     'level' => $course->level,
                     'category' => $course->category,
+                    'mentor' => [
+                        'name' => $course->user->name,
+                        'avatar' => $course->user->avatar,
+                    ],
                     'type' => 'course',
                     'created_at' => $course->created_at,
                 ];
             });
 
-        $bootcamps = Bootcamp::with(['category'])
+        $bootcamps = Bootcamp::with(['category', 'user'])
             ->where('status', 'published')
             ->where('start_date', '>=', now())
             ->orderBy('created_at', 'desc')
@@ -72,12 +75,16 @@ class HomeController extends Controller
                     'start_date' => $bootcamp->start_date,
                     'end_date' => $bootcamp->end_date,
                     'category' => $bootcamp->category,
+                    'mentor' => [
+                        'name' => $bootcamp->user->name,
+                        'avatar' => $bootcamp->user->avatar,
+                    ],
                     'type' => 'bootcamp',
                     'created_at' => $bootcamp->created_at,
                 ];
             });
 
-        $webinars = Webinar::with(['category'])
+        $webinars = Webinar::with(['category', 'user'])
             ->where('status', 'published')
             ->where('start_time', '>=', now())
             ->orderBy('created_at', 'desc')
@@ -93,12 +100,15 @@ class HomeController extends Controller
                     'price' => $webinar->price,
                     'start_time' => $webinar->start_time,
                     'category' => $webinar->category,
+                    'mentor' => [
+                        'name' => $webinar->user->name,
+                        'avatar' => $webinar->user->avatar,
+                    ],
                     'type' => 'webinar',
                     'created_at' => $webinar->created_at,
                 ];
             });
 
-        // ✅ Add Bundles - Filter expired registration deadlines
         $bundles = Bundle::with(['user', 'bundleItems'])
             ->where('status', 'published')
             ->where(function ($query) {
@@ -109,7 +119,6 @@ class HomeController extends Controller
             ->take(6)
             ->get()
             ->map(function ($bundle) {
-                // Calculate total price from bundle items
                 $totalItemsPrice = $bundle->bundleItems->sum('price');
 
                 return [
@@ -117,18 +126,20 @@ class HomeController extends Controller
                     'title' => $bundle->title,
                     'thumbnail' => $bundle->thumbnail,
                     'slug' => $bundle->slug,
-                    // ✅ Use manual strikethrough if > 0, else use total items price
                     'strikethrough_price' => ($bundle->strikethrough_price > 0)
                         ? $bundle->strikethrough_price
                         : $totalItemsPrice,
                     'price' => $bundle->price,
                     'registration_deadline' => $bundle->registration_deadline,
+                    'mentor' => [
+                        'name' => $bundle->user->name,
+                        'avatar' => $bundle->user->avatar,
+                    ],
                     'type' => 'bundle',
                     'created_at' => $bundle->created_at,
                 ];
             });
 
-        // ✅ Add Partnership Products
         $partnershipProducts = PartnershipProduct::with(['category'])
             ->where('status', 'published')
             ->orderBy('created_at', 'desc')
@@ -173,6 +184,27 @@ class HomeController extends Controller
                     'title' => $product['title'],
                     'type' => $product['type'],
                     'price' => $product['price'],
+                ];
+            });
+
+        $latestArticles = Article::with(['category'])
+            ->where('status', 'published')
+            ->orderBy('published_at', 'desc')
+            ->take(6)
+            ->get()
+            ->map(function ($article) {
+                return [
+                    'id' => $article->id,
+                    'title' => $article->title,
+                    'slug' => $article->slug,
+                    'excerpt' => $article->excerpt,
+                    'thumbnail' => $article->thumbnail,
+                    'is_featured' => $article->is_featured,
+                    'category' => [
+                        'id' => $article->category->id,
+                        'name' => $article->category->name,
+                    ],
+                    'published_at' => $article->published_at?->format('Y-m-d H:i:s'),
                 ];
             });
 
@@ -245,12 +277,13 @@ class HomeController extends Controller
         return Inertia::render('user/home/index', [
             'tools' => $tools,
             'latestProducts' => $latestProducts,
+            'latestArticles' => $latestArticles,
             'myProductIds' => $myProductIds,
             'allProducts' => $allProducts,
             'activePromotion' => $activePromotion,
             'referralInfo' => [
                 'code' => session('referral_code'),
-                'hasActive' => session('referral_code') && session('referral_code') !== 'ATM2025',
+                'hasActive' => session('referral_code') && session('referral_code') !== 'TAL2025',
             ],
         ]);
     }

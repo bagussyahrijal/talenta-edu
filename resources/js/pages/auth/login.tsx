@@ -82,7 +82,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 {/* Tampilkan referral info jika ada */}
-                {referralCode && referralCode !== 'ATM2025' && (
+                {referralCode && referralCode !== 'TAL2025' && (
                     <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-blue-500"></div>

@@ -1,6 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { Eye, EyeOff, LoaderCircle } from 'lucide-react';
-import { FormEventHandler, useEffect, useState } from 'react';
+import { FormEventHandler, useState } from 'react';
 
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -15,25 +15,10 @@ type RegisterForm = {
     phone_number: string;
     password: string;
     password_confirmation: string;
-    affiliate_code?: string;
 };
 
-export default function Register({ affiliate_code }: { affiliate_code?: string }) {
+export default function Register() {
     const [showPassword, setShowPassword] = useState(false);
-
-    const getReferralCode = (): string => {
-        if (affiliate_code) {
-            sessionStorage.setItem('referral_code', affiliate_code);
-            return affiliate_code;
-        }
-
-        const storedReferral = sessionStorage.getItem('referral_code');
-        if (storedReferral) {
-            return storedReferral;
-        }
-
-        return 'ATM2025';
-    };
 
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
@@ -41,31 +26,12 @@ export default function Register({ affiliate_code }: { affiliate_code?: string }
         phone_number: '',
         password: '',
         password_confirmation: '',
-        affiliate_code: getReferralCode(),
     });
-
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const refFromUrl = urlParams.get('ref');
-
-        if (refFromUrl) {
-            sessionStorage.setItem('referral_code', refFromUrl);
-            setData('affiliate_code', refFromUrl);
-        } else {
-            const storedReferral = sessionStorage.getItem('referral_code');
-            if (storedReferral) {
-                setData('affiliate_code', storedReferral);
-            }
-        }
-    }, [setData]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
-            onSuccess: () => {
-                sessionStorage.removeItem('referral_code');
-            },
         });
     };
 
@@ -176,18 +142,6 @@ export default function Register({ affiliate_code }: { affiliate_code?: string }
                         </div>
                         <InputError message={errors.password_confirmation} />
                     </div>
-
-                    {/* Tampilkan referral code info */}
-                    {data.affiliate_code && (
-                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                            <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                                <p className="text-sm text-green-700 dark:text-green-300">
-                                    Mendaftar melalui referral: <span className="font-mono font-medium">{data.affiliate_code}</span>
-                                </p>
-                            </div>
-                        </div>
-                    )}
 
                     <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
