@@ -2,6 +2,25 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
 
+const advantageSection = [
+    {
+        title: 'Dibimbing Praktisi Senior.',
+        description: 'Materi disampaikan langsung oleh praktisi berpengalaman sehingga peserta memahami praktik nyata sesuai kebutuhan industri.',
+    },
+    {
+        title: 'Didukung Modul & Kelas Online.',
+        description: 'Peserta mendapatkan modul pembelajaran lengkap serta akses kelas online interaktif untuk menunjang proses belajar.'
+    },
+    {
+        title: 'Durasi Panjang & Terstruktur.',
+        description: 'Program dirancang dengan durasi pembelajaran yang lebih mendalam agar peserta benar-benar menguasai materi secara bertahap.'  
+    },
+    {
+        title: 'Fokus Praktik & Studi Kasus.',
+        description: 'Pembelajaran berbasis praktik dan studi kasus nyata sehingga skill yang diperoleh siap diterapkan di dunia kerja.'  
+    }
+]
+
 export default function HeroSection() {
     return (
         <>
@@ -15,11 +34,7 @@ export default function HeroSection() {
                             Bootcamp Program
                         </h1>
                         <p className="w-1/2">
-                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut et massa mi.
-                            Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla, mattis ligula
-                            consectetur, ultrices mauris. Maecenas vitae mattis tellus. Nullam quis
-                            imperdiet augue. Vestibulum auctor ornare leo, non suscipit magna interdum
-                            eu. Curabitur pellentesque nibh nibh, at maximus ante.
+                            Bootcamp Talenta Academy merupakan program pelatihan intensif berdurasi panjang yang dibimbing langsung oleh praktisi senior. Didukung modul pembelajaran terstruktur dan kelas online interaktif, program ini dirancang untuk membekali peserta dengan keterampilan praktis yang siap diterapkan di dunia kerja.
                         </p>
                     </div>
 
@@ -44,12 +59,12 @@ export default function HeroSection() {
                     {/* Left Content */}
                     <div className='lg:col-span-2 flex flex-col justify-center h-full gap-8'>
                         <h2 className="mb-8 text-4xl font-bold text-primary font-literata md:text-4xl w-1/2">
-                            The Advantages of the upskill Program
+                            Bootcamp Profesional Talenta Academy 
                         </h2>
 
                         <div className="grid gap-6 sm:grid-cols-2">
-                            {[1, 2, 3, 4].map((item) => (
-                                <div key={item} className="flex gap-3">
+                            {advantageSection.map((item) => (
+                                <div key={item.title} className="flex gap-3">
                                     <div className="flex-shrink-0">
                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500">
                                             <CheckCircle2 className="h-5 w-5 text-white" />
@@ -57,12 +72,10 @@ export default function HeroSection() {
                                     </div>
                                     <div>
                                         <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
-                                            Lorem ipsum dolor sit.
+                                            {item.title}
                                         </h3>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            Lorem ipsum dolor sit amet consectetur adipisicing
-                                            elit Ut et massa mi. Aliquam in hendrerit urna.
-                                            Pellentesque sit amet sapien.
+                                            {item.description}
                                         </p>
                                     </div>
                                 </div>
