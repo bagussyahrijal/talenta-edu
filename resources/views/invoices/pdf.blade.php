@@ -191,7 +191,7 @@
             <tr>
                 <td class="company-info">
                     <div class="logo-container">
-                        <img src="{{ public_path('assets/images/logo-primary-sm.png') }}" alt="Talenta Logo"
+                        <img src="{{ public_path('assets/images/logo-primary-2.png') }}" alt="Talenta Logo"
                             class="logo">
                     </div>
                     <div class="company-details">
