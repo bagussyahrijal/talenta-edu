@@ -1,85 +1,94 @@
 import { Button } from '@/components/ui/button';
-import { motion } from 'motion/react';
+import { Check } from 'lucide-react';
 
 export default function HeroSection() {
     return (
-        <section className="to-background from-background via-tertiary dark:via-background dark:to-background relative bg-gradient-to-b py-20 text-gray-900 dark:text-white">
-            <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 animate-spin items-center gap-8 duration-[10s]">
-                <div className="bg-primary h-[300px] w-[300px] rounded-full blur-[200px]" />
-                <div className="bg-secondary h-[300px] w-[300px] rounded-full blur-[200px]" />
-            </div>
-            <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-3">
-                <div className="col-span-1 hidden lg:block">
-                    <div className="relative flex justify-center">
-                        <div className="relative h-[480px] w-[360px]">
-                            <motion.img
-                                src="assets/images/animated/10.webp"
-                                alt="Animasi Partnership 1"
-                                width={360}
-                                className="absolute top-12 left-12 z-10 rotate-3 transform"
-                                animate={{
-                                    y: [0, -20, 0],
-                                }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: 'easeInOut',
-                                }}
-                            />
-                            <motion.img
-                                src="assets/images/animated/11.webp"
-                                alt="Animasi Partnership 2"
-                                width={360}
-                                className="absolute top-6 left-4 z-20 scale-110 rotate-3 transform"
-                                animate={{
-                                    y: [0, 25, 0],
-                                }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: 'easeInOut',
-                                    delay: 0.5,
-                                }}
-                            />
-                            <motion.img
-                                src="assets/images/animated/12.webp"
-                                alt="Animasi Partnership 3"
-                                width={360}
-                                className="absolute top-24 left-0 z-30 rotate-3 transform"
-                                animate={{
-                                    y: [0, -20, 0],
-                                }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    ease: 'easeInOut',
-                                    delay: 1,
-                                }}
-                            />
-                        </div>
-                    </div>
+        <section className=" relative py-20 text-gray-900 dark:text-white">
+            <div className="relative mx-auto max-w-7xl px-4 flex flex-col lg:flex-row items-center gap-12">
+                {/* Left side - Single Image */}
+                <div className="w-full lg:w-[40%] flex justify-center mb-8 lg:mb-0">
+                    <img
+                        src="/assets/images/about.png"
+                        alt="About Talenta Academy"
+                        className="w-full max-w-sm object-contain"
+                    />
                 </div>
-                <div className="col-span-2">
-                    <span className="text-secondary border-secondary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
-                        ✨ Program Sertifikasi Kerjasama!
+
+                {/* Right side - Content */}
+                <div className="w-full lg:w-[60%]">
+                    <span className="text-primary inline-block text-md font-semibold">
+                        About Us
                     </span>
 
-                    <h1 className="mb-6 text-4xl leading-tight font-bold italic sm:text-5xl">
-                        Dapatkan Sertifikasi dari Partner Terpercaya & Tingkatkan Kredibilitas Profesional
+                    <h1 className="mb-6 text-2xl leading-tight font-bold sm:text-3xl font-literata">
+                        Talenta Academy.
                     </h1>
 
-                    <p className="mb-6 max-w-xl text-lg text-gray-600 dark:text-gray-400">
-                        Program sertifikasi yang dirancang bersama partner industri untuk meningkatkan kompetensi dan membuka peluang karir lebih
-                        luas.
+                    <p className="mb-8 text-sm text-gray-700 dark:text-gray-300 leading-relaxed text-justify">
+                        Talenta Academy adalah lembaga pelatihan profesional di bidang akuntansi, perpajakan, dan audit dan lainya yang berfokus pada pembelajaran praktis dan aplikatif. Didukung oleh instruktur berpengalaman, kami membantu peserta meningkatkan kompetensi dan kesiapan menghadapi dunia kerja melalui program pelatihan yang terstruktur dan relevan.
                     </p>
 
-                    <div className="flex flex-wrap gap-4">
-                        <a href="#partnership-products">
-                            <Button>Lihat Program Sertifikasi</Button>
-                        </a>
-                        <a href="https://wa.me/+6285142505794" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">Konsultasi Gratis</Button>
-                        </a>
+                    {/* Features Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Feature 1 */}
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary">
+                                    <Check className="h-5 w-5 text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm mb-1">Materi Praktis & Aplikatif</h3>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    Fokus pada praktik nyata dan studi kasus sesuai kebutuhan dunia kerja..
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Feature 2 */}
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary">
+                                    <Check className="h-5 w-5 text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm mb-1">Program Fleksibel & Terstruktur.</h3>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    Tersedia kelas online, bootcamp, webinar, dan bundling kelas dengan kurikulum yang jelas.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Feature 3 */}
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary">
+                                    <Check className="h-5 w-5 text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm mb-1">Instruktur Praktisi Berpengalaman</h3>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    Dibimbing langsung oleh profesional yang aktif di bidang akuntansi, pajak, dan audit..
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Feature 4 */}
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-foreground to-primary">
+                                    <Check className="h-5 w-5 text-white" />
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-sm mb-1">Sertifikat & Modul Pembelajaran</h3>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    Setiap program dilengkapi sertifikat dan modul sebagai pendukung pengembangan kompetensi..
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

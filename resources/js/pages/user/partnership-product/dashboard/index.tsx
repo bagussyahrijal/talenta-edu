@@ -1,8 +1,10 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
-import FeatureSection from './feature-section';
+import FeatureSection from './legalitas-section';
 import HeroSection from './hero-section';
 import PartnershipProductSection from './partnership-product-section';
+import LegalitasSection from './legalitas-section';
+import MentorSection from './mentor-section';
 
 type Category = {
     id: string;
@@ -34,8 +36,9 @@ export default function PartnershipProductPage({ categories, partnershipProducts
             <Head title="Sertifikasi Kerjasama" />
 
             <HeroSection />
-            <FeatureSection />
-            <PartnershipProductSection categories={categories} partnershipProducts={partnershipProducts} />
+            <LegalitasSection />
+            <MentorSection />
+            {/* <PartnershipProductSection categories={categories} partnershipProducts={partnershipProducts} /> */}
         </UserLayout>
     );
 }

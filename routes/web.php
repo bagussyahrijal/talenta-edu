@@ -31,6 +31,9 @@ use App\Http\Controllers\User\WebinarController as UserWebinarController;
 use App\Http\Controllers\User\PartnershipProductController as UserPartnershipProductController;
 use App\Http\Controllers\User\ArticleController as UserArticleController;
 use App\Http\Controllers\User\MentorController as UserMentorController;
+use App\Http\Controllers\User\GalleryController as UserGalleryController;
+use App\Http\Controllers\User\AlumniController as UserAlumniController;
+use App\Http\Controllers\User\ReviewController as UserReviewController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\Profile\BootcampController as ProfileBootcampController;
 use App\Http\Controllers\User\Profile\CourseController as ProfileCourseController;
@@ -59,6 +62,9 @@ Route::get('/certification/{partnershipProduct:slug}', [UserPartnershipProductCo
 Route::get('/certificate/{code}', [CertificateParticipantController::class, 'show'])->name('certificate.participant.detail');
 Route::get('/article', [UserArticleController::class, 'index'])->name('article.index');
 Route::get('/article/{slug}', [UserArticleController::class, 'show'])->name('article.show');
+Route::get('/galeri', [UserGalleryController::class, 'index'])->name('gallery.index');
+Route::get('/alumni', [UserAlumniController::class, 'index'])->name('alumni.index');
+Route::get('/review', [UserReviewController::class, 'index'])->name('review.index');
 Route::get('/mentor', [UserMentorController::class, 'index'])->name('mentor.index');
 Route::get('/mentor/{id}', [UserMentorController::class, 'show'])->name('mentor.show');
 
