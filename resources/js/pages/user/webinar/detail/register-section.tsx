@@ -75,7 +75,7 @@ export default function RegisterSection({ webinar }: { webinar: Webinar }) {
                     </ul>
                 </div>
                 <div className="flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
-                    <h5 className="mb-4 text-sm">Daftar Webinar Aksademy dan dapatkan kesempatan belajar dari para ahli</h5>
+                    <h5 className="mb-4 text-sm">Daftar Webinar Talenta dan dapatkan kesempatan belajar dari para ahli</h5>
 
                     {webinar.strikethrough_price > 0 && (
                         <span className="text-right text-sm text-red-500 line-through">Rp {webinar.strikethrough_price.toLocaleString('id-ID')}</span>

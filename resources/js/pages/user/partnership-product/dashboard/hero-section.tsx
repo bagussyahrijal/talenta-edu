@@ -6,7 +6,7 @@ export default function HeroSection() {
         <section className=" relative py-20 text-gray-900 dark:text-white">
             <div className="relative mx-auto max-w-7xl px-4 flex flex-col lg:flex-row items-center gap-12">
                 {/* Left side - Single Image */}
-                <div className="w-full lg:w-[40%] flex justify-center mb-8 lg:mb-0">
+                <div className="w-full lg:w-[40%] flex justify-center mb-8 lg:mb-0 hidden sm:flex">
                     <img
                         src="/assets/images/about.png"
                         alt="About Talenta Academy"

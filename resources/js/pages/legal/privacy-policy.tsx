@@ -18,12 +18,12 @@ export default function PrivacyPolicy() {
                             <section className="mb-8">
                                 <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">1. Pendahuluan</h2>
                                 <p className="mb-4 text-gray-700 dark:text-gray-300">
-                                    CV. Aksara Teknologi Mandiri ("kami", "kita", atau "Aksademy") berkomitmen untuk melindungi privasi dan keamanan
+                                    Talenta ("kami", "kita", atau "Talenta") berkomitmen untuk melindungi privasi dan keamanan
                                     informasi pribadi Anda. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan
                                     melindungi informasi pribadi Anda ketika menggunakan platform pembelajaran online kami.
                                 </p>
                                 <p className="text-gray-700 dark:text-gray-300">
-                                    Dengan menggunakan layanan Aksademy, Anda menyetujui praktik yang dijelaskan dalam Kebijakan Privasi ini. Jika
+                                    Dengan menggunakan layanan Talenta, Anda menyetujui praktik yang dijelaskan dalam Kebijakan Privasi ini. Jika
                                     Anda tidak menyetujui kebijakan ini, mohon untuk tidak menggunakan layanan kami.
                                 </p>
                             </section>
@@ -114,7 +114,7 @@ export default function PrivacyPolicy() {
 
                                     <div>
                                         <h3 className="mb-2 font-semibold">4.3 Perlindungan Hak</h3>
-                                        <p>Untuk melindungi hak, properti, dan keselamatan Aksademy, pengguna kami, atau masyarakat umum.</p>
+                                        <p>Untuk melindungi hak, properti, dan keselamatan Talenta, pengguna kami, atau masyarakat umum.</p>
                                     </div>
 
                                     <div>
@@ -296,10 +296,10 @@ export default function PrivacyPolicy() {
                                             <strong>Tim Perlindungan Data</strong>
                                         </p>
                                         <p>
-                                            <strong>CV. Aksara Teknologi Mandiri</strong>
+                                            <strong>Talenta</strong>
                                         </p>
-                                        <p>Email: privacy@aksademy.co.id</p>
-                                        <p>Email umum: info@aksademy.co.id</p>
+                                        <p>Email: privacy@talenta.co.id</p>
+                                        <p>Email umum: info@talenta.co.id</p>
                                         <p>WhatsApp: +6285142505794</p>
                                         <p>
                                             Alamat: Perumahan Permata Permadani, Blok B1
@@ -318,7 +318,7 @@ export default function PrivacyPolicy() {
 
                         <div className="mt-8 border-t border-gray-200 pt-8 text-center dark:border-gray-700">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Dengan menggunakan layanan Aksademy, Anda menyetujui kebijakan privasi di atas.
+                                Dengan menggunakan layanan Talenta, Anda menyetujui kebijakan privasi di atas.
                             </p>
                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                                 Baca juga{' '}

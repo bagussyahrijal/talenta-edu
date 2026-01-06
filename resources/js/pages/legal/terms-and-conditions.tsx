@@ -18,11 +18,11 @@ export default function TermsAndConditions() {
                             <section className="mb-8">
                                 <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">1. Pendahuluan</h2>
                                 <p className="mb-4 text-gray-700 dark:text-gray-300">
-                                    Selamat datang di Aksademy. Syarat dan ketentuan ini mengatur penggunaan layanan pembelajaran online yang
-                                    disediakan oleh CV. Aksara Teknologi Mandiri ("kami", "kita", atau "Aksademy").
+                                    Selamat datang di Talenta. Syarat dan ketentuan ini mengatur penggunaan layanan pembelajaran online yang
+                                    disediakan oleh Talenta ("kami", "kita", atau "Talenta").
                                 </p>
                                 <p className="text-gray-700 dark:text-gray-300">
-                                    Dengan mengakses dan menggunakan platform Aksademy, Anda menyetujui untuk terikat dengan syarat dan ketentuan ini.
+                                    Dengan mengakses dan menggunakan platform Talenta, Anda menyetujui untuk terikat dengan syarat dan ketentuan ini.
                                     Jika Anda tidak menyetujui syarat dan ketentuan ini, mohon untuk tidak menggunakan layanan kami.
                                 </p>
                             </section>
@@ -31,7 +31,7 @@ export default function TermsAndConditions() {
                                 <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">2. Definisi</h2>
                                 <ul className="list-inside list-disc space-y-2 text-gray-700 dark:text-gray-300">
                                     <li>
-                                        <strong>Platform:</strong> Website dan aplikasi Aksademy yang dapat diakses melalui aksademy.co.id
+                                        <strong>Platform:</strong> Website dan aplikasi Talenta yang dapat diakses melalui Talenta.co.id
                                     </li>
                                     <li>
                                         <strong>Pengguna:</strong> Setiap individu yang mengakses atau menggunakan platform kami
@@ -132,7 +132,7 @@ export default function TermsAndConditions() {
                                         <li>Kode program</li>
                                         <li>Logo dan merek dagang</li>
                                     </ul>
-                                    <p>Adalah milik Aksademy atau pembuat konten yang berlisensi kepada kami. Pengguna dilarang untuk:</p>
+                                    <p>Adalah milik Talenta atau pembuat konten yang berlisensi kepada kami. Pengguna dilarang untuk:</p>
                                     <ul className="ml-4 list-inside list-disc space-y-1">
                                         <li>Mendistribusikan konten tanpa izin</li>
                                         <li>Menggunakan konten untuk keperluan komersial</li>
@@ -177,7 +177,7 @@ export default function TermsAndConditions() {
                             <section className="mb-8">
                                 <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">9. Pembatasan Tanggung Jawab</h2>
                                 <div className="space-y-3 text-gray-700 dark:text-gray-300">
-                                    <p>Aksademy tidak bertanggung jawab atas:</p>
+                                    <p>Talenta tidak bertanggung jawab atas:</p>
                                     <ul className="ml-4 list-inside list-disc space-y-1">
                                         <li>Gangguan teknis atau pemadaman server</li>
                                         <li>Kehilangan data akibat kesalahan pengguna</li>
@@ -211,9 +211,9 @@ export default function TermsAndConditions() {
                                     </p>
                                     <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
                                         <p>
-                                            <strong>CV. Aksara Teknologi Mandiri</strong>
+                                            <strong>Talenta</strong>
                                         </p>
-                                        <p>Email: aksarateknologimandiri@gmail.com</p>
+                                        <p>Email: talenta.affiliate@gmail.com</p>
                                         <p>WhatsApp: +6285142505794</p>
                                         <p>
                                             Alamat: Perumahan Permata Permadani, Blok B1
@@ -229,7 +229,7 @@ export default function TermsAndConditions() {
 
                         <div className="mt-8 border-t border-gray-200 pt-8 text-center dark:border-gray-700">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Dengan menggunakan layanan Aksademy, Anda menyetujui syarat dan ketentuan di atas.
+                                Dengan menggunakan layanan Talenta, Anda menyetujui syarat dan ketentuan di atas.
                             </p>
                         </div>
                     </div>

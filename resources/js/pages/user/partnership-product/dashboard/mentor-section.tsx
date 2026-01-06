@@ -96,26 +96,26 @@ export default function MentorSection() {
     const secondRow = mentorsData.slice(4);
 
     return (
-        <section className="relative w-full px-8 py-16 md:px-16 ">
+        <section className="relative w-full px-4 py-10 sm:px-8 md:px-16">
             <div className="mx-auto w-full max-w-7xl">
                 {/* Header */}
-                <div className="mb-16 text-center">
-                    <h2 className="text-5xl font-bold font-literata">
+                <div className="mb-10 sm:mb-16 text-center">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-literata">
                         Meet Our Mentor
                     </h2>
                 </div>
 
                 {/* Mentor Cards Grid */}
-                <div className="space-y-4 ">
+                <div className="space-y-6">
                     {/* Baris pertama: 4 kolom */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-items-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-items-center gap-y-6 gap-x-4">
                         {firstRow.map((mentor) => (
                             <MentorCard key={mentor.id} mentor={mentor} />
                         ))}
                     </div>
                     {/* Baris kedua: 3 kolom, rata tengah */}
                     {secondRow.length > 0 && (
-                        <div className="flex justify-center gap-x-6">
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-y-6 gap-x-4">
                             {secondRow.map((mentor) => (
                                 <MentorCard key={mentor.id} mentor={mentor} />
                             ))}

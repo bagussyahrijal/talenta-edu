@@ -36,18 +36,18 @@
         }
     </style>
 
-    <title inertia>{{ config('app.name', 'Aksademy') }}</title>
+    <title inertia>{{ config('app.name', 'Talenta') }}</title>
 
     <meta name="description"
-        content="Aksademy adalah platform edukasi digital yang menyediakan layanan pembelajaran mulai dari kelas online, webinar, dan bootcamp.">
+        content="Talenta adalah platform edukasi digital yang menyediakan layanan pembelajaran mulai dari kelas online, webinar, dan bootcamp.">
     <meta name="keywords"
-        content="Aksademy, platform edukasi, pembelajaran online, kelas online, webinar, bootcamp, pengembangan keterampilan, kursus digital">
-    <meta name="author" content="Aksara Teknologi Mandiri">
+        content="Talenta, platform edukasi, pembelajaran online, kelas online, webinar, bootcamp, pengembangan keterampilan, kursus digital">
+    <meta name="author" content="Talenta">
     <meta name="robots" content="index, follow">
 
-    <meta property="og:title" content="Aksademy">
+    <meta property="og:title" content="Talenta">
     <meta property="og:description"
-        content="Aksademy adalah platform edukasi digital yang menyediakan layanan pembelajaran mulai dari kelas online, webinar, dan bootcamp.">
+        content="Talenta adalah platform edukasi digital yang menyediakan layanan pembelajaran mulai dari kelas online, webinar, dan bootcamp.">
     <meta property="og:image" content="{{ asset('assets/images/logo-square.png') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">

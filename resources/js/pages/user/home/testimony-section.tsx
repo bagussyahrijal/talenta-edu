@@ -21,13 +21,13 @@ const testimonials: Testimonial[] = [
         name: 'Sarah Wijaya',
         role: 'UI/UX Designer',
         image: '/assets/default-avatar.jpg',
-        text: 'Materi bootcamp UI/UX di Aksademy sangat komprehensif. Sekarang saya sudah bekerja di startup unicorn. Terima kasih Aksademy! Program mentoring yang diberikan sangat membantu saya memahami design thinking dan user research. Portofolio yang saya kembangkan selama bootcamp menjadi nilai plus saat interview.',
+        text: 'Materi bootcamp UI/UX di Talenta sangat komprehensif. Sekarang saya sudah bekerja di startup unicorn. Terima kasih Talenta! Program mentoring yang diberikan sangat membantu saya memahami design thinking dan user research. Portofolio yang saya kembangkan selama bootcamp menjadi nilai plus saat interview.',
     },
     {
         name: 'Budi Santoso',
         role: 'Full Stack Developer',
         image: '/assets/default-avatar.jpg',
-        text: 'Dari nol sampai bisa bikin aplikasi web kompleks. Mentor di Aksademy sangat sabar dan supportif. Worth it banget! Materi yang diajarkan sangat terstruktur dan project-based learning membuat saya cepat memahami konsep programming. Sekarang saya bekerja di perusahaan teknologi ternama.',
+        text: 'Dari nol sampai bisa bikin aplikasi web kompleks. Mentor di Talenta sangat sabar dan supportif. Worth it banget! Materi yang diajarkan sangat terstruktur dan project-based learning membuat saya cepat memahami konsep programming. Sekarang saya bekerja di perusahaan teknologi ternama.',
     },
     {
         name: 'Maya Sari',

@@ -27,7 +27,7 @@ export default function FaqSection() {
                     </AccordionTrigger>
                     <AccordionContent>
                         <p className="text-sm text-black md:text-base dark:text-black-400 mt-2">
-                            Aksademy adalah platform edukasi digital yang dikembangkan oleh CV. Aksara Teknologi Mandiri dan dirancang untuk mendukung
+                            Talenta adalah platform edukasi digital yang dikembangkan oleh Talenta dan dirancang untuk mendukung
                             pengembangan skill di era modern mulai dari teknologi, desain, hingga bisnis.
                         </p>
                     </AccordionContent>
@@ -50,13 +50,13 @@ export default function FaqSection() {
                 <AccordionItem value="advanced-usage" className="rounded-lg border-1 border-zinc-400 px-4 py-2">
                     <AccordionTrigger className="w-full text-left text-zinc-950 hover:cursor-pointer dark:text-zinc-50">
                         <div className="flex items-center justify-between">
-                            <p className="md:text-lg font-semibold text-primary">Bagaimana alur belajar di Aksademy?</p>
+                            <p className="md:text-lg font-semibold text-primary">Bagaimana alur belajar di Talenta?</p>
                             <ChevronUp className="p-1 h-7 w-7 bg-primary rounded-full text-white transition-transform duration-200 group-data-expanded:-rotate-180 dark:text-zinc-50" />
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
                         <p className="text-sm text-black md:text-base dark:text-black-400 mt-2">
-                            Alur belajar di Aksademy dimulai dengan memilih kelas atau bootcamp yang sesuai dengan minat dan kebutuhan Anda. Setelah
+                            Alur belajar di Talenta dimulai dengan memilih kelas atau bootcamp yang sesuai dengan minat dan kebutuhan Anda. Setelah
                             mendaftar, Anda akan mendapatkan akses ke materi pembelajaran yang dapat diakses kapan saja. Setiap kelas dilengkapi
                             dengan modul, quiz, dan forum diskusi untuk mendukung proses belajar Anda.
                         </p>

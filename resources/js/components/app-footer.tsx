@@ -107,7 +107,7 @@ export default function AppFooter() {
                             <h4 className="mb-4 text-lg font-bold text-gray-900">Media Sosial</h4>
                             <div className="flex items-center gap-4">
                                 <a
-                                    href="https://www.instagram.com/aksademy/"
+                                    href="https://www.instagram.com/brevetpajak_talenta/"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-900 transition-colors hover:bg-gray-900 hover:text-white"
@@ -115,7 +115,7 @@ export default function AppFooter() {
                                     <Instagram className="h-5 w-5" />
                                 </a>
                                 <a
-                                    href="https://www.tiktok.com/@aksademy"
+                                    href="https://www.tiktok.com/@brevetpajak_talenta"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-900 transition-colors hover:bg-gray-900 hover:text-white"

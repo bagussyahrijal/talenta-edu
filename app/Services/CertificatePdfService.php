@@ -46,7 +46,7 @@ class CertificatePdfService
 
             // Data dummy untuk preview
             $dummyData = [
-                'participant_name' => 'Aksademy',
+                'participant_name' => 'talenta',
                 'certificate_code' => 'AKS-25AHBEFJ',
                 'participant_issued_at' => now(),
                 'certificate_number' => '0001',
@@ -56,7 +56,7 @@ class CertificatePdfService
             ];
 
             // Generate QR Code
-            $certificateUrl = "https://aksademy.id/certificate/{$dummyData['certificate_code']}";
+            $certificateUrl = "https://talenta.id/certificate/{$dummyData['certificate_code']}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 
             $html = $this->generateHtml($certificate, $dummyData, $qrCodeBase64, $certificateUrl);
@@ -92,7 +92,7 @@ class CertificatePdfService
             ];
 
             // Generate QR Code
-            $certificateUrl = "https://aksademy.id/certificate/{$participant->certificate_code}";
+            $certificateUrl = "https://talenta.id/certificate/{$participant->certificate_code}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 
             $html = $this->generateHtml($certificate, $participantData, $qrCodeBase64, $certificateUrl);

@@ -114,8 +114,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
             <div className="border-sidebar-border/80 bg-background fixed top-0 right-0 left-0 z-40 border-b shadow-xs">
                 <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                     <Link href="/" prefetch className="flex items-center space-x-2">
-                        <img src="/assets/images/logo-primary.png" alt="Aksademy" className="block w-10 fill-current dark:hidden" />
-                        <img src="/assets/images/logo-secondary.png" alt="Aksademy" className="hidden w-10 fill-current dark:block" />
+                        <img src="/assets/images/logo-primary.png" alt="Talenta" className="block w-10 fill-current dark:hidden" />
+                        <img src="/assets/images/logo-secondary.png" alt="Talenta" className="hidden w-10 fill-current dark:block" />
                     </Link>
 
                     <div className="ml-auto hidden h-full items-center space-x-6 lg:flex">

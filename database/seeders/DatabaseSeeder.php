@@ -28,11 +28,11 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $adminAffiliate = User::factory()->create([
-            'name' => 'Aksara Teknologi Mandiri',
-            'email' => 'aksarateknologimandiri@gmail.com',
+            'name' => 'Talenta Affiliate',
+            'email' => 'talenta.affiliate@gmail.com',
             'phone_number' => '085142505794',
-            'bio' => "Aksara Teknologi Mandiri's Affiliate",
-            'password' => bcrypt('aksara2025'),
+            'bio' => "Talenta's Affiliate",
+            'password' => bcrypt('talenta2025'),
             'affiliate_code' => 'TAL2025',
             'affiliate_status' => 'Active',
             'commission' => 15,
