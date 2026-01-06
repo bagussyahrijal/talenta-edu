@@ -214,7 +214,7 @@ export default function TermsAndConditions() {
                                             <strong>Talenta</strong>
                                         </p>
                                         <p>Email: talenta.affiliate@gmail.com</p>
-                                        <p>WhatsApp: +6285142505794</p>
+                                        <p>WhatsApp: +6289528514480</p>
                                         <p>
                                             Alamat: Perumahan Permata Permadani, Blok B1
                                             <br />

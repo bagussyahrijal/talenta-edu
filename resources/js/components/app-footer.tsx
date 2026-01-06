@@ -125,7 +125,7 @@ export default function AppFooter() {
                                     </svg>
                                 </a>
                                 <a
-                                    href="https://wa.me/+6285142505794"
+                                    href="https://wa.me/+6289528514480"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-900 transition-colors hover:bg-gray-900 hover:text-white"

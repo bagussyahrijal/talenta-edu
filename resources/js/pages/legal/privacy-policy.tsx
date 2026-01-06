@@ -300,7 +300,7 @@ export default function PrivacyPolicy() {
                                         </p>
                                         <p>Email: privacy@talenta.co.id</p>
                                         <p>Email umum: info@talenta.co.id</p>
-                                        <p>WhatsApp: +6285142505794</p>
+                                        <p>WhatsApp: +6289528514480</p>
                                         <p>
                                             Alamat: Perumahan Permata Permadani, Blok B1
                                             <br />

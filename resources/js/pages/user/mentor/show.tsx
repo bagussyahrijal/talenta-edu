@@ -145,7 +145,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
 
                             {/* Info */}
                             <div className="flex-1">
-                                <h1 className="mb-2 text-2xl font-bold italic md:text-3xl">{mentor.name}</h1>
+                                <h1 className="mb-2 text-2xl font-bold font-literata md:text-3xl">{mentor.name}</h1>
 
                                 <p className="text-muted-foreground mb-4 text-sm md:text-base">{mentor.bio || 'Mentor profesional di Talenta'}</p>
 
@@ -246,7 +246,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                             </div>
                                             <div className="p-4">
                                                 <div className="mb-2 flex items-center justify-between">
-                                                    <Badge variant="secondary" className="text-xs">
+                                                    <Badge className="text-xs">
                                                         {course.category.name}
                                                     </Badge>
                                                     <Badge className={`text-xs ${levelColors[course.level] || 'bg-gray-100 text-gray-700'}`}>
@@ -337,7 +337,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                 </div>
                                                 <div className="p-4">
                                                     <div className="mb-2 flex items-center justify-between">
-                                                        <Badge variant="secondary" className="text-xs">
+                                                        <Badge className="text-xs">
                                                             {bootcamp.category.name}
                                                         </Badge>
                                                         {bootcamp.batch && (
@@ -435,7 +435,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                 </div>
                                                 <div className="p-4">
                                                     <div className="mb-2 flex items-center justify-between">
-                                                        <Badge variant="secondary" className="text-xs">
+                                                        <Badge  className="text-xs">
                                                             {webinar.category.name}
                                                         </Badge>
                                                         {webinar.batch && (
@@ -516,7 +516,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                 />
                                             </div>
                                             <div className="p-4">
-                                                <Badge variant="secondary" className="mb-2 text-xs">
+                                                <Badge className="mb-2 text-xs">
                                                     {article.category.name}
                                                 </Badge>
 

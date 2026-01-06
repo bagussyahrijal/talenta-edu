@@ -31,7 +31,7 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
             <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 md:px-6">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="mb-2 text-3xl font-bold italic md:text-4xl">Mentor Kami</h1>
+                    <h1 className="mb-2 text-3xl font-bold font-literata md:text-4xl">Mentor Kami</h1>
                     <p className="text-muted-foreground">Belajar bersama mentor profesional dan berpengalaman</p>
                 </div>
 
@@ -53,7 +53,7 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                                                 <h3 className="group-hover:text-primary mb-1 text-lg font-semibold transition-colors">
                                                     {mentor.name}
                                                 </h3>
-                                                <Badge variant="secondary" className="text-xs">
+                                                <Badge className="text-xs">
                                                     {mentor.bio || 'Mentor profesional di Talenta'}
                                                 </Badge>
                                             </div>
