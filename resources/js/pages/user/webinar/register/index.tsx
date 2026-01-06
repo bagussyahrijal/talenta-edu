@@ -831,23 +831,23 @@ export default function RegisterWebinar({
                                                     <li>
                                                         • Follow Instagram{' '}
                                                         <a
-                                                            href="https://www.instagram.com/kompeten.idn/"
+                                                            href="https://www.instagram.com/brevetpajak_talenta/"
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="font-medium underline"
                                                         >
-                                                            @kompeten.idn
+                                                            @brevetpajak_talenta
                                                         </a>
                                                     </li>
                                                     <li>
                                                         • Follow TikTok{' '}
                                                         <a
-                                                            href="https://www.tiktok.com/@kompetenidn"
+                                                            href="https://www.tiktok.com/@brevetpajak_talenta"
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="font-medium underline"
                                                         >
-                                                            @kompetenidn
+                                                            @brevetpajak_talenta
                                                         </a>
                                                     </li>
                                                     <li>• Tag 3 teman di postingan Instagram kami</li>
@@ -1017,7 +1017,7 @@ export default function RegisterWebinar({
                                                 required
                                             />
                                             <p className="mt-1 text-xs text-gray-500">
-                                                Screenshot profil Instagram @kompeten yang menunjukkan follow (Maks. 2MB)
+                                                Screenshot profil Instagram @brevetpajak_talenta yang menunjukkan follow (Maks. 2MB)
                                             </p>
                                         </div>
 
@@ -1033,7 +1033,7 @@ export default function RegisterWebinar({
                                                 required
                                             />
                                             <p className="mt-1 text-xs text-gray-500">
-                                                Screenshot profil TikTok @kompeten yang menunjukkan follow (Maks. 2MB)
+                                                Screenshot profil TikTok @brevetpajak_talenta yang menunjukkan follow (Maks. 2MB)
                                             </p>
                                         </div>
 
