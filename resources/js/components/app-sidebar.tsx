@@ -141,7 +141,7 @@ export function AppSidebar() {
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/admin/dashboard" prefetch>
                                 {/* Logo untuk light mode */}
-                                <img src="/assets/images/logo-primary.png" alt="Talenta" className="block w-32 fill-current dark:hidden" />
+                                <img src="/assets/images/logo-primary-2.png" alt="Talenta" className="block w-32 fill-current dark:hidden" />
                                 {/* Logo untuk dark mode */}
                                 <img src="/assets/images/logo-secondary.png" alt="Talenta" className="hidden w-32 fill-current dark:block" />
                             </Link>

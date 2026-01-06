@@ -250,7 +250,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'KMP-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -432,7 +432,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'KMP-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -585,7 +585,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change'  => true,
-                'prefix' => 'KMP-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $invoice = Invoice::create([
