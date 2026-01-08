@@ -46,8 +46,8 @@ class CertificatePdfService
 
             // Data dummy untuk preview
             $dummyData = [
-                'participant_name' => 'talenta',
-                'certificate_code' => 'AKS-25AHBEFJ',
+                'participant_name' => 'Dewi Carrisa Rahmatika',
+                'certificate_code' => 'TLT-26AHBEFJ',
                 'participant_issued_at' => now(),
                 'certificate_number' => '0001',
                 'completion_date' => now()->format('d F Y'),

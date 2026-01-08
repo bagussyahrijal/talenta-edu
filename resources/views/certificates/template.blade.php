@@ -66,13 +66,20 @@
         .certificate-title {
             font-size: 130px;
             font-weight: bold;
-            color: #1e40af;
+            color: #01385a;
+            text-transform: uppercase;
+        }
+
+        .certificate-titledesc{
+            font-size: 68px;
+            color: #01385a;
+            margin-bottom: 20px;
             text-transform: uppercase;
         }
 
         .certificate-subtitle {
             font-size: 72px;
-            color: #1e40af;
+            color: #01385a;
             font-weight: 600;
             margin-bottom: 46px;
         }
@@ -86,23 +93,34 @@
         }
 
         .content-text {
-            font-size: 38px;
-            color: #1e40af;
-            margin-top: 32px;
-            margin-bottom: 24px;
+            font-size: 56px;
+            font-family: 'Literata', serif;
+            color: #ffffff;
+            margin-top: 120px;
+            margin-bottom: 100px;
+            background: #01385a;
+            padding: 8px 16px;
+            display: inline-block;
+        }
+
+        .content-text2 {
+            font-size: 68px;
+            color: #01385a;
+            font-family: 'Literata', serif;
         }
 
         .participant-name {
-            font-size: 100px;
+            font-size: 72px;
             font-weight: bold;
-            color: #1e40af;
+            color: #01385a;
             margin: 52px 0;
-            display: inline-block;
+            display: block;
             min-width: 250px;
+            text-transform: uppercase;
         }
 
         .program-name {
-            color: #1e40af;
+            color: #01385a;
             font-style: italic;
             display: block;
             margin-top: 24px;
@@ -110,20 +128,22 @@
         }
 
         .program-description {
-            font-size: 38px;
-            font-weight: 600;
+            font-size: 56px;
+            font-family: 'Literata', serif;
+            margin-bottom: 16px;
         }
 
         .description {
-            font-size: 38px;
-            max-width: 920px;
+            font-size: 56px;
+            font-family: 'Literata', serif;
         }
 
         .period {
-            font-size: 38px;
+            font-size: 56px;
             color: #9ca3af;
             margin-top: 24px;
             font-style: italic;
+            font-family: 'Literata', serif;
         }
 
         .footer {
@@ -176,14 +196,15 @@
         }
 
         .certificate-url {
-            font-size: 32px;
+            font-size: 46px;
             color: #6b7280;
-            font-weight: 600;
+            font-family: 'Literata', serif;
         }
 
         .certificate-period {
-            font-size: 32px;
+            font-size: 46px;
             margin-bottom: 2px;
+            font-family: 'Literata', serif;
         }
 
         .signature-space {
@@ -200,16 +221,18 @@
         }
 
         .signature-name {
-            font-size: 46px;
-            color: #1e40af;
+            font-size: 56px;
+            color: #01385a;
             font-weight: bold;
             margin-bottom: 2px;
             text-decoration: underline;
+            font-family: 'Literata', serif;
         }
 
         .signature-title,
         .signature-date {
-            font-size: 38px;
+            font-size: 56px;
+            font-family: 'Literata', serif;
         }
 
         /* Clearfix untuk footer */
@@ -234,28 +257,33 @@
         <div class="certificate-content">
             {{-- Header --}}
             <div class="header">
-                @if ($certificate->header_top)
+                {{-- @if ($certificate->header_top)
                     <div class="header-top">{{ $certificate->header_top }}</div>
-                @endif
+                @endif --}}
 
-                @if ($certificate->header_bottom)
+                {{-- @if ($certificate->header_bottom)
                     <div class="header-bottom">{{ $certificate->header_bottom }}</div>
-                @endif
+                @endif --}}
 
-                <div class="certificate-title">Sertifikat</div>
-                <div class="certificate-subtitle">
+                <div class="certificate-title">Talenta Academy</div>
+                <div class="certificate-titledesc">Training Center & Research</div>    
+                {{-- <div class="certificate-subtitle">
                     @if ($certificate->webinar_id)
                         Partisipasi
                     @else
                         Kompetensi Kelulusan
                     @endif
-                </div>
+                </div> --}}
             </div>
 
             {{-- Content --}}
             <div class="content">
                 <div class="content-text">
-                    {{ sprintf('%04d', $data['certificate_number']) }}/{{ $certificate->certificate_number }}
+                    No. {{ sprintf('%04d', $data['certificate_number']) }}/{{ $certificate->certificate_number }}
+                </div>
+
+                <div class="content-text2">
+                    Sertifikat ini diberikan kepada :
                 </div>
 
                 <div class="participant-name">
@@ -264,9 +292,9 @@
 
                 <div class="program-description">
                     @if ($certificate->webinar_id)
-                        TELAH BERPARTISIPASI PADA
+                        Sebagai Peserta yang Telah Mengikuti 
                     @else
-                        TELAH MENGIKUTI DAN DINYATAKAN LULUS
+                        Sebagai Peserta yang Telah Mengikuti dan Lulus
                     @endif
                 </div>
 
