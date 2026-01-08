@@ -74,7 +74,7 @@ export default function RelatedProduct({ relatedPartnershipProducts }: RelatedPr
                                                     </Badge>
                                                 ))}
                                                 {product.schedule_days.length > 3 && (
-                                                    <Badge variant="secondary" className="bg-gray-100 text-xs text-gray-700">
+                                                    <Badge className="bg-gray-100 text-xs text-gray-700">
                                                         +{product.schedule_days.length - 3}
                                                     </Badge>
                                                 )}

@@ -86,7 +86,7 @@ export default function CertificateDetail({ certificate }: { certificate: Certif
                     <TableRow>
                         <TableCell className="font-medium">Jenis Program</TableCell>
                         <TableCell>
-                            <Badge variant="secondary">{programInfo.type}</Badge>
+                            <Badge>{programInfo.type}</Badge>
                         </TableCell>
                     </TableRow>
                     <TableRow>

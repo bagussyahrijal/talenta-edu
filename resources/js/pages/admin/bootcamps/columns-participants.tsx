@@ -214,7 +214,7 @@ export const createParticipantColumns = (totalSchedules: number): ColumnDef<Part
             const submissionLink = row.original.bootcamp_item.submission_link;
 
             if (!submissionLink) {
-                return <Badge variant="secondary">Belum Upload</Badge>;
+                return <Badge >Belum Upload</Badge>;
             }
 
             return (
@@ -247,7 +247,7 @@ export const createParticipantColumns = (totalSchedules: number): ColumnDef<Part
                     Selesai
                 </Badge>
             ) : (
-                <Badge variant="secondary">
+                <Badge >
                     <Clock className="mr-1 h-3 w-3" />
                     Aktif
                 </Badge>

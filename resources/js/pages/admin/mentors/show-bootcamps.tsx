@@ -32,7 +32,7 @@ export default function ShowBootcamps({ bootcamps }: ShowBootcampsProps) {
             case 'published':
                 return <Badge variant="default">Published</Badge>;
             case 'draft':
-                return <Badge variant="secondary">Draft</Badge>;
+                return <Badge className='bg-zinc-500'>Draft</Badge>;
             case 'archived':
                 return <Badge variant="destructive">Archived</Badge>;
             default:
@@ -91,7 +91,7 @@ export default function ShowBootcamps({ bootcamps }: ShowBootcampsProps) {
                                 <div className="relative h-48 w-full flex-shrink-0 overflow-hidden rounded-lg md:h-32 md:w-48">
                                     <img src={thumbnailUrl} alt={bootcamp.title} className="h-full w-full object-cover" />
                                     <div className="absolute top-2 left-2">
-                                        <Badge variant="secondary" className="text-primary bg-white/90 backdrop-blur-sm">
+                                        <Badge className="text-primary bg-white/90 backdrop-blur-sm">
                                             #{bootcamp.batch}
                                         </Badge>
                                     </div>
