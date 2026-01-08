@@ -28,7 +28,7 @@ export default function AppFooter() {
                     <div className='grid grid-cols-3 lg:col-span-4'>
                         {/* Column 2: Company Links */}
                         <div>
-                            <h4 className="mb-6 text-lg font-bold text-gray-900">Company</h4>
+                            <h4 className="mb-6 text-lg font-bold text-gray-900">Menu</h4>
                             <ul className="space-y-3">
                                 <li>
                                     <Link href="/" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
@@ -41,7 +41,7 @@ export default function AppFooter() {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/publication" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
+                                    <Link href="/galeri" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
                                         Publikasi
                                     </Link>
                                 </li>
@@ -53,7 +53,7 @@ export default function AppFooter() {
                             </ul>
                         </div>
                         <div>
-                            <h4 className="mb-6 text-lg font-bold text-gray-900">Company</h4>
+                            <h4 className="mb-6 text-lg font-bold text-gray-900">Layanan</h4>
                             <ul className="space-y-3">
                                 <li>
                                     <Link href="/bootcamp" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
@@ -79,15 +79,15 @@ export default function AppFooter() {
                         </div>
                         {/* Column 4: Company Links (duplicate) */}
                         <div>
-                            <h4 className="mb-6 text-lg font-bold text-gray-900">Company</h4>
+                            <h4 className="mb-6 text-lg font-bold text-gray-900">Lainnya</h4>
                             <ul className="space-y-3">
                                 <li>
-                                    <Link href="/" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
+                                    <Link href="/terms-and-conditions" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
                                         Syarat & Ketentuan
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/program" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
+                                    <Link href="/privacy-policy" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
                                         Kebijakan Privasi
                                     </Link>
                                 </li>
