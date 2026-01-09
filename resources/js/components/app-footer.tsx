@@ -17,7 +17,7 @@ export default function AppFooter() {
                             Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja
                         </p>
                         <div>
-                            <h5 className="mb-2 font-semibold text-gray-900">CV. Talenta Skill</h5>
+                            <h5 className="mb-2 font-semibold text-gray-900">Talenta Academy</h5>
                             <p className="text-sm text-gray-700">
                                 Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo<br />
                                 Kota Batu Prov. Jawa Timur, 65324
@@ -147,7 +147,7 @@ export default function AppFooter() {
                 {/* Copyright */}
                 <div className="text-center">
                     <p className="text-sm font-medium text-gray-900">
-                        Copyright © Talentaskill, All rights reserved.
+                        Copyright © Talentaacademy, All rights reserved.
                     </p>
                 </div>
             </div>
