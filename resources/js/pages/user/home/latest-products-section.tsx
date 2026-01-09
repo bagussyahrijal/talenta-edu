@@ -126,8 +126,8 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
     return (
         <section className="mx-auto w-full py-8">
             <div className='bg-secondary flex flex-col items-center justify-center space-y-8 px-4 py-14'>
-                <h1 className='text-5xl font-bold font-literata text-primary'>Kelas Terpopuler</h1>
-                <p>Tingkatkan pengetahuan dan keterampilan kamu disini</p>
+                <h1 className='text-5xl font-bold font-literata text-primary text-center'>Kelas Terpopuler</h1>
+                <p className='text-center'>Tingkatkan pengetahuan dan keterampilan kamu disini</p>
                 <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 max-w-7xl w-full pb-4">
                     {(() => {
                         if (safeLatestProducts.length === 0) {

@@ -25,25 +25,17 @@ import { useEffect, useState } from 'react';
 import { SearchCommand } from './search-command';
 import { NavigationMenuHeader } from './ui/nav-header';
 
-const serviceItems = [
-    {
-        title: 'Kelas Online',
-        href: '/course',
-        icon: BookText,
-        description: 'Belajar dengan video pembelajaran terstruktur',
-    },
-    {
-        title: 'Bootcamp',
-        href: '/bootcamp',
-        icon: Presentation,
-        description: 'Program intensif dengan mentor profesional',
-    },
-    {
-        title: 'Webinar',
-        href: '/webinar',
-        icon: MonitorPlay,
-        description: 'Seminar online dengan berbagai topik up to date',
-    },
+const layananMenu = [
+    { href: '/course', title: 'Kelas Online', description: 'Belajar dengan video pembelajaran terstruktur dan materi lengkap', icon: BookText },
+    { href: '/bootcamp', title: 'Bootcamp', description: 'Program intensif dengan mentor profesional dan project-based learning', icon: Presentation },
+    { href: '/webinar', title: 'Webinar', description: 'Seminar online dengan topik terkini dan expert speaker', icon: MonitorPlay },
+    { href: '/bundle', title: 'Bundling', description: 'Paket bundling dengan harga spesial dan materi lengkap', icon: Album },
+];
+
+const publikasiMenu = [
+    { href: '/galeri', title: 'Galeri', description: 'Kumpulan foto kegiatan dan event', icon: FileText },
+    { href: '/alumni', title: 'Alumni', description: 'Kisah sukses alumni setelah mengikuti program kami', icon: User },
+    { href: '/review', title: 'Review', description: 'Testimoni dari peserta tentang pengalaman mereka', icon: User },
 ];
 
 const activeItemStyles = 'text-primary bg-primary/10 dark:text-white dark:bg-primary/50';
@@ -94,7 +86,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const [searchOpen, setSearchOpen] = useState(false);
     const [servicesOpen, setServicesOpen] = useState(false);
 
-    const isServicesActive = serviceItems.some((item) => page.url.startsWith(item.href)) || page.url.startsWith('/bundle');
+    const isServicesActive = layananMenu.some((item) => page.url.startsWith(item.href)) || page.url.startsWith('/bundle');
 
     const isHomepage = page.url === '/' || page.url === '';
 
@@ -161,7 +153,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 Seminar online dengan topik terkini dan expert speaker
                                             </ListItem>
                                             <ListItem href="/bundle" title="Bundling">
-                                                Paket bundling dengan harga spesial dan materi lengkap
+                                                Seminar online dengan topik terkini dan expert speaker
                                             </ListItem>
                                         </ul>
                                     </NavigationMenuContent>
@@ -268,7 +260,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
             {/* Mobile Navigation Dock */}
             <div className="fixed right-0 bottom-0 left-0 z-50 lg:hidden">
                 <div className="bg-background/95 border-border border-t pb-2 shadow-lg backdrop-blur-md">
-                    <div className={`grid gap-1 px-2 py-2 ${auth.user ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                    <div className={`grid gap-1 px-2 py-2 ${auth.user ? 'grid-cols-5' : 'grid-cols-4'}`}>
+                        {/* Beranda */}
                         <Link
                             href="/"
                             className={cn(
@@ -280,6 +273,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             <span className="text-center text-xs leading-none font-medium">Beranda</span>
                         </Link>
 
+                        {/* Program & Layanan */}
                         <Popover open={servicesOpen} onOpenChange={setServicesOpen}>
                             <PopoverTrigger asChild>
                                 <button
@@ -291,18 +285,18 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     )}
                                 >
                                     <Album className="mb-1 h-5 w-6" />
-                                    <span className="text-center text-xs leading-none font-medium">Layanan</span>
+                                    <span className="text-center text-xs leading-none font-medium">Program & Layanan</span>
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent side="top" align="center" className="mb-2 w-80 p-3" sideOffset={8}>
+                            <PopoverContent side="top" align="center" className="mb-2 w-72 sm:w-80 p-3" sideOffset={8}>
                                 <div className="space-y-1">
-                                    <h4 className="mb-3 px-2 text-sm font-semibold">Layanan Kami</h4>
-                                    {serviceItems.map((service) => {
-                                        const isActive = page.url.startsWith(service.href);
+                                    <h4 className="mb-3 px-2 text-sm font-semibold">Program & Layanan</h4>
+                                    {layananMenu.map((item) => {
+                                        const isActive = page.url.startsWith(item.href);
                                         return (
                                             <Link
-                                                key={service.href}
-                                                href={service.href}
+                                                key={item.href}
+                                                href={item.href}
                                                 onClick={() => setServicesOpen(false)}
                                                 className={cn(
                                                     'flex items-start gap-3 rounded-lg p-3 transition-colors duration-200',
@@ -310,71 +304,85 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 )}
                                             >
                                                 <Icon
-                                                    iconNode={service.icon}
+                                                    iconNode={item.icon}
                                                     className={cn(
                                                         'mt-0.5 h-5 w-5 flex-shrink-0',
                                                         isActive ? 'text-primary' : 'text-muted-foreground',
                                                     )}
                                                 />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="mb-1 text-sm leading-none font-medium">{service.title}</p>
-                                                    <p className="text-muted-foreground line-clamp-2 text-xs">{service.description}</p>
+                                                    <p className="mb-1 text-sm leading-none font-medium">{item.title}</p>
+                                                    <p className="text-muted-foreground line-clamp-2 text-xs">{item.description}</p>
                                                 </div>
                                             </Link>
                                         );
                                     })}
-                                    {/* Bundling di Mobile */}
-                                    <Link
-                                        href="/bundle"
-                                        onClick={() => setServicesOpen(false)}
-                                        className={cn(
-                                            'flex items-start gap-3 rounded-lg p-3 transition-colors duration-200',
-                                            page.url.startsWith('/bundle') ? 'bg-primary/10 text-primary' : 'hover:bg-muted/50 hover:text-foreground',
-                                        )}
-                                    >
-                                        <Icon
-                                            iconNode={Album}
-                                            className={cn(
-                                                'mt-0.5 h-5 w-5 flex-shrink-0',
-                                                page.url.startsWith('/bundle') ? 'text-primary' : 'text-muted-foreground',
-                                            )}
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="mb-1 text-sm leading-none font-medium">Paket Bundling</p>
-                                            <p className="text-muted-foreground line-clamp-2 text-xs">
-                                                Paket bundling dengan berbagai produk edukasi
-                                            </p>
-                                        </div>
-                                    </Link>
-                                    {/* Tentang Kami di Mobile */}
-                                    <Link
-                                        href="/certification"
-                                        onClick={() => setServicesOpen(false)}
-                                        className={cn(
-                                            'flex items-start gap-3 rounded-lg p-3 transition-colors duration-200',
-                                            page.url.startsWith('/certification')
-                                                ? 'bg-primary/10 text-primary'
-                                                : 'hover:bg-muted/50 hover:text-foreground',
-                                        )}
-                                    >
-                                        <Icon
-                                            iconNode={BriefcaseBusiness}
-                                            className={cn(
-                                                'mt-0.5 h-5 w-5 flex-shrink-0',
-                                                page.url.startsWith('/certification') ? 'text-primary' : 'text-muted-foreground',
-                                            )}
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="mb-1 text-sm leading-none font-medium">Tentang Kami</p>
-                                            <p className="text-muted-foreground line-clamp-2 text-xs">
-                                                Tingkatkan kredibilitas dengan sertifikasi profesional
-                                            </p>
-                                        </div>
-                                    </Link>
                                 </div>
                             </PopoverContent>
                         </Popover>
 
+                        {/* Publikasi */}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button
+                                    className={cn(
+                                        'flex flex-col items-center justify-center rounded-lg px-2 py-3 transition-colors duration-200',
+                                        page.url.startsWith('/galeri') || page.url.startsWith('/alumni') || page.url.startsWith('/review')
+                                            ? 'text-primary bg-primary/10'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+                                    )}
+                                >
+                                    <FileText className="mb-1 h-5 w-6" />
+                                    <span className="text-center text-xs leading-none font-medium">Publikasi</span>
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent side="top" align="center" className="mb-2 w-72 sm:w-80 p-3" sideOffset={8}>
+                                <div className="space-y-1">
+                                    <h4 className="mb-3 px-2 text-sm font-semibold">Publikasi</h4>
+                                    {publikasiMenu.map((item) => {
+                                        const isActive = page.url.startsWith(item.href);
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                className={cn(
+                                                    'flex items-start gap-3 rounded-lg p-3 transition-colors duration-200',
+                                                    isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted/50 hover:text-foreground',
+                                                )}
+                                            >
+                                                <Icon
+                                                    iconNode={item.icon}
+                                                    className={cn(
+                                                        'mt-0.5 h-5 w-5 flex-shrink-0',
+                                                        isActive ? 'text-primary' : 'text-muted-foreground',
+                                                    )}
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="mb-1 text-sm leading-none font-medium">{item.title}</p>
+                                                    <p className="text-muted-foreground line-clamp-2 text-xs">{item.description}</p>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+
+                        {/* Tentang Kami */}
+                        <Link
+                            href="/about"
+                            className={cn(
+                                'flex flex-col items-center justify-center rounded-lg px-2 py-3 transition-colors duration-200',
+                                page.url.startsWith('/about')
+                                    ? 'text-primary bg-primary/10'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+                            )}
+                        >
+                            <BriefcaseBusiness className="mb-1 h-5 w-6" />
+                            <span className="text-center text-xs leading-none font-medium">Tentang Kami</span>
+                        </Link>
+
+                        {/* Profil (if logged in) */}
                         {auth.user && (
                             <Link
                                 href="/profile"
