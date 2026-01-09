@@ -70,7 +70,7 @@ export default function RegisterSection({ bootcamp }: { bootcamp: Bootcamp }) {
 
     return (
         <section className="mx-auto mt-4 md:mt-8 mb-8 sm:mb-12 w-full max-w-7xl px-4 sm:px-6 lg:px-8" id="register">
-            <Badge className='border-blue-400 bg-white text-blue-400 px-2 py-1 text-xs sm:text-sm'>Bootcamp Online</Badge>
+            <Badge className='border-orange-400 bg-white text-orange-400 px-2 py-1 text-xs sm:text-sm'>Bootcamp Online</Badge>
             <div className="mt-4 sm:mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
                 {/* Left Column - Bootcamp Details */}
                 <div className="flex flex-col gap-4 sm:gap-6">
