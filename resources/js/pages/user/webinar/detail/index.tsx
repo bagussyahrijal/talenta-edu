@@ -84,10 +84,10 @@ export default function Webinar({
 
             <RegisterSection webinar={webinar} />
             {/* <HeroSection webinar={webinar} /> */}
-            <AboutSection />
-            <BenefitsSection webinar={webinar} />
+            <AboutSection webinar={webinar} />
+            {/* <BenefitsSection webinar={webinar} />
             <ToolsSection webinar={webinar} />
-            <MentorSection webinar={webinar} />
+            <MentorSection webinar={webinar} /> */}
             <RelatedProduct relatedWebinars={relatedWebinars} myWebinarIds={myWebinarIds} />
         </UserLayout>
     );

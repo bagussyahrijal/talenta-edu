@@ -74,17 +74,18 @@ export default function BundleDetail({
         <UserLayout>
             <Head title={`${bundle.title} - Paket Bundling`} />
 
-            <HeroSection bundle={bundle} discountPercentage={discountPercentage} />
-            <BundleItemsSection bundle={bundle} groupedItems={groupedItems} totalOriginalPrice={totalOriginalPrice} />
-            <BenefitsSection bundle={bundle} />
+            {/* <HeroSection bundle={bundle} discountPercentage={discountPercentage} /> */}
             <RegisterSection
                 bundle={bundle}
+                bundleItems={bundle.bundle_items}
                 totalOriginalPrice={totalOriginalPrice}
                 discountAmount={discountAmount}
                 discountPercentage={discountPercentage}
                 hasOwnedItems={hasOwnedItems}
                 ownedItems={ownedItems}
             />
+            {/* <BundleItemsSection bundle={bundle} groupedItems={groupedItems} totalOriginalPrice={totalOriginalPrice} /> */}
+            {/* <BenefitsSection bundle={bundle} /> */}
             <RelatedBundles relatedBundles={relatedBundles} />
         </UserLayout>
     );
