@@ -34,17 +34,15 @@ const mentorsData: Mentor[] = [
 
 const MentorCard = ({ mentor }: { mentor: Mentor }) => {
     return (
-        <section className="relative h-[428px] w-[300px] overflow-hidden rounded-[20px]">
-
+        <section className="relative mx-auto h-[370px] w-full max-w-xs overflow-hidden rounded-[20px] sm:max-w-sm md:max-w-md lg:w-[300px]">
             {/* Blue Side Bar with "MENTOR" text */}
-            <div className="absolute left-0 top-0 h-full w-[90px] rounded-[20px_0px_0px_20px] bg-[#1976d3]">
+            <div className="absolute left-0 top-0 h-full w-[70px] rounded-[20px_0px_0px_20px] bg-[#1976d3] sm:w-[90px]">
                 <div className="absolute left-1/2 top-1/3 flex -translate-x-1/2 -translate-y-1/2 -rotate-90 items-center justify-center">
-                    <span className=" whitespace-nowrap font-literata font-bold text-5xl uppercase leading-none  text-primary" style={{ WebkitTextStroke: '0.5px white' }}>
+                    <span className="whitespace-nowrap font-literata font-bold text-3xl uppercase leading-none text-primary sm:text-5xl" style={{ WebkitTextStroke: '0.5px white' }}>
                         MENTOR
                     </span>
                 </div>
             </div>
-
             {/* Mentor Image */}
             <div className="absolute bottom-0 right-0 h-[340px] w-[220px]">
                 <img
@@ -56,16 +54,14 @@ const MentorCard = ({ mentor }: { mentor: Mentor }) => {
                     }}
                 />
             </div>
-
             {/* Gradient Overlay at bottom */}
-            <div className="absolute bottom-0 left-0 h-[120px] w-full  bg-[linear-gradient(180deg,rgba(25,118,211,0)_0%,rgba(25,118,211,1)_26%)] shadow-[0px_4px_4px_rgba(0,0,0,0.25)]" />
+            <div className="absolute bottom-0 left-0 h-[80px] w-full bg-[linear-gradient(180deg,rgba(25,118,211,0)_0%,rgba(25,118,211,1)_26%)] shadow-[0px_4px_4px_rgba(0,0,0,0.25)] sm:h-[120px]" />
             {/* Mentor Name */}
-            <h3 className="absolute bottom-[45px] left-0 w-full px-6 text-left font-bold text-[28px] leading-tight text-white">
+            <h3 className="absolute bottom-[38px] left-0 w-full px-4 text-left font-bold text-lg leading-tight text-white sm:bottom-[45px] sm:px-6 sm:text-[28px]">
                 {mentor.name}
             </h3>
-
             {/* Mentor Role */}
-            <p className="absolute bottom-[20px] left-0 w-full px-6 text-left font-normal text-[14px] text-white/90">
+            <p className="absolute bottom-[16px] left-0 w-full px-4 text-left font-normal text-xs text-white/90 sm:bottom-[20px] sm:px-6 sm:text-[14px]">
                 {mentor.role}
             </p>
         </section>
@@ -74,17 +70,16 @@ const MentorCard = ({ mentor }: { mentor: Mentor }) => {
 
 export default function MentorSection() {
     return (
-        <section className="relative w-full bg-secondary px-8 py-16 md:px-16 ">
+        <section className="relative w-full bg-secondary px-4 py-10 sm:px-8 sm:py-16 md:px-16">
             <div className="mx-auto w-full max-w-7xl">
                 {/* Header */}
-                <div className="mb-16 text-center">
-                    <h2 className="text-5xl font-bold font-literata text-primary">
+                <div className="mb-10 text-center sm:mb-16">
+                    <h2 className="text-3xl font-bold font-literata text-primary sm:text-5xl">
                         Meet Our Mentor
                     </h2>
                 </div>
-
                 {/* Mentor Cards Grid */}
-                <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-8 justify-items-center sm:grid-cols-2 lg:grid-cols-4">
                     {mentorsData.map((mentor) => (
                         <MentorCard key={mentor.id} mentor={mentor} />
                     ))}

@@ -111,10 +111,14 @@ export default function Home({ tools, latestProducts, myProductIds, allProducts,
                 href="https://wa.me/+6289528514480?text=Halo%20Admin%20Talenta,%20saya%20ingin%20bertanya%20tentang%20kelas%20online."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="fixed right-4 bottom-18 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 shadow-lg transition duration-500 hover:bg-primary md:right-10 md:h-16 md:w-16 lg:bottom-6"
+                className="fixed right-4 bottom-28 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 shadow-lg transition duration-500 hover:bg-primary md:right-8 md:bottom-10 md:h-14 md:w-14 lg:right-10 lg:bottom-6 lg:h-16 lg:w-16"
                 aria-label="Chat WhatsApp"
             >
-                <img src="/assets/images/wa-icon.webp" alt="WhatsApp" className="h-8 w-8 md:h-12 md:w-12" />
+                <img
+                    src="/assets/images/wa-icon.webp"
+                    alt="WhatsApp"
+                    className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12"
+                />
             </a>
         </UserLayout>
     );

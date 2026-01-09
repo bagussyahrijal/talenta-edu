@@ -83,7 +83,7 @@ function TestimonyCard({ testimonial, isCenter }: { testimonial: Testimonial; is
     if (!testimonial) return null;
 
     return (
-        <div className={`flex h-[400px] flex-col rounded-3xl bg-white ${isCenter ? 'p-8 shadow-xl' : 'p-6 shadow-md'}`}>
+        <div className={`flex flex-col rounded-3xl bg-white ${isCenter ? 'p-8 shadow-xl' : 'p-6 shadow-md'} h-full`}>
             <div className={`${isCenter ? 'mb-6' : 'mb-4'} flex items-start gap-4`}>
                 <img
                     src={testimonial.image}
@@ -121,32 +121,30 @@ function TestimonyCarousel() {
 
     return (
         <div className="relative">
-            <div className="flex items-center justify-center gap-6">
+            <div className="flex items-center justify-center gap-2 md:gap-6">
                 {/* Left Arrow */}
                 <Button
                     onClick={() => setIndex(getPrevIndex())}
                     variant="ghost"
                     size="icon"
-                    className="z-10 h-13 w-13 shrink-0 rounded-full bg-blue-600 text-white shadow-lg transition-all hover:scale-110 hover:bg-blue-700 hover:text-white"
+                    className="z-10 h-12 w-12 shrink-0 rounded-full bg-blue-600 text-white shadow-lg transition-all hover:scale-110 hover:bg-blue-700 hover:text-white"
                 >
                     <ChevronLeft className="h-7 w-7" />
                 </Button>
 
                 {/* Testimonial Cards */}
                 <div className="relative w-full max-w-6xl overflow-hidden">
-                    <div className="grid grid-cols-3 gap-6 py-16">
+                    <div className="flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-6 py-8 md:py-16">
                         {/* Left card (blurred) */}
-                        <div className="blur-[2px] opacity-50">
+                        <div className="hidden md:block blur-[2px] opacity-50 h-[400px]">
                             <TestimonyCard testimonial={testimonials[getPrevIndex()]} isCenter={false} />
                         </div>
-
                         {/* Center card (active) */}
-                        <div className="scale-105">
+                        <div className="h-[400px] scale-105">
                             <TestimonyCard testimonial={testimonials[validIndex]} isCenter={true} />
                         </div>
-
                         {/* Right card (blurred) */}
-                        <div className="blur-[2px] opacity-50">
+                        <div className="hidden md:block blur-[2px] opacity-50 h-[400px]">
                             <TestimonyCard testimonial={testimonials[getNextIndex()]} isCenter={false} />
                         </div>
                     </div>
@@ -157,9 +155,9 @@ function TestimonyCarousel() {
                     onClick={() => setIndex(getNextIndex())}
                     variant="ghost"
                     size="icon"
-                    className="z-10 h-13 w-13 shrink-0 rounded-full bg-blue-600 text-white shadow-lg transition-all hover:scale-110 hover:bg-blue-700 hover:text-white"
+                    className="z-10 h-12 w-12 shrink-0 rounded-full bg-blue-600 text-white shadow-lg transition-all hover:scale-110 hover:bg-blue-700 hover:text-white"
                 >
-                    <ChevronRight className="" />
+                    <ChevronRight className="h-7 w-7" />
                 </Button>
             </div>
         </div>
@@ -173,9 +171,9 @@ export default function TestimonySection() {
         <section className="w-full py-8">
             <div className="mx-auto w-full max-w-7xl px-4">
                 {/* Header */}
-                <div className="mb-16 text-center">
+                <div className="mb-10 md:mb-16 text-center">
                     <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-700">What our costumers say about us</p>
-                    <h2 className="text-5xl font-bold font-literata text-primary">Testimonials</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold font-literata text-primary">Testimonials</h2>
                 </div>
 
                 {/* Carousel */}
