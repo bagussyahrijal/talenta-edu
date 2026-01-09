@@ -87,13 +87,13 @@ export default function Bootcamp({
         <UserLayout>
             <Head title={`${bootcamp.title} - Bootcamp`} />
 
-            <HeroSection bootcamp={bootcamp} />
-            <AboutSection />
-            <TimelineSection bootcamp={bootcamp} />
+            <RegisterSection bootcamp={bootcamp} />
+            {/* <HeroSection bootcamp={bootcamp} /> */}
+            <AboutSection bootcamp={bootcamp}/>
+            {/* <TimelineSection bootcamp={bootcamp} />
             <RequirementSection bootcamp={bootcamp} />
             <ToolsSection bootcamp={bootcamp} />
-            <MentorSection bootcamp={bootcamp} />
-            <RegisterSection bootcamp={bootcamp} />
+            <MentorSection bootcamp={bootcamp} /> */}
             <RelatedProduct relatedBootcamps={relatedBootcamps} myBootcampIds={myBootcampIds} />
         </UserLayout>
     );
