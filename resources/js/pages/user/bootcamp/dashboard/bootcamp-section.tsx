@@ -129,10 +129,14 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                         const hasAccess = myBootcampIds.includes(bootcamp.id);
 
                         return (
-                            <Link key={bootcamp.id} href={hasAccess ? `profile/my-bootcamps/${bootcamp.slug}` : `/bootcamp/${bootcamp.slug}`} className="group h-full rounded-xl hover:shadow-sm hover:shadow-primary border-1 border-primary">
-                                <div className="relative h-full overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-100 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white before:to-primary-2 before:via-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:z-[-1]">
+                            <Link
+                                key={bootcamp.id}
+                                href={hasAccess ? `profile/my-bootcamps/${bootcamp.slug}` : `/bootcamp/${bootcamp.slug}`}
+                                className="group rounded-xl hover:shadow-sm hover:shadow-primary border-1 border-primary h-full"
+                            >
+                                <div className="relative flex flex-col h-[450px] overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-100 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white before:to-primary-2 before:via-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:z-[-1]">
                                     {/* Image Section */}
-                                    <div className="relative h-48 w-full overflow-hidden">
+                                    <div className="relative h-48 w-full overflow-hidden flex-shrink-0">
                                         <img
                                             src={bootcamp.thumbnail ? `/storage/${bootcamp.thumbnail}` : '/assets/images/placeholder.png'}
                                             alt={bootcamp.title}
@@ -146,7 +150,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                         )}
                                     </div>
                                     {/* Content Section */}
-                                    <div className="flex flex-col p-4">
+                                    <div className="flex flex-col flex-1 justify-start p-4 min-h-0">
                                         {/* Title */}
                                         <h2 className="group-hover:text-white mb-1 line-clamp-2 text-xl font-semibold text-gray-900 dark:text-white font-literata">
                                             {bootcamp.title}
@@ -204,7 +208,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                                 Mentor by <span className='text-primary font-semibold group-hover:text-white '> {bootcamp.user.name} </span>
                                             </p>
                                         </div>
-                                        <div className='text-center text-primary group-hover:text-white group-hover:border-white border-1 border-primary rounded-lg py-1'>
+                                        <div className='justify-self-end text-center text-primary group-hover:text-white group-hover:border-white border-1 border-primary rounded-lg py-1 mt-auto'>
                                             Mulai Belajar
                                         </div>
                                     </div>

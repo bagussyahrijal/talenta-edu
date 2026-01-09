@@ -148,7 +148,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[600px] gap-3 p-4 md:grid-cols-[.75fr_1fr]">
-                                            {/* Row Span - Bundling */}
                                             
 
                                             {/* 3 Produk Utama */}
@@ -160,6 +159,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             </ListItem>
                                             <ListItem href="/webinar" title="Webinar">
                                                 Seminar online dengan topik terkini dan expert speaker
+                                            </ListItem>
+                                            <ListItem href="/bundle" title="Bundling">
+                                                Paket bundling dengan harga spesial dan materi lengkap
                                             </ListItem>
                                         </ul>
                                     </NavigationMenuContent>

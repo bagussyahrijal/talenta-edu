@@ -1,9 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Magnetic } from '@/components/ui/magnetic';
-import { Spotlight } from '@/components/ui/spotlight';
 import { Link } from '@inertiajs/react';
-import { Calendar, GalleryVerticalEnd } from 'lucide-react';
+import { Calendar, Search, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 type Category = {
@@ -56,7 +54,7 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
         if (!isDragging.current || !categoryRef.current) return;
         e.preventDefault();
         const x = e.pageX - categoryRef.current.offsetLeft;
-        const walk = (x - startX.current) * 1.5; // scroll speed
+        const walk = (x - startX.current) * 1.5;
         categoryRef.current.scrollLeft = scrollLeft.current - walk;
     };
 
@@ -70,51 +68,49 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4" id="webinar">
-            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Siap upgrade skill dan jadi lebih siap di dunia kerja digital.
-            </h2>
-            <p className="mx-auto mb-8 text-center text-gray-600 dark:text-gray-400">
-                Tingkatkan wawasan dan koneksi agar lebih siap dalam dunia kerja.
-            </p>
-            <div className="mb-4 flex">
-                <Input type="search" placeholder="Cari webinar..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
-            <div
-                className="mb-4 overflow-x-auto"
-                ref={categoryRef}
-                onMouseDown={handleMouseDown}
-                onMouseLeave={handleMouseLeave}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                style={{ scrollbarWidth: 'none', cursor: isDragging.current ? 'grabbing' : 'grab' }}
-            >
-                <div className="flex w-max flex-nowrap gap-2 select-none">
-                    <button
-                        type="button"
-                        onClick={() => setSelectedCategory(null)}
-                        className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${
-                            selectedCategory === null
-                                ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
-                                : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
-                        } `}
-                    >
-                        Semua Kategori
-                    </button>
-                    {categories.map((category) => (
+            <div className='flex flex-row items-center justify-between mb-4'>
+                <h1 className='text-5xl font-bold font-literata text-primary'>Webinar Program</h1>
+                <div
+                    className="overflow-x-auto bg-primary p-2 rounded-xl"
+                    ref={categoryRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseLeave={handleMouseLeave}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    style={{ scrollbarWidth: 'none', cursor: isDragging.current ? 'grabbing' : 'grab' }}
+                >
+                    <div className="flex w-max flex-nowrap gap-2 select-none">
                         <button
-                            key={category.id}
                             type="button"
-                            onClick={() => setSelectedCategory(category.id)}
-                            className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${
-                                selectedCategory === category.id
-                                    ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
-                                    : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
-                            } `}
+                            onClick={() => setSelectedCategory(null)}
+                            className={`rounded-xl px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === null
+                                ? 'to-primary text-primary border-primary bg-white'
+                                : 'hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                } `}
                         >
-                            {category.name}
+                            Semua
                         </button>
-                    ))}
+                        {categories.map((category) => (
+                            <button
+                                key={category.id}
+                                type="button"
+                                onClick={() => setSelectedCategory(category.id)}
+                                className={`rounded-xl  px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === category.id
+                                    ? 'to-primary text-primary border-primary bg-white'
+                                    : ' hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                    } `}
+                            >
+                                {category.name}
+                            </button>
+                        ))}
+                    </div>
                 </div>
+            </div>
+            <div className="relative mb-4 flex">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <Search size={20} />
+                </span>
+                <Input type="search" placeholder="Cari Program webinar..." value={search} onChange={(e) => setSearch(e.target.value)} className='px-4 py-6 pl-10' />
             </div>
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleWebinars.length === 0 ? (
@@ -130,50 +126,74 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                             <Link
                                 key={webinar.id}
                                 href={hasAccess ? `profile/my-webinars/${webinar.slug}` : `/webinar/${webinar.slug}`}
-                                className="relative overflow-hidden rounded-xl bg-zinc-300/30 p-[2px] dark:bg-zinc-700/30"
+                                className="group rounded-xl hover:shadow-sm hover:shadow-primary border-1 border-primary h-full"
                             >
-                                <Spotlight className="bg-primary blur-2xl" size={284} />
-                                <div
-                                    className={`relative flex h-full w-full flex-col items-center justify-between rounded-lg transition-colors ${
-                                        hasAccess ? 'bg-zinc-100 dark:bg-zinc-900' : 'bg-sidebar dark:bg-zinc-800'
-                                    }`}
-                                >
-                                    <div className="w-full overflow-hidden rounded-t-lg">
+                                <div className="relative flex flex-col h-[450px] overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-100 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white before:to-primary-2 before:via-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:z-[-1]">
+                                    {/* Image Section */}
+                                    <div className="relative h-48 w-full overflow-hidden flex-shrink-0">
                                         <img
                                             src={webinar.thumbnail ? `/storage/${webinar.thumbnail}` : '/assets/images/placeholder.png'}
                                             alt={webinar.title}
-                                            className="h-48 w-full rounded-t-lg object-cover"
+                                            className="h-full w-full object-cover transition-transform duration-300"
                                         />
-                                        <h2 className="mx-4 mt-2 text-lg font-semibold">{webinar.title}</h2>
-                                    </div>
-                                    <div className="w-full p-4 text-left">
-                                        {hasAccess ? (
-                                            <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
-                                        ) : webinar.price === 0 ? (
-                                            <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
-                                        ) : (
-                                            <div className="">
-                                                {webinar.strikethrough_price > 0 && (
-                                                    <p className="text-sm text-red-500 line-through">
-                                                        Rp {webinar.strikethrough_price.toLocaleString('id-ID')}
-                                                    </p>
-                                                )}
-                                                <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                                    Rp {webinar.price.toLocaleString('id-ID')}
-                                                </p>
-                                            </div>
+                                        {/* Category Badge - Top Right */}
+                                        {webinar.category && (
+                                            <span className="absolute top-3 right-3 rounded-full bg-gray-100/70 border border-primary px-3 py-1 text-xs text-black dark:bg-gray-700 dark:text-black">
+                                                {webinar.category.name}
+                                            </span>
                                         )}
-                                        <div className="mt-2 flex justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar size="18" />
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {new Date(webinar.start_time).toLocaleDateString('id-ID', {
-                                                        day: 'numeric',
-                                                        month: 'long',
-                                                        year: 'numeric',
-                                                    })}
-                                                </p>
-                                            </div>
+                                    </div>
+                                    {/* Content Section */}
+                                    <div className="flex flex-col flex-1 justify-start p-4 min-h-0">
+                                        {/* Title */}
+                                        <h2 className="group-hover:text-white mb-1 line-clamp-2 text-xl font-semibold text-gray-900 dark:text-white font-literata">
+                                            {webinar.title}
+                                        </h2>
+                                        {/* Price */}
+                                        <div className="mb-3">
+                                            {hasAccess ? (
+                                                <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
+                                            ) : webinar.price === 0 ? (
+                                                <span className="text-green-600 dark:text-green-400 text-xl font-bold">Gratis</span>
+                                            ) : (
+                                                <>
+                                                    {webinar.strikethrough_price > 0 && (
+                                                        <p className="text-sm text-red-500 line-through">
+                                                            Rp {webinar.strikethrough_price.toLocaleString('id-ID')}
+                                                        </p>
+                                                    )}
+                                                    <p className="group-hover:text-white text-2xl font-literata font-semibold text-gray-900 dark:text-white">
+                                                        Rp {webinar.price.toLocaleString('id-ID')}
+                                                    </p>
+                                                </>
+                                            )}
+                                        </div>
+                                        {/* Date/Time Info */}
+                                        <div className="group-hover:text-white mb-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                            <Calendar size={16} />
+                                            <span>
+                                                {webinar.start_time && (
+                                                    <>
+                                                        {new Date(webinar.start_time).toLocaleDateString('id-ID', {
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric',
+                                                        })}
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className='group-hover:text-white flex flex-row items-center justify-center mr-auto gap-2 text-sm text-gray-600 dark:text-gray-400'>
+                                            <Users size={16} />
+                                            <span>10/10</span>
+                                        </div>
+                                        <div>
+                                            <p className="mb-3 group-hover:text-white mt-2 line-clamp-3 text-gray-700 dark:text-gray-300 text-sm">
+                                                {/* Mentor info not available in Webinar, you can add if available */}
+                                            </p>
+                                        </div>
+                                        <div className='justify-self-end text-center text-primary group-hover:text-white group-hover:border-white border-1 border-primary rounded-lg py-1 mt-auto'>
+                                            Mulai Belajar
                                         </div>
                                     </div>
                                 </div>
@@ -184,11 +204,9 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
             </div>
             {visibleCount < filteredWebinar.length && (
                 <div className="mb-8 flex justify-center">
-                    <Magnetic>
-                        <Button type="button" className="mt-8 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
-                        </Button>
-                    </Magnetic>
+                    <Button type="button" className="mt-8 hover:cursor-pointer text-lg px-16 bg-primary py-6 border border-white shadow-xl hover:scale-105 transition-all duration-300 hover:text-white" onClick={() => setVisibleCount((prev) => prev + 6)}>
+                        Lihat Lebih Banyak
+                    </Button>
                 </div>
             )}
         </section>

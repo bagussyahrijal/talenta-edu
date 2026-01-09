@@ -1,113 +1,105 @@
 import { Button } from '@/components/ui/button';
-import { Check, Package, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
+import { CheckCircle2 } from 'lucide-react';
+
+const advantageSection = [
+    {
+        title: 'Hemat Hingga 70%',
+        description: 'Dapatkan harga spesial untuk akses ke banyak program sekaligus dalam satu paket bundling.',
+    },
+    {
+        title: 'Akses Banyak Program',
+        description: 'Satu kali beli, langsung dapat akses ke beberapa program pilihan sesuai kebutuhanmu.',
+    },
+    {
+        title: 'Sertifikat & Akses Selamanya',
+        description: 'Setiap program dalam bundling memberikan sertifikat dan akses materi tanpa batas waktu.',
+    },
+    {
+        title: 'Fleksibel & Praktis',
+        description: 'Belajar bisa diatur sesuai waktu luangmu, tanpa batasan waktu dan tempat.',
+    }
+];
 
 export default function HeroSection() {
-    const benefits = [
-        'Hemat hingga 70% dari harga normal',
-        'Akses ke beberapa program sekaligus',
-        'Sertifikat untuk semua program',
-        'Pembelajaran fleksibel',
-    ];
-
     return (
-        <section className="to-background from-background via-tertiary dark:via-background dark:to-background relative bg-gradient-to-b py-20 text-gray-900 dark:text-white">
-            <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 animate-spin items-center gap-8 duration-[10s]">
-                <div className="bg-primary h-[300px] w-[300px] rounded-full blur-[200px]" />
-                <div className="bg-secondary h-[300px] w-[300px] rounded-full blur-[200px]" />
-            </div>
-
-            <div className="relative mx-auto max-w-7xl px-4">
-                <div className="mx-auto max-w-4xl text-center">
-                    <span className="text-secondary border-secondary bg-background mb-4 inline-flex items-center gap-2 rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
-                        <Sparkles size={16} />
-                        Penawaran Spesial Paket Bundling
-                    </span>
-
-                    <h1 className="mb-6 text-4xl leading-tight font-bold italic sm:text-5xl">
-                        Belajar Lebih Banyak,
-                        <br />
-                        Bayar Lebih Hemat! 🎉
-                    </h1>
-
-                    {/* Description */}
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="mx-auto mb-8 max-w-2xl text-lg text-gray-600 dark:text-gray-400"
-                    >
-                        Dapatkan akses ke beberapa program pembelajaran sekaligus dengan harga spesial. Tingkatkan skill-mu dengan paket bundling yang
-                        dirancang khusus untuk percepatan karirmu!
-                    </motion.p>
-
-                    {/* Benefits Grid */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.3 }}
-                        className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-                    >
-                        {benefits.map((benefit, index) => (
-                            <motion.div
-                                key={benefit}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
-                                className="bg-background/50 dark:bg-background/30 flex items-start gap-3 rounded-lg border border-gray-200 p-4 backdrop-blur-sm dark:border-gray-800"
-                            >
-                                <div className="bg-primary/10 text-primary mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full">
-                                    <Check size={14} />
-                                </div>
-                                <p className="text-left text-sm font-medium text-gray-700 dark:text-gray-300">{benefit}</p>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-
-                    {/* CTA Buttons */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.5 }}
-                        className="flex flex-wrap justify-center gap-4"
-                    >
-                        <a href="#bundles">
-                            <Button size="lg" className="gap-2">
-                                <Package size={18} />
-                                Lihat Paket Bundling
-                            </Button>
-                        </a>
-                        <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
-                            <Button size="lg" variant="outline" className="gap-2">
-                                Konsultasi Gratis
-                            </Button>
-                        </a>
-                    </motion.div>
-
-                    {/* Stats */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.6, delay: 0.6 }}
-                        className="mt-12 flex flex-wrap justify-center gap-8 text-center"
-                    >
-                        <div>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white">70%</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Hemat Lebih Banyak</p>
-                        </div>
-                        <div className="h-12 w-px bg-gray-300 dark:bg-gray-700" />
-                        <div>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white">2+</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Program dalam 1 Paket</p>
-                        </div>
-                        <div className="h-12 w-px bg-gray-300 dark:bg-gray-700" />
-                        <div>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-white">100%</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Akses Selamanya</p>
-                        </div>
-                    </motion.div>
+        <>
+            {/* Hero Section */}
+            <section className="relative mx-auto max-w-7xl px-4 py-12">
+                <div className="relative overflow-hidden rounded-xl p-8 md:p-16 h-[450px] flex items-center justify-center" style={{
+                    background: 'linear-gradient(to right, #1976D3 10%, #1976D3 50%, #a0a0a0 95%)'
+                }}>
+                    <div className="relative z-10 text-white">
+                        <h1 className="mb-6 text-5xl font-bold leading-tight md:text-5xl font-literata">
+                            Bundling Program
+                        </h1>
+                        <p className="w-1/2">
+                            Paket Bundling Talenta Academy adalah solusi hemat untuk upgrade skill. Dapatkan akses ke banyak program sekaligus, sertifikat, dan akses materi selamanya hanya dengan satu kali pembelian. Pilih bundling yang sesuai kebutuhanmu dan mulai belajar lebih banyak dengan harga lebih hemat!
+                        </p>
+                    </div>
+                    {/* Background Image */}
+                    <div className="absolute right-0 top-0 h-full w-full hidden md:block">
+                        <img
+                            src="/assets/images/hero-bootcamp.png"
+                            alt="Bundling"
+                            className="h-full w-full object-cover"
+                            style={{
+                                maskImage: 'linear-gradient(to right, transparent 0%, black 100%)',
+                                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 100%)'
+                            }}
+                        />
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            {/* Advantages Section */}
+            <section className="relative mx-auto max-w-7xl px-4 py-12">
+                <div className="grid gap-12 lg:grid-cols-3 items-center">
+                    {/* Left Content */}
+                    <div className='lg:col-span-2 flex flex-col justify-center h-full gap-8'>
+                        <h2 className="mb-8 text-4xl font-bold text-primary font-literata md:text-4xl w-1/2">
+                            Keunggulan Paket Bundling Talenta Academy
+                        </h2>
+                        <div className="grid gap-6 sm:grid-cols-2">
+                            {advantageSection.map((item) => (
+                                <div key={item.title} className="flex gap-3">
+                                    <div className="flex-shrink-0">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500">
+                                            <CheckCircle2 className="h-5 w-5 text-white" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="mb-2 font-semibold text-gray-900 dark:text-white">
+                                            {item.title}
+                                        </h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {item.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    {/* Right Image */}
+                    <div className="relative flex justify-center lg:justify-end cols-span-1">
+                        {/* Blue blob background */}
+                        <div
+                            className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-primary rounded-tr-[125px] rounded-bl-[125px] h-[380px] w-[380px]"
+                            style={{
+                                boxShadow: 'inset 0 5px 15px rgba(0, 0, 0, 0.3), inset 0 -5px 15px rgba(0, 0, 0, 0.3)'
+                            }}
+                        ></div>
+                        <div className="relative">
+                            {/* Main image */}
+                            <img
+                                src="/assets/images/hero-bundle.png"
+                                alt="Bundling Illustration"
+                                className="relative z-10 h-[440px] w-full max-w-md rounded-3xl object-cover object-right"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </>
     );
 }
