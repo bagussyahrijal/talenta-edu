@@ -32,7 +32,7 @@ export default function ShowCourse({ courses }: ShowCourseProps) {
             case 'published':
                 return <Badge variant="default">Published</Badge>;
             case 'draft':
-                return <Badge variant="secondary">Draft</Badge>;
+                return <Badge className='bg-zinc-500'>Draft</Badge>;
             case 'archived':
                 return <Badge variant="destructive">Archived</Badge>;
             default:

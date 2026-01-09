@@ -21,7 +21,7 @@ class PartnershipProductController extends Controller
             ->orderBy('registration_deadline', 'asc')
             ->get();
 
-        return Inertia::render('user/partnership-product/dashboard/index', [
+        return Inertia::render('user/about/dashboard/index', [
             'categories' => $categories,
             'partnershipProducts' => $partnershipProducts,
         ]);

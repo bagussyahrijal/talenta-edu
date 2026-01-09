@@ -139,7 +139,7 @@ export const createWebinarParticipantColumns = (): ColumnDef<WebinarParticipant>
 
             if (!webinarItem.attendance_proof) {
                 return (
-                    <Badge variant="secondary" className="gap-1">
+                    <Badge className="gap-1 bg-zinc-500">
                         <Clock className="h-3 w-3" />
                         Belum Upload
                     </Badge>
@@ -176,7 +176,7 @@ export const createWebinarParticipantColumns = (): ColumnDef<WebinarParticipant>
                     Selesai
                 </Badge>
             ) : (
-                <Badge variant="secondary">
+                <Badge>
                     <Clock className="mr-1 h-3 w-3" />
                     Aktif
                 </Badge>

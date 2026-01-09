@@ -8,27 +8,27 @@ interface Mentor {
 const mentorsData: Mentor[] = [
     {
         id: 1,
-        name: 'David',
-        role: 'Mentor Akuntansi',
-        image: '/assets/images/mentors/mentor-1.png',
+        name: 'Fajar Nurdin, M.Ak., BKP.',
+        role: 'Mentor Perpajakan',
+        image: '/assets/images/mentors/fajar.png',
     },
     {
         id: 2,
-        name: 'Mariam',
-        role: 'Mentor Akuntansi',
-        image: '/assets/images/mentors/mentor-1.png',
+        name: 'Citra Kharisma Utami, S.E., M.Ak.',
+        role: 'Mentor Perpajakan',
+        image: '/assets/images/mentors/citra.png',
     },
     {
         id: 3,
-        name: 'Mariam',
-        role: 'Mentor Akuntansi',
-        image: '/assets/images/mentors/mentor-1.png',
+        name: 'Rizki Indrawan, M.Ak., Ak.',
+        role: 'Mentor Perpajakan',
+        image: '/assets/images/mentors/rizki.png',
     },
     {
         id: 4,
-        name: 'David',
-        role: 'Mentor Akuntansi',
-        image: '/assets/images/mentors/mentor-1.png',
+        name: 'Wildan Dwi Dermawan, M.Ak.',
+        role: 'Mentor Perpajakan',
+        image: '/assets/images/mentors/wildan.png',
     },
 ];
 

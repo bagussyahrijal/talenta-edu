@@ -443,7 +443,7 @@ export default function CreateBundle({ courses, bootcamps, webinars }: CreatePro
                                                     <div className="flex items-center gap-2">
                                                         <p className="truncate text-sm font-medium">{field.title}</p>
                                                         {field.price === 0 && (
-                                                            <Badge variant="secondary" className="text-xs">
+                                                            <Badge  className="text-xs">
                                                                 Gratis
                                                             </Badge>
                                                         )}

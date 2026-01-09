@@ -21,62 +21,56 @@ export default function FaqSection() {
                 <AccordionItem value="getting-started" className="rounded-lg border-1 border-zinc-400 px-4 py-2">
                     <AccordionTrigger className="w-full text-left text-zinc-950 hover:cursor-pointer dark:text-zinc-50">
                         <div className="flex items-center justify-between">
-                            <p className="md:text-lg font-semibold text-primary">Apa itu Aksademi?</p>
+                            <p className="md:text-lg font-semibold text-primary">Apa itu Talenta Academy ? </p>
                             <ChevronUp className="p-1 h-7 w-7 bg-primary rounded-full text-white transition-transform duration-200 group-data-expanded:-rotate-180 dark:text-zinc-50" />
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
                         <p className="text-sm text-black md:text-base dark:text-black-400 mt-2">
-                            Aksademy adalah platform edukasi digital yang dikembangkan oleh CV. Aksara Teknologi Mandiri dan dirancang untuk mendukung
-                            pengembangan skill di era modern mulai dari teknologi, desain, hingga bisnis.
+                            Talenta Academy adalah lembaga pelatihan profesional yang fokus pada pengembangan kompetensi di bidang akuntansi, perpajakan, audit, dan software akuntansi, dll dengan pendekatan praktis dan aplikatif
                         </p>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="animation-properties" className="rounded-lg border-1 border-zinc-400 px-4 py-2">
                     <AccordionTrigger className="w-full text-left text-zinc-950 hover:cursor-pointer dark:text-zinc-50">
                         <div className="flex items-center justify-between">
-                            <p className="md:text-lg font-semibold text-primary">Apa saja fitur yang tersedia di Aksademi?</p>
+                            <p className="md:text-lg font-semibold text-primary">Apa Saja Fitur dan di Talenta Academy ?</p>
                             <ChevronUp className="p-1 h-7 w-7 bg-primary rounded-full text-white transition-transform duration-200 group-data-expanded:-rotate-180 dark:text-zinc-50" />
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
                         <p className="text-sm text-black md:text-base dark:text-black-400 mt-2">
-                            Aksademi menawarkan berbagai fitur seperti Kelas Online, Bootcamp, dan pelatihan dalam bentuk Webinar yang mencakup
-                            berbagai disiplin ilmu. Setiap fitur dirancang untuk memberikan pengalaman belajar yang interaktif dan mendalam,
-                            memungkinkan pengguna untuk mengembangkan keterampilan mereka secara efektif.
+                            Talenta Academy menyediakan berbagai program pembelajaran seperti Kelas Online, Bootcamp, serta pelatihan berbasis Webinar. Setiap program dirancang secara interaktif dan aplikatif untuk membantu peserta mengembangkan keterampilan secara optimal dan siap diterapkan di dunia kerja.
                         </p>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="advanced-usage" className="rounded-lg border-1 border-zinc-400 px-4 py-2">
                     <AccordionTrigger className="w-full text-left text-zinc-950 hover:cursor-pointer dark:text-zinc-50">
                         <div className="flex items-center justify-between">
-                            <p className="md:text-lg font-semibold text-primary">Bagaimana alur belajar di Aksademy?</p>
+                            <p className="md:text-lg font-semibold text-primary">Bagaimana alur belajar di Talenta?</p>
                             <ChevronUp className="p-1 h-7 w-7 bg-primary rounded-full text-white transition-transform duration-200 group-data-expanded:-rotate-180 dark:text-zinc-50" />
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
                         <p className="text-sm text-black md:text-base dark:text-black-400 mt-2">
-                            Alur belajar di Aksademy dimulai dengan memilih kelas atau bootcamp yang sesuai dengan minat dan kebutuhan Anda. Setelah
-                            mendaftar, Anda akan mendapatkan akses ke materi pembelajaran yang dapat diakses kapan saja. Setiap kelas dilengkapi
-                            dengan modul, quiz, dan forum diskusi untuk mendukung proses belajar Anda.
+                            Pendaftaran dapat dilakukan melalui website resmi Talenta Academy atau dengan menghubungi admin melalui WhatsApp yang tersedia di website atau DM di IG @brevetpajak_talenta.
                         </p>
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="community-and-support" className="rounded-lg border-1 border-zinc-400 px-4 py-2">
                     <AccordionTrigger className="w-full text-left text-zinc-950 hover:cursor-pointer dark:text-zinc-50">
                         <div className="flex items-center justify-between">
-                            <p className="md:text-lg font-semibold text-primary">Kemana saya bisa mendapatkan informasi lebih lanjut tentang Aksademi?</p>
+                            <p className="md:text-lg font-semibold text-primary">Kemana Saya bisa mendapatkan informasi untuk bekerjasama atau jika terdapat kendala ?</p>
                             <ChevronUp className="p-1 h-7 w-7 bg-primary rounded-full text-white transition-transform duration-200 group-data-expanded:-rotate-180 dark:text-zinc-50" />
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
                         <p className="text-sm text-black md:text-base dark:text-black-400 mt-2">
-                            Untuk informasi lebih lanjut tentang Aksademi, Anda dapat menghubungi admin kami di{' '}
-                            <a href="https://wa.me/+6285142505794" className="text-primary hover:underline">
-                                +6285142505794
+                            Untuk informasi lebih lanjut mengenai Talenta Academy, silakan menghubungi admin kami melalui WhatsApp{' '}
+                            <a href="https://wa.me/+6289528514480" className="text-primary hover:underline">
+                                +6289528514480
                             </a>
-                            . Kami juga aktif di media sosial, jadi pastikan untuk mengikuti kami di platform seperti Instagram, Tiktok, dan Linkedin
-                            untuk update terbaru dan tips belajar.
+                            . Kami juga aktif di berbagai media sosial, jadi pastikan untuk mengikuti Talenta Academy di Instagram, TikTok, dan LinkedIn untuk mendapatkan update terbaru serta tips seputar akuntansi dan perpajakan.
                         </p>
                     </AccordionContent>
                 </AccordionItem>

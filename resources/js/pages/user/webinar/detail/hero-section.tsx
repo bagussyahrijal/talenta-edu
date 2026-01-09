@@ -49,7 +49,7 @@ export default function HeroSection({ webinar }: { webinar: Webinar }) {
                         <a href="#register">
                             <Button>Daftar Sekarang</Button>
                         </a>
-                        <a href="https://wa.me/+6285142505794" target="_blank" rel="noopener noreferrer">
+                        <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
                             <Button variant="outline">Hubungi Kami</Button>
                         </a>
                     </div>

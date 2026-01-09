@@ -257,11 +257,8 @@ export default function DetailMyCourse({
                 </div>
             ) : (
                 <>
-                    <section className="to-background from-background via-tertiary dark:via-background dark:to-background relative bg-gradient-to-b py-12 text-gray-900 dark:text-white">
-                        <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 animate-spin items-center gap-8 duration-[10s]">
-                            <div className="bg-primary h-[300px] w-[300px] rounded-full blur-[200px]" />
-                            <div className="bg-secondary h-[300px] w-[300px] rounded-full blur-[200px]" />
-                        </div>
+                    <section className=" dark:via-background dark:to-background relative bg-gradient-to-b py-12 text-gray-900 dark:text-white">
+                        
                         <div className="relative mx-auto max-w-7xl px-4 text-center">
                             <Button className="top-0 left-4 mb-4 rounded-full md:absolute md:mb-0" variant="secondary" asChild>
                                 <Link href="/profile/my-courses">
@@ -270,17 +267,17 @@ export default function DetailMyCourse({
                             </Button>
                             <div className="col-span-2">
                                 <div className="flex flex-col items-center justify-center md:flex-row md:gap-4">
-                                    <span className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
+                                    {/* <span className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
                                         📌 Enrolled in{' '}
                                         {courseItem &&
                                             new Date(courseItem.created_at).toLocaleDateString('id-ID', {
                                                 month: 'long',
                                                 year: 'numeric',
                                             })}
-                                    </span>
-                                    <span className="text-secondary border-secondary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
+                                    </span> */}
+                                    {/* <span className="text-secondary border-secondary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
                                         🎮 Level <span className="capitalize">{courseData.level}</span>
-                                    </span>
+                                    </span> */}
                                     {hasCertificate ? (
                                         <span className="mb-4 flex w-fit items-center gap-2 rounded-full border border-green-800 bg-green-100 px-4 py-1 text-sm font-medium text-green-800 shadow-xs">
                                             <Award size={16} />
@@ -289,7 +286,7 @@ export default function DetailMyCourse({
                                     ) : null}
                                 </div>
 
-                                <h1 className="mx-auto mb-4 max-w-2xl text-4xl leading-tight font-bold italic sm:text-5xl">{courseData.title}</h1>
+                                <h1 className="mx-auto mb-4 max-w-2xl text-4xl leading-tight font-bold font-literata sm:text-5xl">{courseData.title}</h1>
 
                                 <p className="mb-6 text-lg text-gray-600 dark:text-gray-400">{courseData.description}</p>
 

@@ -211,7 +211,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                                     />
                                                 </div>
                                                 <CardContent className="p-4">
-                                                    <Badge variant="secondary" className="mb-2 text-xs">
+                                                    <Badge className="mb-2 text-xs">
                                                         {article.category.name}
                                                     </Badge>
                                                     <h3 className="group-hover:text-primary mb-2 line-clamp-2 font-semibold">{article.title}</h3>

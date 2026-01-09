@@ -50,7 +50,7 @@ const getStatusBadge = (discountCode: DiscountCode) => {
     }
 
     if (!discountCode.is_valid) {
-        return <Badge variant="secondary">Kedaluwarsa</Badge>;
+        return <Badge className='bg-zinc-400'>Kedaluwarsa</Badge>;
     }
 
     const now = new Date();

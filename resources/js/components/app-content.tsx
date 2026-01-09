@@ -29,7 +29,7 @@ export function AppContent({ variant = 'header', children, ...props }: AppConten
             {...props}
         >
             {(isAdmin || isAffiliate || isMentor) && (
-                <div className="bg-secondary fixed top-16 right-0 left-0 z-40">
+                <div className="bg-primary fixed top-16 right-0 left-0 z-40">
                     <div className="flex max-w-7xl items-center justify-between gap-4 px-4 py-2 md:mx-auto">
                         <div>
                             <h2 className="font-semibold text-white md:text-lg">

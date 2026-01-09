@@ -339,7 +339,7 @@ export default function BootcampDetail({ bootcamp }: { bootcamp: Bootcamp }) {
                                                     </div>
                                                     <div>
                                                         {isPastSchedule ? (
-                                                            <Badge variant="secondary" className="text-xs">
+                                                            <Badge  className="text-xs">
                                                                 Selesai
                                                             </Badge>
                                                         ) : (

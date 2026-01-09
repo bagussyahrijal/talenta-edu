@@ -81,7 +81,7 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
                         <article>
                             {/* Header */}
                             <div className="mb-6">
-                                <Badge variant="secondary" className="mb-3">
+                                <Badge className="mb-3">
                                     {article.category.name}
                                 </Badge>
                                 <h1 className="mb-4 text-3xl font-bold italic md:text-4xl">{article.title}</h1>
@@ -161,7 +161,7 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
                                     </Avatar>
                                     <div className="flex-1">
                                         <h3 className="mb-1 font-semibold">Tentang Penulis</h3>
-                                        <p className="text-lg font-medium">{article.user.name === 'Admin' ? 'Aksademy Team' : article.user.name}</p>
+                                        <p className="text-lg font-medium">{article.user.name === 'Admin' ? 'Talenta Team' : article.user.name}</p>
                                         <p className="text-muted-foreground text-sm">{article.user.bio}</p>
                                     </div>
                                 </div>

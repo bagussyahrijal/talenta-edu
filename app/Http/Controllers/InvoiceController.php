@@ -250,7 +250,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'KMP-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -432,7 +432,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'KMP-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -585,7 +585,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change'  => true,
-                'prefix' => 'KMP-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $invoice = Invoice::create([
@@ -1389,7 +1389,7 @@ class InvoiceController extends Controller
             'company' => [
                 'name' => 'Talenta',
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
-                'phone' => '+6285142505794',
+                'phone' => '+6289528514480',
                 'email' => 'info@talenta.id',
                 'website' => 'www.talenta.id'
             ]

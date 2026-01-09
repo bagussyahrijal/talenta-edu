@@ -145,7 +145,7 @@ const getProductTypeBadge = (type: string) => {
     };
 
     return (
-        <Badge variant="secondary" className={styles[type as keyof typeof styles]}>
+        <Badge className={styles[type as keyof typeof styles]}>
             {labels[type as keyof typeof labels]}
         </Badge>
     );

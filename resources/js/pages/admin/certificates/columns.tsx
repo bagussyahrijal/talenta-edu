@@ -144,7 +144,7 @@ export const columns: ColumnDef<Certificate>[] = [
         header: 'Desain',
         cell: ({ row }) => {
             const design = row.getValue('design') as Certificate['design'];
-            return <Badge variant="secondary">{design?.name}</Badge>;
+            return <Badge >{design?.name}</Badge>;
         },
     },
     {

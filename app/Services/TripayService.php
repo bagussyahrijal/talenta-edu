@@ -74,7 +74,7 @@ class TripayService
                 'customer_email' => $customerEmail,
                 'order_items' => [
                     [
-                        'sku' => 'kompeten-' . $merchantRef,
+                        'sku' => 'talenta-' . $merchantRef,
                         'name' => $title,
                         'price' => $amount,
                         'quantity' => 1,
