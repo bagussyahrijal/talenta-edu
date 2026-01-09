@@ -33,7 +33,6 @@ export default function Webinar({ categories, webinars, myWebinarIds }: WebinarP
             <Head title="Webinar" />
 
             <HeroSection />
-            <FeatureSection />
             <WebinarSection categories={categories} webinars={webinars} myWebinarIds={myWebinarIds} />
         </UserLayout>
     );

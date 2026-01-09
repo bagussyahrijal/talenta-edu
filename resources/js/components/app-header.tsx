@@ -148,7 +148,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[600px] gap-3 p-4 md:grid-cols-[.75fr_1fr]">
-                                            {/* Row Span - Bundling */}
                                             
 
                                             {/* 3 Produk Utama */}
