@@ -19,6 +19,9 @@ interface Course {
     price: number;
     level: 'beginner' | 'intermediate' | 'advanced';
     category: Category;
+    user: {
+        name: string;
+    };
 }
 
 interface CourseProps {
@@ -33,7 +36,7 @@ export default function Course({ categories, courses, myCourseIds }: CourseProps
             <Head title="Kelas Online" />
 
             <HeroSection />
-            <FeatureSection />
+            {/* <FeatureSection /> */}
             <CoursesSection categories={categories} courses={courses} myCourseIds={myCourseIds} />
         </UserLayout>
     );

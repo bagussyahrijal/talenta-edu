@@ -85,11 +85,11 @@ export default function HeroSection() {
 
                     {/* Right Image */}
                     <div className="relative flex justify-center lg:justify-end cols-span-1">
-                        <div className="relative">
                             {/* Blue blob background */}
                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-primary rounded-tr-[125px] rounded-bl-[125px] h-[380px] w-[380px]" style={{
                                 boxShadow: 'inset 0 5px 15px rgba(0, 0, 0, 0.3), inset 0 -5px 15px rgba(0, 0, 0, 0.3)'
                             }}></div>
+                        <div className="relative">
                             {/* Main image */}
                             <img
                                 src="assets/images/hero-bootcamp-2.png"
