@@ -84,12 +84,12 @@ export default function BundlingSection({ bundles, categories = [] }: BundlingSe
     };
 
     return (
-        <section className="mx-auto w-full max-w-7xl px-4" id="bundles">
-            <div className='flex flex-row items-center justify-between mb-4'>
-                <h1 className='text-5xl font-bold font-literata text-primary'>Bundling Program</h1>
+        <section className="mx-auto w-full max-w-7xl px-4 py-12" id="bundles">
+            <div className='flex flex-col md:flex-row items-center justify-between mb-4'>
+                <h1 className='text-5xl font-bold font-literata text-primary text-center md:text-left mb-8 md:mb-0'>Bundling Program</h1>
                 {categories.length > 0 && (
                     <div
-                        className="overflow-x-auto bg-primary p-2 rounded-xl"
+                        className="overflow-x-auto bg-primary p-2 rounded-xl mb-2 md:mb-0"
                         ref={categoryRef}
                         onMouseDown={handleMouseDown}
                         onMouseLeave={handleMouseLeave}
@@ -125,7 +125,7 @@ export default function BundlingSection({ bundles, categories = [] }: BundlingSe
                     </div>
                 )}
             </div>
-            <div className="relative mb-4 flex">
+            <div className="relative mb-8 flex">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                     <Search size={20} />
                 </span>
@@ -153,7 +153,7 @@ export default function BundlingSection({ bundles, categories = [] }: BundlingSe
                             <Link
                                 key={bundle.id}
                                 href={route ? route('bundle.detail', bundle.slug) : `/bundling/${bundle.slug}`}
-                                className="group rounded-xl hover:shadow-sm hover:shadow-primary border-1 border-primary h-full"
+                                className="group h-full rounded-xl hover:shadow-sm hover:shadow-primary border-1 border-primary"
                             >
                                 <div className="relative flex flex-col h-[480px] overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-100 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white before:to-primary-2 before:via-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:z-[-1]">
                                     {/* Image Section */}
