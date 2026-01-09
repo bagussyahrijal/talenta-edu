@@ -1,15 +1,20 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BadgeCheck, InfinityIcon, Presentation, Smartphone, TvMinimalPlay } from 'lucide-react';
+import { BadgeCheck, BookOpen, Calendar, ChartBar, Clock, FileText, MessageCircle, Monitor, User } from 'lucide-react';
 
 interface Course {
     title: string;
     thumbnail?: string | null;
     strikethrough_price: number;
+    short_description?: string | null;
+    user?: { id: string; name: string; bio: string | null };
     price: number;
     registration_url: string;
+    level: 'beginner' | 'intermediate' | 'advanced';
+    created_at: string;
     modules?: {
         title: string;
         description?: string | null;
@@ -43,76 +48,155 @@ export default function RegisterSection({ course }: { course: Course }) {
         warningMessage = 'Profil Anda belum lengkap!';
     } else {
         registrationUrl = course.registration_url;
-        buttonText = 'Gabung Sekarang';
+        buttonText = 'Beli Sekarang';
         warningMessage = null;
     }
 
     return (
-        <section className="mx-auto mt-8 w-full max-w-5xl px-4" id="register">
-            <h2 className="dark:text-primary-foreground mb-4 text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Daftar & Dapatkan Promo Diskon Special Launching!
-            </h2>
-            <p className="text-center text-gray-600 dark:text-gray-400">Jangan sampai kelewatan ya!</p>
-            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
+        <section className="mx-auto mt-4 md:mt-8 mb-8 sm:mb-12 w-full max-w-7xl px-4 sm:px-6 lg:px-8" id="register">
+            <Badge className='border-green-400 bg-white text-green-400 px-2 py-1 text-xs sm:text-sm'>Kelas Online</Badge>
+            <div className="mt-4 sm:mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+                {/* Left Column - Course Details */}
+                <div className="flex flex-col gap-4 sm:gap-6">
+                    <div>
+                        <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold font-literata text-gray-900 dark:text-gray-100 leading-tight">{course.title}</h1>
+                    </div>
+                    <div>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">{course.short_description}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-4 sm:gap-6">
+                        <div className="flex items-center gap-2">
+                            <ChartBar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                            <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 capitalize">{course.level}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                            <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+                            {new Date(course.created_at).toLocaleDateString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                            })}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Course Image */}
                     <img
                         src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
                         alt={course.title}
-                        className="rounded-lg border border-gray-200 shadow-md"
+                        className="w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg sm:rounded-xl object-cover border border-primary/50"
                     />
-                    <ul className="space-y-2">
-                        <li className="flex items-center gap-2 text-sm">
-                            <BadgeCheck size="16" className="text-green-600" />
-                            <p>Akses Selamanya</p>
-                        </li>
-                        <li className="flex items-center gap-2 text-sm">
-                            <BadgeCheck size="16" className="text-green-600" />
-                            <p>Materi Update</p>
-                        </li>
-                        <li className="flex items-center gap-2 text-sm">
-                            <BadgeCheck size="16" className="text-green-600" />
-                            <p>Waktu Belajar Fleksibel</p>
-                        </li>
-                    </ul>
+
+                    {/* Instructor Section - Hidden on mobile, shown on tablet+ */}
+                    <div className="hidden sm:block">
+                        {course.user?.name === 'Admin' ? (
+                            <div className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4">
+                                <div className="rounded-full bg-gray-200 p-2">
+                                    <User className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
+                                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <Link
+                                href={`/mentor/${course.user?.id}`}
+                                className="flex items-center gap-3 sm:gap-4 rounded-lg border border-gray-200 bg-white p-3 sm:p-4 shadow-md transition hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
+                                <div className="rounded-full bg-gray-200 p-2">
+                                    <User className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
+                                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
+                                </div>
+                            </Link>
+                        )}
+                    </div>
                 </div>
-                <div className="flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
-                    <h5 className="mb-4 text-sm">Miliki kelas Premium secara permanen dan bangun sebuah projek nyata</h5>
 
-                    {course.strikethrough_price > 0 && (
-                        <span className="text-right text-sm text-red-500 line-through">Rp {course.strikethrough_price.toLocaleString('id-ID')}</span>
-                    )}
-                    {course.price > 0 ? (
-                        <span className="text-right text-3xl font-bold text-gray-900 italic dark:text-gray-100">
-                            Rp {course.price.toLocaleString('id-ID')}
-                        </span>
-                    ) : (
-                        <span className="text-left text-3xl font-bold text-gray-900 italic dark:text-gray-100">GRATIS</span>
-                    )}
+                {/* Right Column - Price Card */}
+                <div className="flex flex-col">
+                    <div className="lg:sticky lg:top-4 rounded-xl sm:rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+                        {course.strikethrough_price > 0 && (
+                            <span className="block text-xs sm:text-sm text-gray-500 font-literata line-through mb-1">
+                                Rp {course.strikethrough_price.toLocaleString('id-ID')}
+                            </span>
+                        )}
+                        {course.price > 0 ? (
+                            <h3 className="mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl font-bold font-literata text-gray-900 dark:text-gray-100">
+                                Rp {course.price.toLocaleString('id-ID')}
+                            </h3>
+                        ) : (
+                            <h3 className="mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl font-bold font-literata text-gray-900 dark:text-gray-100">GRATIS</h3>
+                        )}
 
-                    <Separator className="my-4" />
-                    <ul className="space-y-2">
-                        <li className="flex items-center gap-2 text-sm">
-                            <TvMinimalPlay size="16" className="text-primary dark:text-secondary" />
-                            <p>{totalLessons} Materi</p>
-                        </li>
-                        <li className="flex items-center gap-2 text-sm">
-                            <Presentation size="16" className="text-primary dark:text-secondary" />
-                            <p>Free Konsultasi</p>
-                        </li>
-                        <li className="flex items-center gap-2 text-sm">
-                            <InfinityIcon size="16" className="text-primary dark:text-secondary" />
-                            <p>Akses Selamanya</p>
-                        </li>
-                        <li className="flex items-center gap-2 text-sm">
-                            <Smartphone size="16" className="text-primary dark:text-secondary" />
-                            <p>Materi On Demand</p>
-                        </li>
-                    </ul>
-                    <div className="mt-auto">
-                        {warningMessage && <p className="mb-2 text-center text-sm text-red-500">{warningMessage}</p>}
-                        <Button className="w-full" asChild>
+                        {warningMessage && (
+                            <div className="mb-3 sm:mb-4 p-2 sm:p-3 text-center bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">{warningMessage}</p>
+                            </div>
+                        )}
+
+                        <Button className="mb-4 sm:mb-6 w-full rounded-lg text-sm sm:text-base py-5 sm:py-6" asChild>
                             <Link href={registrationUrl}>{buttonText}</Link>
                         </Button>
+
+                        <div className="space-y-2 sm:space-y-3">
+                            <div className="flex items-start gap-2 sm:gap-3">
+                                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
+                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{totalLessons} modul pembelajaran</span>
+                            </div>
+                            <div className="flex items-start gap-2 sm:gap-3">
+                                <BadgeCheck className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
+                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">akses selamanya</span>
+                            </div>
+                            <div className="flex items-start gap-2 sm:gap-3">
+                                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
+                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">grup diskusi aktif</span>
+                            </div>
+                            <div className="flex items-start gap-2 sm:gap-3">
+                                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
+                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">E-modul</span>
+                            </div>
+                            <div className="flex items-start gap-2 sm:gap-3">
+                                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
+                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">E-Sertifikat</span>
+                            </div>
+                            <div className="flex items-start gap-2 sm:gap-3">
+                                <Monitor className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
+                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">dapat diakses di komputer, laptop dan mobile</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Instructor Section for Mobile - Shown only on mobile */}
+                    <div className="block sm:hidden mt-6">
+                        {course.user?.name === 'Admin' ? (
+                            <div className="flex items-center gap-3 py-3">
+                                <div className="rounded-full bg-gray-200 p-2">
+                                    <User className="h-10 w-10 text-gray-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <Link
+                                href={`/mentor/${course.user?.id}`}
+                                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-md transition active:shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
+                                <div className="rounded-full bg-gray-200 p-2">
+                                    <User className="h-10 w-10 text-gray-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
+                                </div>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>

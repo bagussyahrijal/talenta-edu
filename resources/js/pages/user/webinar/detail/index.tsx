@@ -82,12 +82,12 @@ export default function Webinar({
         <UserLayout>
             <Head title={`${webinar.title} - Webinar`} />
 
-            <HeroSection webinar={webinar} />
+            <RegisterSection webinar={webinar} />
+            {/* <HeroSection webinar={webinar} /> */}
             <AboutSection />
             <BenefitsSection webinar={webinar} />
             <ToolsSection webinar={webinar} />
             <MentorSection webinar={webinar} />
-            <RegisterSection webinar={webinar} />
             <RelatedProduct relatedWebinars={relatedWebinars} myWebinarIds={myWebinarIds} />
         </UserLayout>
     );
