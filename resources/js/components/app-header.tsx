@@ -160,6 +160,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             <ListItem href="/webinar" title="Webinar">
                                                 Seminar online dengan topik terkini dan expert speaker
                                             </ListItem>
+                                            <ListItem href="/bundle" title="Bundling">
+                                                Paket bundling dengan harga spesial dan materi lengkap
+                                            </ListItem>
                                         </ul>
                                     </NavigationMenuContent>
                                     {isServicesActive && (

@@ -1,13 +1,8 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Magnetic } from '@/components/ui/magnetic';
-import { Spotlight } from '@/components/ui/spotlight';
 import { Link } from '@inertiajs/react';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
-import { Calendar, GalleryVerticalEnd, Package, Percent } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, Search, Users, Package, Percent } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 interface BundleItem {
     id: string;
@@ -32,29 +27,55 @@ interface Bundle {
     status: 'draft' | 'published' | 'archived';
     bundle_items: BundleItem[];
     bundle_items_count: number;
+    category?: { id: string; name: string }; // optional, if you want to add category filter
 }
 
 interface BundlingSectionProps {
     bundles: Bundle[];
+    categories?: { id: string; name: string }[]; // optional, if you want to add category filter
 }
 
-export default function BundlingSection({ bundles }: BundlingSectionProps) {
+export default function BundlingSection({ bundles, categories = [] }: BundlingSectionProps) {
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(6);
+    const categoryRef = useRef<HTMLDivElement | null>(null);
+    const isDragging = useRef(false);
+    const startX = useRef(0);
+    const scrollLeft = useRef(0);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        isDragging.current = true;
+        startX.current = e.pageX - (categoryRef.current?.offsetLeft ?? 0);
+        scrollLeft.current = categoryRef.current?.scrollLeft ?? 0;
+    };
+
+    const handleMouseLeave = () => {
+        isDragging.current = false;
+    };
+
+    const handleMouseUp = () => {
+        isDragging.current = false;
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging.current || !categoryRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - categoryRef.current.offsetLeft;
+        const walk = (x - startX.current) * 1.5;
+        categoryRef.current.scrollLeft = scrollLeft.current - walk;
+    };
 
     const filteredBundles = bundles.filter((bundle) => {
         const matchSearch = bundle.title.toLowerCase().includes(search.toLowerCase());
-        return matchSearch && bundle.status === 'published';
+        const matchCategory = selectedCategory === null ? true : bundle.category?.id === selectedCategory;
+        return matchSearch && bundle.status === 'published' && matchCategory;
     });
 
     const visibleBundles = filteredBundles.slice(0, visibleCount);
 
     const formatRupiah = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
+        return amount.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 });
     };
 
     const calculateDiscount = (original: number, discounted: number) => {
@@ -63,25 +84,60 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
     };
 
     return (
-        <section className="mx-auto w-full max-w-7xl px-4 py-12" id="bundles">
-            <div className="mb-8 text-center">
-                <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-3xl font-bold text-gray-900 italic md:text-4xl">
-                    Pilih Paket Bundling Terbaik Untukmu
-                </h2>
-                <p className="mx-auto text-gray-600 dark:text-gray-400">Hemat lebih banyak dengan membeli paket bundling program pembelajaran.</p>
+        <section className="mx-auto w-full max-w-7xl px-4" id="bundles">
+            <div className='flex flex-row items-center justify-between mb-4'>
+                <h1 className='text-5xl font-bold font-literata text-primary'>Bundling Program</h1>
+                {categories.length > 0 && (
+                    <div
+                        className="overflow-x-auto bg-primary p-2 rounded-xl"
+                        ref={categoryRef}
+                        onMouseDown={handleMouseDown}
+                        onMouseLeave={handleMouseLeave}
+                        onMouseUp={handleMouseUp}
+                        onMouseMove={handleMouseMove}
+                        style={{ scrollbarWidth: 'none', cursor: isDragging.current ? 'grabbing' : 'grab' }}
+                    >
+                        <div className="flex w-max flex-nowrap gap-2 select-none">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedCategory(null)}
+                                className={`rounded-xl px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === null
+                                    ? 'to-primary text-primary border-primary bg-white'
+                                    : 'hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                    } `}
+                            >
+                                Semua
+                            </button>
+                            {categories.map((category) => (
+                                <button
+                                    key={category.id}
+                                    type="button"
+                                    onClick={() => setSelectedCategory(category.id)}
+                                    className={`rounded-xl  px-4 py-2 text-sm transition hover:cursor-pointer ${selectedCategory === category.id
+                                        ? 'to-primary text-primary border-primary bg-white'
+                                        : ' hover:bg-white hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
+                                        } `}
+                                >
+                                    {category.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
-
-            <div className="mb-6">
+            <div className="relative mb-4 flex">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <Search size={20} />
+                </span>
                 <Input
                     type="search"
-                    placeholder="Cari paket bundling..."
+                    placeholder="Cari Program bundling..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="mx-auto max-w-md"
+                    className='px-4 py-6 pl-10'
                 />
             </div>
-
-            <div className="mb-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleBundles.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
                         <img src="/assets/images/not-found.webp" alt="Paket Bundling Belum Tersedia" className="w-48" />
@@ -92,83 +148,89 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                 ) : (
                     visibleBundles.map((bundle) => {
                         const discount = calculateDiscount(bundle.strikethrough_price, bundle.price);
-                        const hasDeadline = bundle.registration_deadline;
 
                         return (
                             <Link
                                 key={bundle.id}
-                                href={route('bundle.detail', bundle.slug)}
-                                className="group relative overflow-hidden rounded-xl bg-zinc-300/30 p-[2px] transition-all hover:bg-zinc-400/40 dark:bg-zinc-700/30 dark:hover:bg-zinc-600/40"
+                                href={route ? route('bundle.detail', bundle.slug) : `/bundling/${bundle.slug}`}
+                                className="group rounded-xl hover:shadow-sm hover:shadow-primary border-1 border-primary h-full"
                             >
-                                <Spotlight className="bg-primary blur-2xl" size={284} />
-                                <div className="bg-background relative flex h-full w-full flex-col rounded-lg transition-all group-hover:shadow-lg dark:bg-zinc-800">
-                                    {/* Thumbnail */}
-                                    <div className="relative w-full overflow-hidden rounded-t-lg">
+                                <div className="relative flex flex-col h-[480px] overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-100 before:absolute before:inset-0 before:rounded-xl before:bg-gradient-to-br before:from-white before:to-primary-2 before:via-primary before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100 before:z-[-1]">
+                                    {/* Image Section */}
+                                    <div className="relative h-48 w-full overflow-hidden flex-shrink-0">
                                         <img
                                             src={bundle.thumbnail ? `/storage/${bundle.thumbnail}` : '/assets/images/placeholder.png'}
                                             alt={bundle.title}
-                                            className="h-48 w-full object-cover transition-transform duration-300"
+                                            className="h-full w-full object-cover transition-transform duration-300"
                                         />
-
+                                        {/* Category Badge - Top Right */}
+                                        {bundle.category && (
+                                            <span className="absolute top-3 right-3 rounded-full bg-gray-100/70 border border-primary px-3 py-1 text-xs text-black dark:bg-gray-700 dark:text-black">
+                                                {bundle.category.name}
+                                            </span>
+                                        )}
                                         {/* Discount Badge */}
                                         {discount > 0 && (
-                                            <div className="absolute top-3 right-3">
-                                                <Badge className="bg-red-500 text-white shadow-lg">
-                                                    <Percent size={12} className="mr-1" />
-                                                    Hemat {discount}%
-                                                </Badge>
-                                            </div>
+                                            <span className="absolute top-3 left-3 rounded-full bg-red-500 px-3 py-1 text-xs text-white flex items-center gap-1">
+                                                <Percent size={12} />
+                                                Hemat {discount}%
+                                            </span>
                                         )}
-
                                         {/* Items Count Badge */}
-                                        <div className="absolute bottom-3 left-3">
-                                            <Badge
-                                                variant="secondary"
-                                                className="bg-white/90 text-gray-900 backdrop-blur-sm dark:bg-gray-900/90 dark:text-white"
-                                            >
-                                                <Package size={12} className="mr-1" />
-                                                {bundle.bundle_items_count} Program
-                                            </Badge>
-                                        </div>
+                                        <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs text-gray-900 flex items-center gap-1 dark:bg-gray-900/90 dark:text-white">
+                                            <Package size={12} />
+                                            {bundle.bundle_items_count} Program
+                                        </span>
                                     </div>
-
-                                    {/* Content */}
-                                    <div className="flex flex-1 flex-col p-4">
-                                        <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-gray-900 dark:text-white">{bundle.title}</h3>
-
-                                        {bundle.short_description && (
-                                            <p className="text-muted-foreground mb-4 line-clamp-2 text-sm">{bundle.short_description}</p>
-                                        )}
-
+                                    {/* Content Section */}
+                                    <div className="flex flex-col flex-1 justify-start p-4 min-h-0">
+                                        {/* Title */}
+                                        <h2 className="group-hover:text-white mb-1 line-clamp-2 text-xl font-semibold text-gray-900 dark:text-white font-literata">
+                                            {bundle.title}
+                                        </h2>
                                         {/* Price */}
-                                        <div className="mt-auto">
+                                        <div className="mb-3">
                                             {bundle.price === 0 ? (
-                                                <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                <span className="text-green-600 dark:text-green-400 text-xl font-bold">Gratis</span>
                                             ) : (
-                                                <div className="mb-3">
+                                                <>
                                                     {bundle.strikethrough_price > 0 && (
-                                                        <p className="text-sm text-gray-500 line-through dark:text-gray-400">
+                                                        <p className="text-sm text-red-500 line-through">
                                                             {formatRupiah(bundle.strikethrough_price)}
                                                         </p>
                                                     )}
-                                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatRupiah(bundle.price)}</p>
-                                                </div>
+                                                    <p className="group-hover:text-white text-2xl font-literata font-semibold text-gray-900 dark:text-white">
+                                                        {formatRupiah(bundle.price)}
+                                                    </p>
+                                                </>
                                             )}
-
-                                            {/* Deadline */}
-                                            {hasDeadline && (
-                                                <div className="border-t pt-3">
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                                        <Calendar size={14} className="text-red-500" />
-                                                        <span>
-                                                            Daftar sebelum:{' '}
-                                                            <span className="font-medium text-gray-900 dark:text-white">
-                                                                {format(new Date(bundle.registration_deadline!), 'dd MMM yyyy', { locale: id })}
-                                                            </span>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            )}
+                                        </div>
+                                        {/* Deadline Info */}
+                                        {bundle.registration_deadline && (
+                                            <div className="group-hover:text-white mb-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                                <Calendar size={16} />
+                                                <span>
+                                                    {new Date(bundle.registration_deadline).toLocaleDateString('id-ID', {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {/* Items Count */}
+                                        <div className='group-hover:text-white flex flex-row items-center justify-center mr-auto gap-2 text-sm text-gray-600 dark:text-gray-400'>
+                                            <Users size={16} />
+                                            <span>{bundle.bundle_items_count} Program</span>
+                                        </div>
+                                        {/* Description */}
+                                        <div>
+                                            <p className="mb-3 group-hover:text-white mt-2 line-clamp-3 text-gray-700 dark:text-gray-300 text-sm">
+                                                {bundle.short_description}
+                                            </p>
+                                        </div>
+                                        <div className='justify-self-end text-center text-primary group-hover:text-white group-hover:border-white border-1 border-primary rounded-lg py-1 mt-auto'>
+                                            Mulai Belajar
                                         </div>
                                     </div>
                                 </div>
@@ -177,14 +239,11 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                     })
                 )}
             </div>
-
             {visibleCount < filteredBundles.length && (
-                <div className="flex justify-center">
-                    <Magnetic>
-                        <Button type="button" className="mt-4 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
-                        </Button>
-                    </Magnetic>
+                <div className="mb-8 flex justify-center">
+                    <Button type="button" className="mt-8 hover:cursor-pointer text-lg px-16 bg-primary py-6 border border-white shadow-xl hover:scale-105 transition-all duration-300 hover:text-white" onClick={() => setVisibleCount((prev) => prev + 6)}>
+                        Lihat Lebih Banyak
+                    </Button>
                 </div>
             )}
         </section>
