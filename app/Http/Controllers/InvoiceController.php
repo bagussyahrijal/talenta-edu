@@ -1390,8 +1390,8 @@ class InvoiceController extends Controller
                 'name' => 'Talenta',
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
                 'phone' => '+6289528514480',
-                'email' => 'info@talenta.id',
-                'website' => 'www.talenta.id'
+                'email' => 'talentaskill.academic@gmail.com',
+                'website' => 'www.talentaedu.id'
             ]
         ];
 
