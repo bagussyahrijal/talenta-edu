@@ -5,15 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\PartnershipProduct;
 use App\Models\PartnershipProductClick;
+use App\Models\PartnershipProductScholarship;
+use App\Traits\WablasTrait;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class PartnershipProductController extends Controller
 {
+    use WablasTrait;
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -44,24 +50,43 @@ class PartnershipProductController extends Controller
             });
         }
 
-        $products = $query->get();
+        // Simpan collection asli untuk statistik
+        $originalProducts = $query->get();
 
-        // ✅ Calculate Statistics
-        $totalProducts = $products->count();
-        $publishedProducts = $products->where('status', 'published')->count();
-        $draftProducts = $products->where('status', 'draft')->count();
-        $archivedProducts = $products->where('status', 'archived')->count();
+        // Transform data untuk frontend
+        $products = $originalProducts->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'title' => $product->title,
+                'category_id' => $product->category_id,
+                'category_relation' => $product->category,
+                'thumbnail' => $product->thumbnail,
+                'price' => $product->price,
+                'strikethrough_price' => $product->strikethrough_price,
+                'registration_url' => $product->registration_url,
+                'status' => $product->status,
+                'type' => $product->type,
+                'clicks_count' => $product->clicks_count,
+                'created_at' => $product->created_at,
+            ];
+        });
+
+        // ✅ Calculate Statistics menggunakan originalProducts
+        $totalProducts = $originalProducts->count();
+        $publishedProducts = $originalProducts->where('status', 'published')->count();
+        $draftProducts = $originalProducts->where('status', 'draft')->count();
+        $archivedProducts = $originalProducts->where('status', 'archived')->count();
 
         // Price breakdown
-        $freeProducts = $products->where('price', 0)->count();
-        $paidProducts = $products->where('price', '>', 0)->count();
+        $freeProducts = $originalProducts->where('price', 0)->count();
+        $paidProducts = $originalProducts->where('price', '>', 0)->count();
 
         // Click statistics
-        $totalClicks = $products->sum('clicks_count');
+        $totalClicks = $originalProducts->sum('clicks_count');
         $averageClicksPerProduct = $totalProducts > 0 ? round($totalClicks / $totalProducts, 1) : 0;
 
         // Get unique users who clicked
-        $productIds = $products->pluck('id');
+        $productIds = $originalProducts->pluck('id');
         $uniqueUsers = PartnershipProductClick::whereIn('partnership_product_id', $productIds)
             ->whereNotNull('user_id')
             ->distinct('user_id')
@@ -82,13 +107,17 @@ class PartnershipProductController extends Controller
 
         // Calculate potential revenue (strikethrough - price) * clicks
         $totalPotentialSavings = 0;
-        foreach ($products as $product) {
+        foreach ($originalProducts as $product) {
             $savings = $product->strikethrough_price - $product->price;
             $totalPotentialSavings += ($savings * ($product->clicks_count ?? 0));
         }
 
         // Top performing products
-        $topProducts = $products->sortByDesc('clicks_count')->take(3);
+        $topProducts = $originalProducts->sortByDesc('clicks_count')->take(3)->map(fn($p) => [
+            'id' => $p->id,
+            'title' => $p->title,
+            'clicks_count' => $p->clicks_count ?? 0,
+        ]);
 
         $statistics = [
             'overview' => [
@@ -111,11 +140,7 @@ class PartnershipProductController extends Controller
             ],
             'performance' => [
                 'total_potential_savings' => $totalPotentialSavings,
-                'top_products' => $topProducts->map(fn($p) => [
-                    'id' => $p->id,
-                    'title' => $p->title,
-                    'clicks_count' => $p->clicks_count ?? 0,
-                ]),
+                'top_products' => $topProducts,
             ],
         ];
 
@@ -144,12 +169,16 @@ class PartnershipProductController extends Controller
             'key_points' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
             'registration_deadline' => 'required|date|after:today',
-            'duration_days' => 'nullable|integer|min:0',
+            'event_deadline' => 'nullable|date',
+            'payment_code' => 'nullable|string|max:255',
+            'duration_days' => 'required|integer|min:0',
             'schedule_days' => 'required|array|min:1',
             'schedule_days.*' => 'string|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
             'strikethrough_price' => 'required|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'registration_url' => 'required|url|max:500',
+            'type' => 'required|in:regular,scholarship',
+            'scholarship_group_link' => 'nullable|url|max:500',
         ]);
 
         // Generate slug
@@ -183,6 +212,30 @@ class PartnershipProductController extends Controller
             ->withCount('clicks')
             ->findOrFail($id);
 
+        $scholarshipParticipants = collect();
+        if ($product->type === 'scholarship') {
+            $scholarshipParticipants = PartnershipProductScholarship::query()
+                ->where('partnership_product_id', $id)
+                ->orderByDesc('created_at')
+                ->get([
+                    'id',
+                    'name',
+                    'email',
+                    'phone',
+                    'nim',
+                    'university',
+                    'major',
+                    'semester',
+                    'ktm_photo',
+                    'transcript_photo',
+                    'instagram_proof_photo',
+                    'instagram_tag_proof_photo',
+                    'is_accepted',
+                    'accepted_at',
+                    'created_at',
+                ]);
+        }
+
         // Get click statistics grouped by date (last 30 days)
         $clickStats = DB::table('partnership_product_clicks')
             ->where('partnership_product_id', $id)
@@ -211,7 +264,114 @@ class PartnershipProductController extends Controller
             'clickStats' => $clickStats,
             'uniqueClicks' => $uniqueClicks,
             'recentClicks' => $recentClicks,
+            'scholarshipParticipants' => $product->type === 'scholarship' ? $scholarshipParticipants : [],
+            'scholarshipParticipantsCount' => $product->type === 'scholarship' ? $scholarshipParticipants->count() : 0,
         ]);
+    }
+
+    public function acceptScholarshipParticipant(Request $request, string $id, string $scholarshipId)
+    {
+        $product = PartnershipProduct::findOrFail($id);
+
+        if ($product->type !== 'scholarship') {
+            return back()->with('error', 'Produk ini bukan tipe beasiswa.');
+        }
+
+        if (empty($product->product_url)) {
+            return back()->with('error', 'Link produk (product_url) belum tersedia.');
+        }
+
+        if (empty($product->event_deadline)) {
+            return back()->with('error', 'Batas event (event_deadline) belum diisi.');
+        }
+
+        if (empty($product->payment_code)) {
+            return back()->with('error', 'Payment code belum diisi.');
+        }
+
+        $participant = PartnershipProductScholarship::where('partnership_product_id', $id)
+            ->where('id', $scholarshipId)
+            ->firstOrFail();
+
+        if ($participant->is_accepted) {
+            return back()->with('success', 'Peserta ini sudah diterima sebelumnya.');
+        }
+
+        if (empty($participant->phone)) {
+            return back()->with('error', 'Nomor WhatsApp peserta tidak tersedia.');
+        }
+
+        $participant->update([
+            'is_accepted' => true,
+            'accepted_at' => now(),
+        ]);
+
+        try {
+            $phoneNumber = $this->formatPhoneNumber($participant->phone);
+
+            $deadline = Carbon::parse($product->event_deadline);
+            $deadlineText = $deadline->locale('id')->translatedFormat('d F Y') . ' pukul ' . $deadline->format('H.i') . ' WIB';
+
+            $message = "*[Talenta – Pengumuman Beasiswa]* 🎉\n\n";
+            $message .= "Hai Kak {$participant->name},\n\n";
+            $message .= "Selamat! ✨\n";
+            $message .= "Anda dinyatakan LOLOS sebagai penerima Beasiswa {$product->title} by Talenta.\n\n";
+            $message .= "Langkah Selanjutnya:\n";
+            $message .= "Silakan melengkapi pendaftaran melalui link berikut 👇\n";
+            $message .= "🔗 {$product->registration_url}\n\n";
+            $message .= "🧾 Kode Pembayaran: {$product->payment_code}\n\n";
+            $message .= "⚠️ Penting:\n";
+            $message .= "• Batas akhir pengisian hingga {$deadlineText}\n";
+            $message .= "• Pastikan data diisi dengan benar agar proses berjalan lancar\n\n";
+            $message .= "Jika mengalami kendala atau membutuhkan bantuan, silakan balas pesan ini.\n\n";
+            $message .= "Terima kasih dan selamat bergabung! 🚀\n\n";
+            $message .= "Tim Talenta – Customer Support";
+
+            $waData = [
+                [
+                    'phone' => $phoneNumber,
+                    'message' => $message,
+                    'isGroup' => 'false',
+                ],
+            ];
+
+            // $sent = self::sendText($waData);
+
+            // if (!$sent) {
+            //     Log::warning('Failed to send WhatsApp scholarship acceptance message', [
+            //         'partnership_product_id' => $product->id,
+            //         'scholarship_id' => $participant->id,
+            //         'phone' => $phoneNumber,
+            //     ]);
+            // }
+        } catch (\Throwable $e) {
+            Log::error('Error sending WhatsApp scholarship acceptance message', [
+                'partnership_product_id' => $product->id,
+                'scholarship_id' => $participant->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return back()->with('success', 'Peserta berhasil diterima dan notifikasi WhatsApp diproses.');
+    }
+
+    private function formatPhoneNumber(string $phoneNumber): string
+    {
+        $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
+
+        if (str_starts_with($phoneNumber, '0')) {
+            return '62' . substr($phoneNumber, 1);
+        }
+
+        if (str_starts_with($phoneNumber, '62')) {
+            return $phoneNumber;
+        }
+
+        if (str_starts_with($phoneNumber, '8')) {
+            return '62' . $phoneNumber;
+        }
+
+        return $phoneNumber;
     }
 
     public function edit(string $id)
@@ -237,12 +397,16 @@ class PartnershipProductController extends Controller
             'key_points' => 'nullable|string',
             'thumbnail' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:2048',
             'registration_deadline' => 'required|date|after:today',
-            'duration_days' => 'nullable|integer|min:0',
+            'event_deadline' => 'nullable|date',
+            'payment_code' => 'nullable|string|max:255',
+            'duration_days' => 'required|integer|min:0',
             'schedule_days' => 'required|array|min:1',
             'schedule_days.*' => 'string|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu,Minggu',
             'strikethrough_price' => 'required|numeric|min:0',
             'price' => 'required|numeric|min:0',
             'registration_url' => 'required|url|max:500',
+            'type' => 'required|in:regular,scholarship',
+            'scholarship_group_link' => 'nullable|url|max:500',
         ], [
             'title.required' => 'Judul produk harus diisi.',
             'category_id.required' => 'Kategori harus dipilih.',

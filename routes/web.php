@@ -74,6 +74,9 @@ Route::get('/bootcamp/{bootcamp:slug}/register', [UserBootcampController::class,
 Route::get('/webinar/{webinar:slug}/register', [UserWebinarController::class, 'showRegister'])->name('webinar.register');
 Route::get('/bundle/{bundle:slug}/checkout', [UserBundleController::class, 'showCheckout'])->name('bundle.checkout');
 Route::get('/certification/{partnershipProduct:slug}/track-click', [UserPartnershipProductController::class, 'trackClick'])->name('partnership-products.track-click');
+Route::get('/certification/{partnershipProduct:slug}/scholarship-apply', [UserPartnershipProductController::class, 'scholarshipApply'])->name('partnership-products.scholarship-apply');
+Route::post('/certification/{partnershipProduct:slug}/scholarship-store', [UserPartnershipProductController::class, 'scholarshipStore'])->name('partnership-products.scholarship-store');
+Route::get('/certification/{partnershipProduct:slug}/scholarship-success', [UserPartnershipProductController::class, 'scholarshipSuccess'])->name('partnership-products.scholarship-success');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/course/checkout/success', [UserCourseController::class, 'showCheckoutSuccess'])->name('course.checkout.success');
@@ -194,6 +197,10 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
         Route::post('/partnership-products/{id}/duplicate', [PartnershipProductController::class, 'duplicate'])->name('partnership-products.duplicate');
         Route::get('/partnership-products/stats/overview', [PartnershipProductController::class, 'statistics'])->name('partnership-products.statistics');
         Route::post('/partnership-products/bulk-action', [PartnershipProductController::class, 'bulkAction'])->name('partnership-products.bulk-action');
+        Route::post(
+            '/partnership-products/{id}/scholarship-participants/{scholarshipId}/accept',
+            [PartnershipProductController::class, 'acceptScholarshipParticipant']
+        )->name('partnership-products.scholarship-participants.accept');
 
         Route::resource('bundles', BundleController::class);
         Route::post('/bundles/{bundle}/publish', [BundleController::class, 'publish'])->name('bundles.publish');
