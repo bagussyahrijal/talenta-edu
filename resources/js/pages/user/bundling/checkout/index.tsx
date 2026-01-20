@@ -62,7 +62,7 @@ interface PendingInvoice {
     status: string;
     amount: number;
     payment_method: string;
-    payment_channel: string;
+    // payment_channel: string;
     va_number?: string;
     qr_code_url?: string;
     bank_name?: string;
@@ -70,60 +70,60 @@ interface PendingInvoice {
     expires_at: string;
 }
 
-interface PaymentChannel {
-    active: boolean;
-    code: string;
-    fee_customer: {
-        flat: number;
-        percent: number;
-    };
-    fee_merchant: {
-        flat: number;
-        percent: number;
-    };
-    group: string;
-    icon_url: string;
-    maximum_amount: number;
-    maximum_fee: number | null;
-    minimum_amount: number;
-    minimum_fee: number | null;
-    name: string;
-    total_fee: {
-        flat: number;
-        percent: string;
-    };
-    type: string;
-}
+// interface PaymentChannel {
+//     active: boolean;
+//     code: string;
+//     fee_customer: {
+//         flat: number;
+//         percent: number;
+//     };
+//     fee_merchant: {
+//         flat: number;
+//         percent: number;
+//     };
+//     group: string;
+//     icon_url: string;
+//     maximum_amount: number;
+//     maximum_fee: number | null;
+//     minimum_amount: number;
+//     minimum_fee: number | null;
+//     name: string;
+//     total_fee: {
+//         flat: number;
+//         percent: string;
+//     };
+//     type: string;
+// }
 
 interface CheckoutBundleProps {
     bundle: Bundle;
     hasAccess: boolean;
     pendingInvoice?: PendingInvoice | null;
     transactionDetail?: TransactionDetail | null;
-    channels: PaymentChannel[];
+    // channels: PaymentChannel[];
     referralInfo: ReferralInfo;
 }
 
-export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, transactionDetail, channels, referralInfo }: CheckoutBundleProps) {
+export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, transactionDetail, referralInfo }: CheckoutBundleProps) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
     const isProfileComplete = isLoggedIn && auth.user?.phone_number;
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(channels.length > 0 ? channels[0] : null);
+    // const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(channels.length > 0 ? channels[0] : null);
 
     const bundleDiscount = bundle.strikethrough_price - bundle.price;
 
-    const calculateAdminFee = (channel: PaymentChannel | null): number => {
-        if (!channel) return 0;
-        const flatFee = channel.fee_customer.flat || 0;
-        const percentFee = Math.round(bundle.price * ((channel.fee_customer.percent || 0) / 100));
-        return flatFee + percentFee;
-    };
+    // const calculateAdminFee = (channel: PaymentChannel | null): number => {
+    //     if (!channel) return 0;
+    //     const flatFee = channel.fee_customer.flat || 0;
+    //     const percentFee = Math.round(bundle.price * ((channel.fee_customer.percent || 0) / 100));
+    //     return flatFee + percentFee;
+    // };
 
-    const adminFee = calculateAdminFee(selectedChannel);
-    const totalPrice = bundle.price + adminFee;
+    const adminFee =  5000; //calculateAdminFee(selectedChannel);
+     const totalPrice =  bundle.price + adminFee;
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -178,7 +178,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                 discount_amount: bundleDiscount,
                 nett_amount: bundle.price,
                 total_amount: totalPrice,
-                payment_channel: selectedChannel?.code,
+                // payment_channel: selectedChannel?.code,
             };
 
             try {
@@ -226,15 +226,15 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         }
     };
 
-    const getPaymentChannelName = (code: string): string => {
-        const channel = channels.find((c) => c.code === code);
-        return channel?.name || code;
-    };
+    // const getPaymentChannelName = (code: string): string => {
+    //     const channel = channels.find((c) => c.code === code);
+    //     return channel?.name || code;
+    // };
 
-    const getPaymentGroupIcon = (channelCode: string): string => {
-        const channel = channels.find((c) => c.code === channelCode);
-        return channel?.icon_url || '';
-    };
+    // const getPaymentGroupIcon = (channelCode: string): string => {
+    //     const channel = channels.find((c) => c.code === channelCode);
+    //     return channel?.icon_url || '';
+    // };
 
     const formatExpiryTime = (expiresAt: string): { time: string; status: 'expired' | 'urgent' | 'normal' } => {
         const now = new Date();
@@ -436,7 +436,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                         </div>
 
                         {/* Payment Channels Section */}
-                        {channels.length > 0 && !pendingInvoice && !hasAccess && (
+                        {/* {channels.length > 0 && !pendingInvoice && !hasAccess && (
                             <div className="mt-6 overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
                                 <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
                                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Metode Pembayaran</h2>
@@ -492,7 +492,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        )} */}
                     </div>
 
                     {/* Payment Section */}
@@ -555,7 +555,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             <span className="text-sm text-gray-600 dark:text-gray-400">No. Invoice</span>
                                             <span className="font-semibold text-gray-900 dark:text-white">{pendingInvoice.invoice_code}</span>
                                         </div>
-                                        <div className="flex items-center justify-between">
+                                        {/* <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">Metode Pembayaran</span>
                                             <div className="flex items-center gap-2">
                                                 <img
@@ -567,7 +567,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                                     {transactionDetail?.payment_name || getPaymentChannelName(pendingInvoice.payment_channel)}
                                                 </span>
                                             </div>
-                                        </div>
+                                        </div> */}
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">Total Pembayaran</span>
                                             <span className="text-xl font-bold text-orange-600">

@@ -44,6 +44,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebinarController;
 use App\Http\Controllers\User\QuizController as UserQuizController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MidtransCallbackController;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');

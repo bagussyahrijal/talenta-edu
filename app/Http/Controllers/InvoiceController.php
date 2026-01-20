@@ -33,16 +33,22 @@ use Xendit\Configuration;
 use Xendit\Invoice\CreateInvoiceRequest;
 use Xendit\Invoice\InvoiceApi;
 
+use App\Services\MidtransService;
+
+
+
 class InvoiceController extends Controller
 {
     use WablasTrait;
 
     protected $tripayService;
+    protected $midtransService;
 
-    public function __construct(TripayService $tripayService)
+    public function __construct(TripayService $tripayService, MidtransService $midtransService)
     {
         Configuration::setXenditKey(config('xendit.API_KEY'));
         $this->tripayService = $tripayService;
+        $this->midtransService = $midtransService;
     }
 
     public function index()
@@ -264,7 +270,7 @@ class InvoiceController extends Controller
                 'nett_amount' => $nettAmount,
                 'transaction_fee' => $validatedFee,
                 'expires_at' => $expiresAt,
-                'payment_method' => 'tripay',
+                'payment_method' => 'midtrans',
                 'payment_channel' => $paymentChannel,
             ]);
 
@@ -279,29 +285,50 @@ class InvoiceController extends Controller
                 $discountCode->incrementUsage();
             }
 
-            $tripayResponse = $this->tripayService->requestTransaction(
-                $invoice_code,
-                $paymentChannel,
-                $item->title,
-                (int)$nettAmount,
-                Auth::user()->name,
-                Auth::user()->email
-            );
+            // Create Midtrans transaction
+            $midtransParams = [
+                'transaction_details' => [
+                    'order_id' => $invoice_code,
+                    'gross_amount' => (int)$totalAmount,
+                ],
+                'customer_details' => [
+                    'first_name' => Auth::user()->name,
+                    'email' => Auth::user()->email,
+                    'phone' => Auth::user()->phone_number ?? '',
+                ],
+                'item_details' => [
+                    [
+                        'id' => $item->id,
+                        'price' => (int)$nettAmount,
+                        'quantity' => 1,
+                        'name' => $item->title,
+                    ],
+                ],
+                'callbacks' => [
+                    'finish' => config('app.url') . '/invoice/' . $invoice->id,
+                    'error' => config('app.url') . '/invoice/pending',
+                    'unfinish' => config('app.url') . '/invoice/pending',
+                ],
+            ];
 
-            if (!isset($tripayResponse->success) || !$tripayResponse->success) {
-                throw new \Exception($tripayResponse->message ?? 'Gagal membuat transaksi Tripay');
+            // Add transaction fee if exists
+            if ($validatedFee > 0) {
+                $midtransParams['item_details'][] = [
+                    'id' => 'fee',
+                    'price' => (int)$validatedFee,
+                    'quantity' => 1,
+                    'name' => 'Biaya Admin',
+                ];
             }
 
-            if (!isset($tripayResponse->data)) {
-                throw new \Exception('Invalid response format from Tripay');
-            }
+            $midtransResponse = $this->midtransService->createTransaction($midtransParams);
 
-            $transaction = $tripayResponse->data;
+            if (!$midtransResponse['success']) {
+                throw new \Exception($midtransResponse['message'] ?? 'Gagal membuat transaksi Midtrans');
+            }
 
             $invoice->update([
-                'payment_reference' => $transaction->reference,
-                'va_number' => $transaction->pay_code ?? null,
-                'qr_code_url' => $transaction->qr_url ?? null,
+                'payment_reference' => $invoice_code,
             ]);
 
             $enrollmentTable::create([
@@ -318,10 +345,10 @@ class InvoiceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'payment_url' => $transaction->checkout_url,
+                'payment_url' => $midtransResponse['redirect_url'],
+                'snap_token' => $midtransResponse['snap_token'],
                 'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->invoice_code,
-                'reference' => $transaction->reference,
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -446,7 +473,7 @@ class InvoiceController extends Controller
                 'nett_amount' => $nettAmount,
                 'transaction_fee' => $validatedFee,
                 'expires_at' => $expiresAt,
-                'payment_method' => 'tripay',
+                'payment_method' => 'midtrans',
                 'payment_channel' => $paymentChannel,
             ]);
 
@@ -477,40 +504,59 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            $tripayResponse = $this->tripayService->requestTransaction(
-                $invoice_code,
-                $paymentChannel,
-                'Paket Bundling: ' . $bundle->title,
-                (int)$nettAmount,
-                Auth::user()->name,
-                Auth::user()->email
-            );
+            // Create Midtrans transaction for bundle
+            $midtransParams = [
+                'transaction_details' => [
+                    'order_id' => $invoice_code,
+                    'gross_amount' => (int)$totalAmount,
+                ],
+                'customer_details' => [
+                    'first_name' => Auth::user()->name,
+                    'email' => Auth::user()->email,
+                    'phone' => Auth::user()->phone_number ?? '',
+                ],
+                'item_details' => [
+                    [
+                        'id' => $bundle->id,
+                        'price' => (int)$nettAmount,
+                        'quantity' => 1,
+                        'name' => 'Paket Bundling: ' . $bundle->title,
+                    ],
+                ],
+                'callbacks' => [
+                'finish' => config('app.url') . '/invoice/' . $invoice->id,
+            ],
+            ];
 
-            if (!isset($tripayResponse->success) || !$tripayResponse->success) {
-                throw new \Exception($tripayResponse->message ?? 'Gagal membuat transaksi Tripay');
+            // Add transaction fee if exists
+            if ($validatedFee > 0) {
+                $midtransParams['item_details'][] = [
+                    'id' => 'fee',
+                    'price' => (int)$validatedFee,
+                    'quantity' => 1,
+                    'name' => 'Biaya Admin',
+                ];
             }
 
-            if (!isset($tripayResponse->data)) {
-                throw new \Exception('Invalid response format from Tripay');
-            }
+            $midtransResponse = $this->midtransService->createTransaction($midtransParams);
 
-            $transaction = $tripayResponse->data;
+            if (!$midtransResponse['success']) {
+                throw new \Exception($midtransResponse['message'] ?? 'Gagal membuat transaksi Midtrans');
+            }
 
             $invoice->update([
-                'payment_reference' => $transaction->reference,
-                'va_number' => $transaction->pay_code ?? null,
-                'qr_code_url' => $transaction->qr_url ?? null,
+                'payment_reference' => $invoice_code,
             ]);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'payment_url' => $transaction->checkout_url,
+                'payment_url' => $midtransResponse['redirect_url'],
+                'snap_token' => $midtransResponse['snap_token'],
                 'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->invoice_code,
-                'payment_method' => 'tripay',
-                'reference' => $transaction->reference,
+                'payment_method' => 'midtrans',
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -774,12 +820,13 @@ class InvoiceController extends Controller
 
     private function calculateTransactionFee($channelCode, $nettAmount): int
     {
-        if (!$channelCode || $nettAmount <= 0) {
+        if ( $nettAmount <= 0) {
             return 0;
         }
+        return 5000;
 
         try {
-            $channels = $this->tripayService->getPaymentChannels();
+            $channels = $this->midtransService->getPaymentChannels();
 
             $selectedChannel = collect($channels)->firstWhere('code', $channelCode);
 
@@ -787,8 +834,11 @@ class InvoiceController extends Controller
                 throw new \Exception('Payment channel tidak ditemukan');
             }
 
-            $flatFee = $selectedChannel->fee_customer->flat ?? 0;
-            $percentFee = round($nettAmount * (($selectedChannel->fee_customer->percent ?? 0) / 100));
+            // Midtrans returns array, not object
+            $feeCustomer = is_array($selectedChannel) ? $selectedChannel['fee_customer'] : $selectedChannel->fee_customer;
+            $flatFee = is_array($feeCustomer) ? ($feeCustomer['flat'] ?? 0) : ($feeCustomer->flat ?? 0);
+            $percentValue = is_array($feeCustomer) ? ($feeCustomer['percent'] ?? 0) : ($feeCustomer->percent ?? 0);
+            $percentFee = round($nettAmount * ($percentValue / 100));
 
             return (int)($flatFee + $percentFee);
         } catch (\Exception $e) {
