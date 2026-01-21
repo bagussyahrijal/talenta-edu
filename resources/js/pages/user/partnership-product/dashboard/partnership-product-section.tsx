@@ -81,7 +81,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-12" id="partnership-products">
-            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
+            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-center text-3xl font-bold text-gray-900 font-literata md:text-4xl">
                 Raih Sertifikasi Profesional dan Tingkatkan Karirmu
             </h2>
             <p className="mx-auto mb-8 text-center text-gray-600 dark:text-gray-400">Pilih program sertifikasi yang sesuai dengan tujuan karirmu.</p>

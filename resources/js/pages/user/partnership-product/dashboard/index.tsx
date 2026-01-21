@@ -33,8 +33,8 @@ export default function PartnershipProductPage({ categories, partnershipProducts
         <UserLayout>
             <Head title="Sertifikasi Kerjasama" />
 
-            <HeroSection />
-            <FeatureSection />
+            {/* <HeroSection /> */}
+            {/* <FeatureSection /> */}
             <PartnershipProductSection categories={categories} partnershipProducts={partnershipProducts} />
         </UserLayout>
     );
