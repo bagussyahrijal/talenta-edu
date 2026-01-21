@@ -71,8 +71,8 @@ export default function FaqSection() {
                     <AccordionContent>
                         <p className="text-xs sm:text-sm md:text-base text-black dark:text-black-400 mt-2 ">
                             Untuk informasi lebih lanjut mengenai Talenta Academy, silakan menghubungi admin kami melalui WhatsApp{' '}
-                            <a href="https://wa.me/+6289528514480" className="text-primary hover:underline">
-                                +6289528514480
+                            <a href="https://wa.me/+6285606391730" className="text-primary hover:underline">
+                                +6285606391730
                             </a>
                             . Kami juga aktif di berbagai media sosial, jadi pastikan untuk mengikuti Talenta Academy di Instagram, TikTok, dan LinkedIn untuk mendapatkan update terbaru serta tips seputar akuntansi dan perpajakan.
                         </p>
