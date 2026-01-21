@@ -58,7 +58,7 @@ Route::get('/webinar', [UserWebinarController::class, 'index'])->name('webinar.i
 Route::get('/webinar/{webinar:slug}', [UserWebinarController::class, 'detail'])->name('webinar.detail');
 Route::get('/bundle', [UserBundleController::class, 'index'])->name('bundle.index');
 Route::get('/bundle/{bundle:slug}', [UserBundleController::class, 'detail'])->name('bundle.detail');
-Route::get('/about', [UserPartnershipProductController::class, 'index'])->name('partnership-product.index');
+Route::get('/certification', [UserPartnershipProductController::class, 'index'])->name('partnership-product.index');
 Route::get('/certification/{partnershipProduct:slug}', [UserPartnershipProductController::class, 'detail'])->name('partnership-product.detail');
 Route::get('/certificate/{code}', [CertificateParticipantController::class, 'show'])->name('certificate.participant.detail');
 Route::get('/article', [UserArticleController::class, 'index'])->name('article.index');
@@ -67,6 +67,7 @@ Route::get('/galeri', [UserGalleryController::class, 'index'])->name('gallery.in
 Route::get('/alumni', [UserAlumniController::class, 'index'])->name('alumni.index');
 Route::get('/review', [UserReviewController::class, 'index'])->name('review.index');
 Route::get('/mentor', [UserMentorController::class, 'index'])->name('mentor.index');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/mentor/{id}', [UserMentorController::class, 'show'])->name('mentor.show');
 
 Route::get('/course/{course:slug}/checkout', [UserCourseController::class, 'showCheckout'])->name('course.checkout');
