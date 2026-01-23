@@ -14,6 +14,8 @@ use Inertia\Inertia;
 
 class BootcampController extends Controller
 {
+    private const ADMIN_WHATSAPP_URL = 'https://wa.me/+6285606391730';
+
     // protected $tripayService;
     protected $midtransService;
 
@@ -52,6 +54,17 @@ class BootcampController extends Controller
     {
         $this->handleReferralCode($request);
 
+        if ($bootcamp->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Bootcamp Tidak Tersedia',
+                'item' => $bootcamp->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Bootcamp tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('bootcamp.index'),
+                'backLabel' => 'Kembali ke Daftar Bootcamp',
+            ])->toResponse($request)->setStatusCode(404);
+        }
+
         $bootcamp->load(['category', 'schedules', 'tools', 'user']);
 
         $relatedBootcamps = Bootcamp::with(['category', 'user'])
@@ -89,6 +102,17 @@ class BootcampController extends Controller
     public function showRegister(Request $request, Bootcamp $bootcamp)
     {
         $this->handleReferralCode($request);
+
+        if ($bootcamp->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Bootcamp Tidak Tersedia',
+                'item' => $bootcamp->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Bootcamp tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('bootcamp.index'),
+                'backLabel' => 'Kembali ke Daftar Bootcamp',
+            ])->toResponse($request)->setStatusCode(404);
+        }
 
         if (!Auth::check()) {
             $currentUrl = $request->fullUrl();

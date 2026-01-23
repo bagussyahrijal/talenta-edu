@@ -14,6 +14,8 @@ use Inertia\Inertia;
 
 class WebinarController extends Controller
 {
+    private const ADMIN_WHATSAPP_URL = 'https://wa.me/+6285606391730';
+
     // protected $tripayService;
     protected $midtransService;
 
@@ -53,6 +55,17 @@ class WebinarController extends Controller
     {
         $this->handleReferralCode($request);
 
+        if ($webinar->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Webinar Tidak Tersedia',
+                'item' => $webinar->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Webinar tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('webinar.index'),
+                'backLabel' => 'Kembali ke Daftar Webinar',
+            ])->toResponse($request)->setStatusCode(404);
+        }
+
         $webinar->load(['category', 'tools', 'user']);
 
         $relatedWebinars = Webinar::with(['category', 'user'])
@@ -91,6 +104,17 @@ class WebinarController extends Controller
     public function showRegister(Request $request, Webinar $webinar)
     {
         $this->handleReferralCode($request);
+
+        if ($webinar->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Webinar Tidak Tersedia',
+                'item' => $webinar->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Webinar tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('webinar.index'),
+                'backLabel' => 'Kembali ke Daftar Webinar',
+            ])->toResponse($request)->setStatusCode(404);
+        }
 
         if (!Auth::check()) {
             $currentUrl = $request->fullUrl();
