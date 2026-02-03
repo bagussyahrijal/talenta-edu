@@ -236,6 +236,9 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
 
         Route::get('webinars', [WebinarController::class, 'index'])->name('webinars.index');
         Route::get('webinars/{webinar}', [WebinarController::class, 'show'])->name('webinars.show');
+
+        Route::get('bundles', [BundleController::class, 'index'])->name('bundles.index');
+        Route::get('bundles/{bundle}', [BundleController::class, 'show'])->name('bundles.show');
     });
 
     Route::middleware(['role:affiliate|mentor'])->group(function () {
