@@ -31,8 +31,8 @@ export default function LegalitasSection() {
                         <img src="/assets/images/aktanotaris.png" alt="Akta Notaris" className="w-24 h-24 mb-4" />
                         <h3 className="text-xl font-bold mb-2 text-center">Akta Notaris</h3>
                         <div className=" text-center text-gray-800 text-base">
-                            Akta Notaris No. 07 Tahun 2024<br />
-                            (Notaris Shrimanti Indira Pratiwi, S.H., MKn.)
+                            Akta Notaris No. 01 Tahun 2025<br />
+                            (Notaris Moch Ilham Prasetyo, S.H.,MKn.)
                         </div>
                     </div>
                     {/* Surat Kemenkumham */}
@@ -41,7 +41,7 @@ export default function LegalitasSection() {
                         <h3 className="text-xl font-bold mb-2 text-center">Surat Kemenkumham</h3>
                         <div className="text-center text-gray-800 text-base">
                             Surat Keterangan Terdaftar Kemenkumham<br />
-                            (No: AHU-0000695 Tahun 2024)
+                            (No: AHU-0013666.AH.01.14 Tahun 2025)
                         </div>
                     </div>
                     {/* NIB */}
@@ -50,7 +50,7 @@ export default function LegalitasSection() {
                         <h3 className="text-xl font-bold mb-2 text-center">NIB</h3>
                         <div className="text-center text-gray-800 text-base">
                             Telah Terbit Nomor Induk Berusaha<br />
-                            (No. 090124005728)
+                            (No. 1102250038515)
                         </div>
                     </div>
                 </div>

@@ -128,7 +128,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
             <div className='bg-secondary flex flex-col items-center justify-center space-y-8 px-4 py-14'>
                 <h1 className='text-5xl font-bold font-literata text-primary text-center'>Kelas Terpopuler</h1>
                 <p className='text-center'>Tingkatkan pengetahuan dan keterampilan kamu disini</p>
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 max-w-7xl w-full pb-4">
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl w-full pb-4">
                     {(() => {
                         if (safeLatestProducts.length === 0) {
                             return (
@@ -155,7 +155,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                 <Link key={product.id} href={productUrl} className="group h-full">
                                     <div className="relative h-full overflow-hidden rounded-xl 
                                                     border border-primary bg-white shadow-sm 
-                                                    transition-all duration-300 
+                                                    transition-all duration-300
                                                     hover:shadow-xl hover:scale-105 
                                                     dark:border-primary dark:bg-zinc-800
                                                     before:absolute before:inset-0 before:rounded-xl 
@@ -228,10 +228,6 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                     )}
                                                     {product.type === 'course' && 'Akses Selamanya'}
                                                 </span>
-                                                <div className='flex flex-row items-center justify-center ml-auto'>
-                                                    <Users size={16} />
-                                                    <span>10/10</span>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
