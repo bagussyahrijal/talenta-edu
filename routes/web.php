@@ -44,6 +44,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebinarController;
 use App\Http\Controllers\User\QuizController as UserQuizController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MidtransCallbackController;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -57,7 +58,7 @@ Route::get('/webinar', [UserWebinarController::class, 'index'])->name('webinar.i
 Route::get('/webinar/{webinar:slug}', [UserWebinarController::class, 'detail'])->name('webinar.detail');
 Route::get('/bundle', [UserBundleController::class, 'index'])->name('bundle.index');
 Route::get('/bundle/{bundle:slug}', [UserBundleController::class, 'detail'])->name('bundle.detail');
-Route::get('/about', [UserPartnershipProductController::class, 'index'])->name('partnership-product.index');
+Route::get('/certification', [UserPartnershipProductController::class, 'index'])->name('partnership-product.index');
 Route::get('/certification/{partnershipProduct:slug}', [UserPartnershipProductController::class, 'detail'])->name('partnership-product.detail');
 Route::get('/certificate/{code}', [CertificateParticipantController::class, 'show'])->name('certificate.participant.detail');
 Route::get('/article', [UserArticleController::class, 'index'])->name('article.index');
@@ -66,6 +67,7 @@ Route::get('/galeri', [UserGalleryController::class, 'index'])->name('gallery.in
 Route::get('/alumni', [UserAlumniController::class, 'index'])->name('alumni.index');
 Route::get('/review', [UserReviewController::class, 'index'])->name('review.index');
 Route::get('/mentor', [UserMentorController::class, 'index'])->name('mentor.index');
+Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/mentor/{id}', [UserMentorController::class, 'show'])->name('mentor.show');
 
 Route::get('/course/{course:slug}/checkout', [UserCourseController::class, 'showCheckout'])->name('course.checkout');
@@ -73,6 +75,9 @@ Route::get('/bootcamp/{bootcamp:slug}/register', [UserBootcampController::class,
 Route::get('/webinar/{webinar:slug}/register', [UserWebinarController::class, 'showRegister'])->name('webinar.register');
 Route::get('/bundle/{bundle:slug}/checkout', [UserBundleController::class, 'showCheckout'])->name('bundle.checkout');
 Route::get('/certification/{partnershipProduct:slug}/track-click', [UserPartnershipProductController::class, 'trackClick'])->name('partnership-products.track-click');
+Route::get('/certification/{partnershipProduct:slug}/scholarship-apply', [UserPartnershipProductController::class, 'scholarshipApply'])->name('partnership-products.scholarship-apply');
+Route::post('/certification/{partnershipProduct:slug}/scholarship-store', [UserPartnershipProductController::class, 'scholarshipStore'])->name('partnership-products.scholarship-store');
+Route::get('/certification/{partnershipProduct:slug}/scholarship-success', [UserPartnershipProductController::class, 'scholarshipSuccess'])->name('partnership-products.scholarship-success');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/course/checkout/success', [UserCourseController::class, 'showCheckoutSuccess'])->name('course.checkout.success');
@@ -193,6 +198,10 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
         Route::post('/partnership-products/{id}/duplicate', [PartnershipProductController::class, 'duplicate'])->name('partnership-products.duplicate');
         Route::get('/partnership-products/stats/overview', [PartnershipProductController::class, 'statistics'])->name('partnership-products.statistics');
         Route::post('/partnership-products/bulk-action', [PartnershipProductController::class, 'bulkAction'])->name('partnership-products.bulk-action');
+        Route::post(
+            '/partnership-products/{id}/scholarship-participants/{scholarshipId}/accept',
+            [PartnershipProductController::class, 'acceptScholarshipParticipant']
+        )->name('partnership-products.scholarship-participants.accept');
 
         Route::resource('bundles', BundleController::class);
         Route::post('/bundles/{bundle}/publish', [BundleController::class, 'publish'])->name('bundles.publish');
@@ -227,6 +236,9 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
 
         Route::get('webinars', [WebinarController::class, 'index'])->name('webinars.index');
         Route::get('webinars/{webinar}', [WebinarController::class, 'show'])->name('webinars.show');
+
+        Route::get('bundles', [BundleController::class, 'index'])->name('bundles.index');
+        Route::get('bundles/{bundle}', [BundleController::class, 'show'])->name('bundles.show');
     });
 
     Route::middleware(['role:affiliate|mentor'])->group(function () {

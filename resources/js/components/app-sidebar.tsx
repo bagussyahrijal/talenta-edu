@@ -81,7 +81,7 @@ const allNavItems: (NavItem & { roles: string[] })[] = [
         title: 'Paket Bundling',
         href: '/admin/bundles',
         icon: Gift,
-        roles: ['admin'],
+        roles: ['admin', 'affiliate'],
     },
     {
         title: 'Sertifikasi Kerjasama',

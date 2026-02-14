@@ -7,17 +7,22 @@ use App\Models\Bootcamp;
 use App\Models\Category;
 use App\Models\Invoice;
 use App\Services\TripayService;
+use App\Services\MidtransService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class BootcampController extends Controller
 {
-    protected $tripayService;
+    private const ADMIN_WHATSAPP_URL = 'https://wa.me/+6285606391730';
 
-    public function __construct(TripayService $tripayService)
+    // protected $tripayService;
+    protected $midtransService;
+
+    public function __construct(MidtransService $midtransService)
     {
-        $this->tripayService = $tripayService;
+        // $this->tripayService = $tripayService;
+        $this->midtransService = $midtransService;
     }
     public function index()
     {
@@ -48,6 +53,17 @@ class BootcampController extends Controller
     public function detail(Request $request, Bootcamp $bootcamp)
     {
         $this->handleReferralCode($request);
+
+        if ($bootcamp->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Bootcamp Tidak Tersedia',
+                'item' => $bootcamp->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Bootcamp tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('bootcamp.index'),
+                'backLabel' => 'Kembali ke Daftar Bootcamp',
+            ])->toResponse($request)->setStatusCode(404);
+        }
 
         $bootcamp->load(['category', 'schedules', 'tools', 'user']);
 
@@ -87,6 +103,17 @@ class BootcampController extends Controller
     {
         $this->handleReferralCode($request);
 
+        if ($bootcamp->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Bootcamp Tidak Tersedia',
+                'item' => $bootcamp->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Bootcamp tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('bootcamp.index'),
+                'backLabel' => 'Kembali ke Daftar Bootcamp',
+            ])->toResponse($request)->setStatusCode(404);
+        }
+
         if (!Auth::check()) {
             $currentUrl = $request->fullUrl();
             return redirect()->route('login', ['redirect' => $currentUrl]);
@@ -122,7 +149,7 @@ class BootcampController extends Controller
                     'status' => $invoice->status,
                     'amount' => $invoice->amount,
                     'payment_method' => $invoice->payment_method,
-                    'payment_channel' => $invoice->payment_channel,
+                    // 'payment_channel' => $invoice->payment_channel,
                     'va_number' => $invoice->va_number,
                     'qr_code_url' => $invoice->qr_code_url,
                     'bank_name' => $invoice->bank_name ?? null,
@@ -130,26 +157,26 @@ class BootcampController extends Controller
                     'expires_at' => $invoice->expires_at,
                 ];
 
-                if ($invoice->payment_reference) {
-                    try {
-                        $tripayDetail = $this->tripayService->detailTransaction($invoice->payment_reference);
-                        if (isset($tripayDetail->data)) {
-                            $transactionDetail = [
-                                'reference' => $tripayDetail->data->reference ?? null,
-                                'payment_name' => $tripayDetail->data->payment_name ?? null,
-                                'pay_code' => $tripayDetail->data->pay_code ?? null,
-                                'instructions' => $tripayDetail->data->instructions ?? [],
-                                'status' => $tripayDetail->data->status ?? 'PENDING',
-                                'paid_at' => $tripayDetail->data->paid_at ?? null,
-                            ];
-                        }
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::warning('Failed to fetch Tripay details', [
-                            'invoice_code' => $invoice->invoice_code,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
+                // if ($invoice->payment_reference) {
+                //     try {
+                //         $tripayDetail = $this->tripayService->detailTransaction($invoice->payment_reference);
+                //         if (isset($tripayDetail->data)) {
+                //             $transactionDetail = [
+                //                 'reference' => $tripayDetail->data->reference ?? null,
+                //                 'payment_name' => $tripayDetail->data->payment_name ?? null,
+                //                 'pay_code' => $tripayDetail->data->pay_code ?? null,
+                //                 'instructions' => $tripayDetail->data->instructions ?? [],
+                //                 'status' => $tripayDetail->data->status ?? 'PENDING',
+                //                 'paid_at' => $tripayDetail->data->paid_at ?? null,
+                //             ];
+                //         }
+                //     } catch (\Exception $e) {
+                //         \Illuminate\Support\Facades\Log::warning('Failed to fetch Tripay details', [
+                //             'invoice_code' => $invoice->invoice_code,
+                //             'error' => $e->getMessage()
+                //         ]);
+                //     }
+                // }
             }
         }
 
@@ -158,7 +185,7 @@ class BootcampController extends Controller
             'hasAccess' => $hasAccess,
             'pendingInvoice' => $pendingInvoice,
             'transactionDetail' => $transactionDetail,
-            'channels' => $this->tripayService->getPaymentChannels(),
+            // 'channels' => $this->midtransService->getPaymentChannels(),
             'referralInfo' => $this->getReferralInfo(),
         ]);
     }

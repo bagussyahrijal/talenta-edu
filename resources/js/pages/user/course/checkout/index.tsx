@@ -73,7 +73,7 @@ interface PendingInvoice {
     status: string;
     amount: number;
     payment_method: string;
-    payment_channel: string;
+    // payment_channel: string;
     va_number?: string;
     qr_code_url?: string;
     bank_name?: string;
@@ -81,30 +81,30 @@ interface PendingInvoice {
     expires_at: string;
 }
 
-interface PaymentChannel {
-    active: boolean;
-    code: string;
-    fee_customer: {
-        flat: number;
-        percent: number;
-    };
-    fee_merchant: {
-        flat: number;
-        percent: number;
-    };
-    group: string;
-    icon_url: string;
-    maximum_amount: number;
-    maximum_fee: number | null;
-    minimum_amount: number;
-    minimum_fee: number | null;
-    name: string;
-    total_fee: {
-        flat: number;
-        percent: string;
-    };
-    type: string;
-}
+// interface PaymentChannel {
+//     active: boolean;
+//     code: string;
+//     fee_customer: {
+//         flat: number;
+//         percent: number;
+//     };
+//     fee_merchant: {
+//         flat: number;
+//         percent: number;
+//     };
+//     group: string;
+//     icon_url: string;
+//     maximum_amount: number;
+//     maximum_fee: number | null;
+//     minimum_amount: number;
+//     minimum_fee: number | null;
+//     name: string;
+//     total_fee: {
+//         flat: number;
+//         percent: string;
+//     };
+//     type: string;
+// }
 
 interface InvoiceData {
     type: string;
@@ -112,7 +112,7 @@ interface InvoiceData {
     discount_amount: number;
     nett_amount: number;
     total_amount: number;
-    payment_channel?: string;
+    // payment_channel?: string;
     discount_code_id?: string;
     discount_code_amount?: number;
 }
@@ -122,14 +122,14 @@ export default function CheckoutCourse({
     hasAccess,
     pendingInvoice,
     transactionDetail,
-    channels,
+    // channels,
     referralInfo,
 }: {
     course: Course;
     hasAccess: boolean;
     pendingInvoice?: PendingInvoice | null;
     transactionDetail?: TransactionDetail | null;
-    channels: PaymentChannel[];
+    // channels: PaymentChannel[];
     referralInfo: ReferralInfo;
 }) {
     const { auth } = usePage<SharedData>().props;
@@ -142,7 +142,7 @@ export default function CheckoutCourse({
     const [discountData, setDiscountData] = useState<DiscountData | null>(null);
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoError, setPromoError] = useState('');
-    const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(channels.length > 0 ? channels[0] : null);
+    // const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(channels.length > 0 ? channels[0] : null);
 
     const isFree = course.price === 0;
 
@@ -150,15 +150,15 @@ export default function CheckoutCourse({
     const discountAmount = discountData?.discount_amount || 0;
     const finalCoursePrice = basePrice - discountAmount;
 
-    const calculateAdminFee = (channel: PaymentChannel | null): number => {
-        if (!channel || isFree) return 0;
-        const flatFee = channel.fee_customer.flat || 0;
-        const percentFee = Math.round(finalCoursePrice * ((channel.fee_customer.percent || 0) / 100));
-        return flatFee + percentFee;
-    };
+    // const calculateAdminFee = (channel: PaymentChannel | null): number => {
+    //     if (!channel || isFree) return 0;
+    //     const flatFee = channel.fee_customer.flat || 0;
+    //     const percentFee = Math.round(finalCoursePrice * ((channel.fee_customer.percent || 0) / 100));
+    //     return flatFee + percentFee;
+    // };
 
-    const adminFee = calculateAdminFee(selectedChannel);
-    const totalPrice = isFree ? 0 : finalCoursePrice + adminFee;
+     const adminFee = isFree ? 0 : 5000; //calculateAdminFee(selectedChannel);
+     const totalPrice = isFree ? 0 : finalCoursePrice + adminFee;
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -303,7 +303,7 @@ export default function CheckoutCourse({
                 discount_amount: originalDiscountAmount + promoDiscountAmount,
                 nett_amount: finalCoursePrice,
                 total_amount: totalPrice,
-                payment_channel: selectedChannel?.code,
+                // payment_channel: selectedChannel?.code,
             };
 
             if (discountData?.valid) {
@@ -383,15 +383,15 @@ export default function CheckoutCourse({
         }
     };
 
-    const getPaymentChannelName = (code: string): string => {
-        const channel = channels.find((c) => c.code === code);
-        return channel?.name || code;
-    };
+    // const getPaymentChannelName = (code: string): string => {
+    //     const channel = channels.find((c) => c.code === code);
+    //     return channel?.name || code;
+    // };
 
-    const getPaymentGroupIcon = (channelCode: string): string => {
-        const channel = channels.find((c) => c.code === channelCode);
-        return channel?.icon_url || '';
-    };
+    // const getPaymentGroupIcon = (channelCode: string): string => {
+    //     const channel = channels.find((c) => c.code === channelCode);
+    //     return channel?.icon_url || '';
+    // };
 
     const formatExpiryTime = (expiresAt: string): { time: string; status: 'expired' | 'urgent' | 'normal' } => {
         const now = new Date();
@@ -530,8 +530,9 @@ export default function CheckoutCourse({
                         </div>
 
                         {/* Payment Channels Section */}
-                        {!isFree && channels.length > 0 && !pendingInvoice && !hasAccess && (
-                            <div className="mt-6 overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+                        
+                        {/* {!isFree && channels.length > 0 && !pendingInvoice && !hasAccess && ( */}
+                            {/* <div className="mt-6 overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
                                 <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
                                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Metode Pembayaran</h2>
                                 </div>
@@ -585,8 +586,8 @@ export default function CheckoutCourse({
                                         ))}
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            </div> */}
+                        {/* )} */}
                     </div>
 
                     {/* Payment Section */}
@@ -649,7 +650,7 @@ export default function CheckoutCourse({
                                             <span className="text-sm text-gray-600 dark:text-gray-400">No. Invoice</span>
                                             <span className="font-semibold text-gray-900 dark:text-white">{pendingInvoice.invoice_code}</span>
                                         </div>
-                                        <div className="flex items-center justify-between">
+                                        {/* <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">Metode Pembayaran</span>
                                             <div className="flex items-center gap-2">
                                                 <img
@@ -661,7 +662,7 @@ export default function CheckoutCourse({
                                                     {transactionDetail?.payment_name || getPaymentChannelName(pendingInvoice.payment_channel)}
                                                 </span>
                                             </div>
-                                        </div>
+                                        </div> */}
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">Total Pembayaran</span>
                                             <span className="text-xl font-bold text-orange-600">

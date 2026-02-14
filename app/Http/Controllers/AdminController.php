@@ -409,7 +409,9 @@ class AdminController extends Controller
             'commission_last_month' => $lastMonthCommission,
             'daily_commission_change' => round($dailyCommissionChange, 1),
             'monthly_commission_change' => round($monthlyCommissionChange, 1),
-            'total_referrals' => User::where('referred_by_user_id', $user->id)->count(),
+            'total_referrals' => AffiliateEarning::where('affiliate_user_id', $user->id)
+                ->distinct('invoice_id')
+                ->count(),
             'conversion_rate' => 0, // Data klik belum ada, jadi kita set 0
             'total_clicks' => 0, // Data klik belum ada, jadi kita set 0
             'recent_referrals' => AffiliateEarning::where('affiliate_user_id', $user->id)

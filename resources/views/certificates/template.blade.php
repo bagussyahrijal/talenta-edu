@@ -70,7 +70,7 @@
             text-transform: uppercase;
         }
 
-        .certificate-titledesc{
+        .certificate-titledesc {
             font-size: 68px;
             color: #01385a;
             margin-bottom: 20px;
@@ -266,7 +266,7 @@
                 @endif --}}
 
                 <div class="certificate-title">Talenta Academy</div>
-                <div class="certificate-titledesc">Training Center & Research</div>    
+                <div class="certificate-titledesc">Training Center & Research</div>
                 {{-- <div class="certificate-subtitle">
                     @if ($certificate->webinar_id)
                         Partisipasi
@@ -292,7 +292,7 @@
 
                 <div class="program-description">
                     @if ($certificate->webinar_id)
-                        Sebagai Peserta yang Telah Mengikuti 
+                        Sebagai Peserta yang Telah Mengikuti
                     @else
                         Sebagai Peserta yang Telah Mengikuti dan Lulus
                     @endif
@@ -352,7 +352,7 @@
                             <div class="certificate-url">{{ $certificateUrl }}</div>
                         @else
                             <div class="certificate-url">
-                                https://talenta.id/certificate/{{ $data['certificate_code'] }}
+                                https://talentaedu.id/certificate/{{ $data['certificate_code'] }}
                             </div>
                         @endif
                     </div>

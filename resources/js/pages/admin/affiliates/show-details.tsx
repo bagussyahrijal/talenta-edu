@@ -22,7 +22,7 @@ export default function AffiliateDetail({ affiliate }: { affiliate: Affiliate })
                 <Button
                     type="button"
                     onClick={() => {
-                        navigator.clipboard.writeText(`https://talenta.com/register?ref=${affiliate.affiliate_code}`);
+                        navigator.clipboard.writeText(`https://talentaedu.com/register?ref=${affiliate.affiliate_code}`);
                         toast.success('Link afiliasi berhasil disalin!');
                     }}
                     className="w-full hover:cursor-pointer"

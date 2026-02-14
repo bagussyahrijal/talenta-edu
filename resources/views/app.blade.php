@@ -48,7 +48,7 @@
     <meta property="og:title" content="Talenta">
     <meta property="og:description"
         content="Talenta adalah platform edukasi digital yang menyediakan layanan pembelajaran mulai dari kelas online, webinar, dan bootcamp.">
-    <meta property="og:image" content="{{ asset('assets/images/logo-square.png') }}">
+    <meta property="og:image" content="{{ asset('assets/images/logo-primary.png') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">
 

@@ -287,4 +287,9 @@ class HomeController extends Controller
             ],
         ]);
     }
+
+    public function about()
+    {
+        return Inertia::render('user/about/dashboard/index');
+    }
 }
