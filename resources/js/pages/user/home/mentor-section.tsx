@@ -34,7 +34,7 @@ const mentorsData: Mentor[] = [
 
 const MentorCard = ({ mentor }: { mentor: Mentor }) => {
     return (
-        <section className="relative mx-auto h-[370px] w-full max-w-xs overflow-hidden rounded-[20px] sm:max-w-sm md:max-w-md lg:w-[300px]">
+        <section className="relative mx-auto h-[370px] w-full max-w-xs overflow-hidden rounded-[20px] sm:max-w-sm md:max-w-md lg:w-[300px] shadow-lg">
             {/* Blue Side Bar with "MENTOR" text */}
             <div className="absolute left-0 top-0 h-full w-[70px] rounded-[20px_0px_0px_20px] bg-[#1976d3] sm:w-[90px]">
                 <div className="absolute left-1/2 top-1/3 flex -translate-x-1/2 -translate-y-1/2 -rotate-90 items-center justify-center">
