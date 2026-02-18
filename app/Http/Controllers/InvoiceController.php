@@ -504,6 +504,12 @@ class InvoiceController extends Controller
                 ]);
             }
 
+            // Pastikan peserta langsung ditambahkan ke sertifikat untuk setiap item bundle
+            foreach ($bundle->bundleItems as $item) {
+                $type = $item->getTypeSlug();
+                $this->addToCertificateParticipants($type, $item->bundleable_id, $userId);
+            }
+
             // Create Midtrans transaction for bundle
             $midtransParams = [
                 'transaction_details' => [
@@ -524,8 +530,8 @@ class InvoiceController extends Controller
                     ],
                 ],
                 'callbacks' => [
-                'finish' => config('app.url') . '/invoice/' . $invoice->id,
-            ],
+                    'finish' => config('app.url') . '/invoice/' . $invoice->id,
+                ],
             ];
 
             // Add transaction fee if exists
@@ -820,7 +826,7 @@ class InvoiceController extends Controller
 
     private function calculateTransactionFee($channelCode, $nettAmount): int
     {
-        if ( $nettAmount <= 0) {
+        if ($nettAmount <= 0) {
             return 0;
         }
         return 5000;

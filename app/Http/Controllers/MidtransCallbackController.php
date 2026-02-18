@@ -33,7 +33,7 @@ class MidtransCallbackController extends Controller
         try {
             $serverKey = config('midtrans.server_key');
             $hashed = hash('sha512', $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
-            
+
             if ($hashed !== $request->signature_key) {
                 return Response::json([
                     'success' => false,
@@ -128,7 +128,7 @@ class MidtransCallbackController extends Controller
     {
         // Ambil VA number dengan cara yang lebih aman
         $vaNumber = null;
-        
+
         // Cek berbagai format VA number dari Midtrans
         if ($request->has('va_numbers') && is_array($request->va_numbers) && count($request->va_numbers) > 0) {
             $vaNumber = $request->va_numbers[0]['va_number'] ?? null;
@@ -164,11 +164,22 @@ class MidtransCallbackController extends Controller
 
     private function processInvoiceEnrollments($invoice)
     {
+        $invoice->loadMissing([
+            'courseItems',
+            'bootcampItems',
+            'webinarItems',
+            'bundleEnrollments.bundle.bundleItems.bundleable'
+        ]);
+
+        $userId = $invoice->user_id;
+
         if ($invoice->courseItems->count() > 0) {
             foreach ($invoice->courseItems as $item) {
                 $item->update([
                     'completed_at' => Carbon::now('Asia/Jakarta')
                 ]);
+
+                $this->addToCertificateParticipants('course', $item->course_id, $userId);
             }
         }
 
@@ -177,6 +188,8 @@ class MidtransCallbackController extends Controller
                 $item->update([
                     'completed_at' => Carbon::now('Asia/Jakarta')
                 ]);
+
+                $this->addToCertificateParticipants('bootcamp', $item->bootcamp_id, $userId);
             }
         }
 
@@ -185,6 +198,8 @@ class MidtransCallbackController extends Controller
                 $item->update([
                     'completed_at' => Carbon::now('Asia/Jakarta')
                 ]);
+
+                $this->addToCertificateParticipants('webinar', $item->webinar_id, $userId);
             }
         }
 
@@ -193,38 +208,84 @@ class MidtransCallbackController extends Controller
                 $enrollment->update([
                     'completed_at' => Carbon::now('Asia/Jakarta')
                 ]);
+
+                // Pastikan enrollments individu dan sertifikat untuk semua item bundle terbuat
+                if (method_exists($enrollment, 'createIndividualEnrollments')) {
+                    $enrollment->createIndividualEnrollments();
+                }
+
+                $bundle = $enrollment->bundle;
+                if ($bundle && $bundle->bundleItems) {
+                    foreach ($bundle->bundleItems as $bundleItem) {
+                        $type = $bundleItem->getTypeSlug();
+                        $this->addToCertificateParticipants($type, $bundleItem->bundleable_id, $userId);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Menambahkan peserta ke certificate participants berdasarkan tipe program
+     */
+    private function addToCertificateParticipants(string $type, $itemId, $userId): void
+    {
+        $certificate = null;
+
+        switch ($type) {
+            case 'course':
+                $certificate = Certificate::where('course_id', $itemId)->first();
+                break;
+            case 'bootcamp':
+                $certificate = Certificate::where('bootcamp_id', $itemId)->first();
+                break;
+            case 'webinar':
+                $certificate = Certificate::where('webinar_id', $itemId)->first();
+                break;
+        }
+
+        if ($certificate) {
+            $existingParticipant = CertificateParticipant::where('certificate_id', $certificate->id)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$existingParticipant) {
+                CertificateParticipant::create([
+                    'certificate_id' => $certificate->id,
+                    'user_id' => $userId,
+                ]);
             }
         }
     }
 
 
-private function recordAffiliateCommission($invoice)
-{
-    if ($invoice->referred_by_user_id && $invoice->nett_amount > 0) {
-        $commissionPercent = 10;
-        $commissionAmount = ($invoice->nett_amount * $commissionPercent) / 100;
+    private function recordAffiliateCommission($invoice)
+    {
+        if ($invoice->referred_by_user_id && $invoice->nett_amount > 0) {
+            $commissionPercent = 10;
+            $commissionAmount = ($invoice->nett_amount * $commissionPercent) / 100;
 
-        AffiliateEarning::create([
-            'affiliate_user_id' => $invoice->referred_by_user_id,
-            'invoice_id' => $invoice->id,
-            'course_id' => $invoice->courseItems->first()->course_id ?? null,
-            'amount' => $commissionAmount,
-            'rate' => $commissionPercent,
-            'status' => 'approved',
-        ]);
+            AffiliateEarning::create([
+                'affiliate_user_id' => $invoice->referred_by_user_id,
+                'invoice_id' => $invoice->id,
+                'course_id' => $invoice->courseItems->first()->course_id ?? null,
+                'amount' => $commissionAmount,
+                'rate' => $commissionPercent,
+                'status' => 'approved',
+            ]);
 
-        Log::info('Affiliate commission recorded', [
-            'invoice_code' => $invoice->invoice_code,
-            'commission_amount' => $commissionAmount
-        ]);
+            Log::info('Affiliate commission recorded', [
+                'invoice_code' => $invoice->invoice_code,
+                'commission_amount' => $commissionAmount
+            ]);
+        }
     }
-}
 
     private function sendEmailNotification($invoice)
-        {
-            try {
-                $productType = '';
-                $productTitle = '';
+    {
+        try {
+            $productType = '';
+            $productTitle = '';
             if ($invoice->courseItems->count() > 0) {
                 $productType = 'Course';
                 $productTitle = $invoice->courseItems->first()->course->title ?? '';
