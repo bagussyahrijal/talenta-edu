@@ -90,6 +90,9 @@ class MidtransCallbackController extends Controller
                         'invoice_code' => $orderId,
                         'status' => $transactionStatus
                     ]);
+
+                    // Kirim WhatsApp untuk pembayaran gagal
+                    $this->sendWhatsAppPaymentFailed($invoice, $transactionStatus);
                 }
 
                 DB::commit();
@@ -160,6 +163,182 @@ class MidtransCallbackController extends Controller
         $this->processInvoiceEnrollments($invoice);
         $this->recordAffiliateCommission($invoice);
         $this->sendEmailNotification($invoice);
+
+        // Kirim WhatsApp setelah pembayaran berhasil
+        $this->sendWhatsAppNotification($invoice);
+    }
+
+    /**
+     * Kirim notifikasi WhatsApp setelah pembayaran berhasil
+     */
+    private function sendWhatsAppNotification(Invoice $invoice): void
+    {
+        try {
+            $invoice->loadMissing([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'bundleEnrollments.bundle',
+            ]);
+
+            $user = $invoice->user;
+
+            if (!$user || !$user->phone_number) {
+                Log::warning('User does not have phone number', [
+                    'user_id' => $user->id ?? null,
+                    'invoice_code' => $invoice->invoice_code,
+                ]);
+                return;
+            }
+
+            $phoneNumber = $this->formatPhoneNumber($user->phone_number);
+            $message = $this->createWhatsAppSuccessMessage($invoice);
+
+            $waData = [
+                [
+                    'phone' => $phoneNumber,
+                    'message' => $message,
+                    'isGroup' => 'false',
+                ]
+            ];
+
+            $sent = self::sendText($waData);
+
+            if ($sent) {
+                Log::info('WhatsApp notification sent successfully', [
+                    'invoice_code' => $invoice->invoice_code,
+                    'user_id' => $user->id,
+                    'phone' => $phoneNumber,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send WhatsApp notification', [
+                'invoice_code' => $invoice->invoice_code,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Kirim notifikasi WhatsApp untuk pembayaran gagal
+     */
+    private function sendWhatsAppPaymentFailed(Invoice $invoice, ?string $midtransStatus = null): void
+    {
+        try {
+            $invoice->loadMissing([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'bundleEnrollments.bundle',
+            ]);
+
+            $user = $invoice->user;
+
+            if (!$user || !$user->phone_number) {
+                return;
+            }
+
+            $phoneNumber = $this->formatPhoneNumber($user->phone_number);
+
+            $itemType = 'Program';
+            if ($invoice->courseItems->count() > 0) {
+                $itemType = 'Kelas Online';
+            } elseif ($invoice->bootcampItems->count() > 0) {
+                $itemType = 'Bootcamp';
+            } elseif ($invoice->webinarItems->count() > 0) {
+                $itemType = 'Webinar';
+            } elseif ($invoice->bundleEnrollments->count() > 0) {
+                $itemType = 'Bundle';
+            }
+
+            $statusText = $midtransStatus ? " (status: {$midtransStatus})" : '';
+
+            $message = "*[Sekolah Pajak - Pembayaran {$itemType} Gagal]*\n\n";
+            $message .= "Hai *{$user->name}*,\n\n";
+            $message .= "Maaf, pembayaran {$itemType} untuk invoice *{$invoice->invoice_code}* tidak berhasil atau telah kadaluarsa{$statusText}.\n\n";
+            $message .= "Silakan melakukan pembelian ulang jika Anda masih berminat.\n\n";
+            $message .= "Terima kasih atas perhatiannya.\n\n";
+            $message .= "*Sekolah Pajak Customer Support*";
+
+            $waData = [
+                [
+                    'phone' => $phoneNumber,
+                    'message' => $message,
+                    'isGroup' => 'false',
+                ]
+            ];
+
+            self::sendText($waData);
+        } catch (\Exception $e) {
+            Log::error('Failed to send WhatsApp payment failed notification', [
+                'invoice_code' => $invoice->invoice_code,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function createWhatsAppSuccessMessage(Invoice $invoice): string
+    {
+        $user = $invoice->user;
+        $loginUrl = route('login');
+        $profileUrl = route('profile.index');
+
+        $programName = 'Program';
+        $programTitle = '';
+
+        if ($invoice->bundleEnrollments->count() > 0) {
+            $programName = 'Bundle';
+            $programTitle = $invoice->bundleEnrollments->first()->bundle->title ?? '';
+        } elseif ($invoice->courseItems->count() > 0) {
+            $programName = 'Kelas Online';
+            $programTitle = $invoice->courseItems->first()->course->title ?? '';
+        } elseif ($invoice->bootcampItems->count() > 0) {
+            $programName = 'Bootcamp';
+            $programTitle = $invoice->bootcampItems->first()->bootcamp->title ?? '';
+        } elseif ($invoice->webinarItems->count() > 0) {
+            $programName = 'Webinar';
+            $programTitle = $invoice->webinarItems->first()->webinar->title ?? '';
+        }
+
+        $paidAt = $invoice->paid_at ? Carbon::parse($invoice->paid_at)->format('d M Y H:i') : Carbon::now('Asia/Jakarta')->format('d M Y H:i');
+
+        $message = "*[Sekolah Pajak - Pembayaran {$programName} Berhasil]* ✅\n\n";
+        $message .= "Hai *{$user->name}*,\n\n";
+        $message .= "Terima kasih! Pembayaran {$programName} Anda telah berhasil diproses.\n\n";
+        $message .= "*Detail Pembelian:*\n";
+        $message .= "🧾 Invoice: *{$invoice->invoice_code}*\n";
+        if ($programTitle) {
+            $message .= "📚 {$programName}: *{$programTitle}*\n";
+        }
+        $message .= "💰 Total: *Rp " . number_format((int) $invoice->amount, 0, ',', '.') . "*\n";
+        $message .= "📅 Dibayar: {$paidAt}\n\n";
+        $message .= "*Cara Mengakses:*\n";
+        $message .= "1. Login ke akun Anda: {$loginUrl}\n";
+        $message .= "2. Kunjungi dashboard: {$profileUrl}\n";
+        $message .= "3. Mulai belajar dan raih sertifikat!\n\n";
+        $message .= "*Sekolah Pajak Customer Support*";
+
+        return $message;
+    }
+
+    /**
+     * Format nomor HP ke format WhatsApp (62...)
+     */
+    private function formatPhoneNumber(string $phoneNumber): string
+    {
+        $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
+
+        if (substr($phoneNumber, 0, 1) == '0') {
+            $phoneNumber = '62' . substr($phoneNumber, 1);
+        }
+
+        if (substr($phoneNumber, 0, 2) != '62') {
+            $phoneNumber = '62' . $phoneNumber;
+        }
+
+        return $phoneNumber;
     }
 
     private function processInvoiceEnrollments($invoice)
@@ -258,26 +437,69 @@ class MidtransCallbackController extends Controller
         }
     }
 
-
-    private function recordAffiliateCommission($invoice)
+    private function recordAffiliateCommission(Invoice $invoice): void
     {
-        if ($invoice->referred_by_user_id && $invoice->nett_amount > 0) {
-            $commissionPercent = 10;
-            $commissionAmount = ($invoice->nett_amount * $commissionPercent) / 100;
+        if ((float) $invoice->nett_amount <= 0) {
+            return;
+        }
 
-            AffiliateEarning::create([
-                'affiliate_user_id' => $invoice->referred_by_user_id,
-                'invoice_id' => $invoice->id,
-                'course_id' => $invoice->courseItems->first()->course_id ?? null,
-                'amount' => $commissionAmount,
-                'rate' => $commissionPercent,
-                'status' => 'approved',
-            ]);
+        if ($invoice->referred_by_user_id) {
+            $affiliate = User::find($invoice->referred_by_user_id);
 
-            Log::info('Affiliate commission recorded', [
-                'invoice_code' => $invoice->invoice_code,
-                'commission_amount' => $commissionAmount
-            ]);
+            if ($affiliate && $affiliate->affiliate_status === 'Active' && (float) $affiliate->commission > 0) {
+                $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
+
+                AffiliateEarning::create([
+                    'affiliate_user_id' => $affiliate->id,
+                    'invoice_id' => $invoice->id,
+                    'amount' => $commissionAmount,
+                    'rate' => $affiliate->commission,
+                    'status' => 'approved',
+                ]);
+            }
+        } else {
+            $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
+
+            if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && (float) $defaultAffiliate->commission > 0) {
+                $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
+
+                AffiliateEarning::create([
+                    'affiliate_user_id' => $defaultAffiliate->id,
+                    'invoice_id' => $invoice->id,
+                    'amount' => $commissionAmount,
+                    'rate' => $defaultAffiliate->commission,
+                    'status' => 'approved',
+                ]);
+            }
+        }
+
+        $this->recordMentorCommission($invoice);
+    }
+
+    /**
+     * Mencatat komisi untuk mentor dari penjualan kelas mereka
+     */
+    private function recordMentorCommission(Invoice $invoice): void
+    {
+        $invoice->loadMissing(['courseItems.course.user']);
+
+        foreach ($invoice->courseItems as $courseItem) {
+            $course = $courseItem->course;
+            $mentor = $course?->user;
+
+            if ($mentor && $mentor->hasRole('mentor') && $mentor->affiliate_status === 'Active' && (float) $mentor->commission > 0) {
+                $commissionAmount = $courseItem->price * ($mentor->commission / 100);
+
+                AffiliateEarning::create([
+                    'affiliate_user_id' => $mentor->id,
+                    'invoice_id' => $invoice->id,
+                    'amount' => $commissionAmount,
+                    'rate' => $mentor->commission,
+                    'status' => 'approved',
+                    'type' => 'mentor_course',
+                    'course_id' => $course->id,
+                ]);
+            }
         }
     }
 
