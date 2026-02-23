@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, useCarousel } from '@/components/ui/carousel';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Testimonial {
     name: string;
@@ -83,7 +83,7 @@ function TestimonyCard({ testimonial, isCenter }: { testimonial: Testimonial; is
     if (!testimonial) return null;
 
     return (
-        <div className={`flex flex-col rounded-3xl bg-white ${isCenter ? 'p-8 shadow-xl' : 'p-6 shadow-md'} h-full`}>
+        <div className={`flex flex-col rounded-3xl bg-white ${isCenter ? 'p-8 shadow-xl' : 'p-6 shadow-md'} h-full`} >
             <div className={`${isCenter ? 'mb-6' : 'mb-4'} flex items-start gap-4`}>
                 <img
                     src={testimonial.image}
@@ -116,12 +116,18 @@ function TestimonyCarousel() {
         return (index + 1) % totalItems;
     };
 
-    // Pastikan index valid
     const validIndex = Math.min(Math.max(index, 0), testimonials.length - 1);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex(getNextIndex());
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [index, setIndex]);
 
     return (
         <div className="relative">
-            <div className="flex items-center justify-center gap-2 md:gap-6">
+            <div className="flex items-center justify-center gap-2 md:gap-6 px-2">
                 {/* Left Arrow */}
                 <Button
                     onClick={() => setIndex(getPrevIndex())}
@@ -182,7 +188,7 @@ export default function TestimonySection() {
                         {testimonials.map((testimonial, idx) => (
                             <CarouselItem key={idx} className="pl-0">
                                 <div className="hidden">
-                                    <TestimonyCard testimonial={testimonial} isCenter={false} />
+                                    <TestimonyCard testimonial={testimonial} isCenter={false}/>
                                 </div>
                             </CarouselItem>
                         ))}
