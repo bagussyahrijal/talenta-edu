@@ -76,7 +76,7 @@ class RegisteredUserController extends Controller
 
         session()->forget('referral_code');
 
-        // return to_route('home');
-        return to_route('verification.notice')->with('status', 'Pendaftaran berhasil! Silakan periksa email Anda untuk tautan verifikasi.');
+        return to_route('home');
+        // return to_route('verification.notice')->with('status', 'Pendaftaran berhasil! Silakan periksa email Anda untuk tautan verifikasi.');
     }
 }
