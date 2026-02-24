@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/createLucideIcon-BmjPsIbX.js
 import{r as a}from"./app-rW6VLnf3.js";/**
-========
-import{r as a}from"./app-CGODZS5d.js";/**
->>>>>>>> 3c13056529d5d0446239ab42da143f96609efd0e:public/build/assets/createLucideIcon-C5agtoS_.js
  * @license lucide-react v0.475.0 - ISC
  *
  * This source code is licensed under the ISC license.

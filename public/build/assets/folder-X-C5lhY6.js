@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/folder-X-C5lhY6.js
 import{c as o}from"./createLucideIcon-BmjPsIbX.js";/**
-========
-import{c as o}from"./createLucideIcon-C5agtoS_.js";/**
->>>>>>>> 3c13056529d5d0446239ab42da143f96609efd0e:public/build/assets/folder-CV-cMG2d.js
  * @license lucide-react v0.475.0 - ISC
  *
  * This source code is licensed under the ISC license.

@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/book-marked-CC2U_U0G.js
 import{c as o}from"./createLucideIcon-BmjPsIbX.js";/**
-========
-import{c as o}from"./createLucideIcon-C5agtoS_.js";/**
->>>>>>>> 3c13056529d5d0446239ab42da143f96609efd0e:public/build/assets/book-marked-CsJ-ZBJ2.js
  * @license lucide-react v0.475.0 - ISC
  *
  * This source code is licensed under the ISC license.

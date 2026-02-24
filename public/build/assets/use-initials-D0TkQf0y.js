@@ -1,5 +1,1 @@
-<<<<<<<< HEAD:public/build/assets/use-initials-D0TkQf0y.js
 import{r as a}from"./app-rW6VLnf3.js";function i(){return a.useCallback(r=>{const t=r.trim().split(" ");if(t.length===0)return"";if(t.length===1)return t[0].charAt(0).toUpperCase();const e=t[0].charAt(0),n=t[t.length-1].charAt(0);return`${e}${n}`.toUpperCase()},[])}export{i as u};
-========
-import{r as a}from"./app-CGODZS5d.js";function i(){return a.useCallback(r=>{const t=r.trim().split(" ");if(t.length===0)return"";if(t.length===1)return t[0].charAt(0).toUpperCase();const e=t[0].charAt(0),n=t[t.length-1].charAt(0);return`${e}${n}`.toUpperCase()},[])}export{i as u};
->>>>>>>> 3c13056529d5d0446239ab42da143f96609efd0e:public/build/assets/use-initials-BKCSS5zP.js

@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/trash-7tP_RDMe.js
 import{c}from"./createLucideIcon-BmjPsIbX.js";/**
-========
-import{c}from"./createLucideIcon-C5agtoS_.js";/**
->>>>>>>> 3c13056529d5d0446239ab42da143f96609efd0e:public/build/assets/trash-Ds_CgUNK.js
  * @license lucide-react v0.475.0 - ISC
  *
  * This source code is licensed under the ISC license.
