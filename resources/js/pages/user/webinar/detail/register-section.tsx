@@ -36,19 +36,11 @@ export default function RegisterSection({ webinar }: { webinar: Webinar }) {
     let buttonText: string;
     let warningMessage: string | null = null;
 
-    if (!isLoggedIn) {
-        registrationUrl = webinar.registration_url;
-        buttonText = 'Login untuk Mendaftar';
-        warningMessage = 'Anda harus login terlebih dahulu!';
-    } else if (!isProfileComplete) {
-        registrationUrl = route('profile.edit', { redirect: window.location.href });
-        buttonText = 'Lengkapi Profil untuk Mendaftar';
-        warningMessage = 'Profil Anda belum lengkap!';
-    } else {
-        registrationUrl = webinar.registration_url;
-        buttonText = 'Gabung Sekarang';
-        warningMessage = null;
-    }
+
+    registrationUrl = webinar.registration_url;
+    buttonText = 'Gabung Sekarang';
+    warningMessage = null;
+
 
     const deadline = new Date(webinar.registration_deadline);
     const isRegistrationOpen = new Date() < deadline;
@@ -109,7 +101,7 @@ export default function RegisterSection({ webinar }: { webinar: Webinar }) {
                             </p>
                         </div>
                     </div>
-                    
+
                     {/* Webinar Image */}
                     <img
                         src={webinar.thumbnail ? `/storage/${webinar.thumbnail}` : '/assets/images/placeholder.png'}
@@ -120,7 +112,7 @@ export default function RegisterSection({ webinar }: { webinar: Webinar }) {
                     {/* Speaker Section - Hidden on mobile, shown on tablet+ */}
                     {webinar.user && (
                         <div className="hidden sm:block">
-                            
+
                             <Link
                                 href={`/mentor/${webinar.user.id}`}
                                 className="flex items-center justify-between gap-4  dark:border-zinc-700 dark:bg-zinc-800"
@@ -137,7 +129,7 @@ export default function RegisterSection({ webinar }: { webinar: Webinar }) {
                                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{webinar.user.name}</h3>
                                         </div>
                                         <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">{webinar.user.bio}</p>
-                                        
+
                                     </div>
                                 </div>
                             </Link>
@@ -210,7 +202,7 @@ export default function RegisterSection({ webinar }: { webinar: Webinar }) {
                             </p>
                         </div>
                     </div>
-                    
+
                     {/* Speaker Section for Mobile - Shown only on mobile */}
                     {webinar.user && (
                         <div className="block sm:hidden mt-6">
