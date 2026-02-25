@@ -1,3 +1,5 @@
+import InputError from '@/components/input-error';
+import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -5,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
 import { SharedData } from '@/types';
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BadgeCheck, Calendar, Check, Hourglass, ShoppingCart, User, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { BadgeCheck, Calendar, Check, Eye, EyeOff, Hourglass, LoaderCircle, LoaderCircleIcon, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
+import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 interface Bootcamp {
     id: string;
@@ -110,20 +113,25 @@ interface InvoiceData {
     discount_code_id?: string;
     discount_code_amount?: number;
 }
+type RegisterForm = {
+    name: string;
+    email: string;
+    phone_number: string;
+    password: string;
+    password_confirmation: string;
+};
 
 export default function RegisterBootcamp({
     bootcamp,
     hasAccess,
     pendingInvoice,
     transactionDetail,
-    // channels,
     referralInfo,
 }: {
     bootcamp: Bootcamp;
     hasAccess: boolean;
     pendingInvoice?: PendingInvoice | null;
     transactionDetail?: TransactionDetail | null;
-    // channels: PaymentChannel[];
     referralInfo: ReferralInfo;
 }) {
     const { auth } = usePage<SharedData>().props;
@@ -136,8 +144,6 @@ export default function RegisterBootcamp({
     const [discountData, setDiscountData] = useState<DiscountData | null>(null);
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoError, setPromoError] = useState('');
-    // const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(channels.length > 0 ? channels[0] : null);
-
     const [showFreeForm, setShowFreeForm] = useState(false);
     const [freeFormData, setFreeFormData] = useState({
         ig_follow_proof: null as File | null,
@@ -150,21 +156,62 @@ export default function RegisterBootcamp({
         tag_friend_proof: false,
     });
 
-    const isFree = bootcamp.price === 0;
+    const [emailExists, setEmailExists] = useState(false);
+    const [checkingEmail, setCheckingEmail] = useState(false);
 
+    const isFree = bootcamp.price === 0;
     const basePrice = bootcamp.price;
     const discountAmount = discountData?.discount_amount || 0;
     const finalBootcampPrice = basePrice - discountAmount;
-
-    // const calculateAdminFee = (channel: PaymentChannel | null): number => {
-    //     if (!channel || isFree) return 0;
-    //     const flatFee = channel.fee_customer.flat || 0;
-    //     const percentFee = Math.round(finalBootcampPrice * ((channel.fee_customer.percent || 0) / 100));
-    //     return flatFee + percentFee;
-    // };
-
-    const adminFee = isFree ? 0 : 5000; //calculateAdminFee(selectedChannel);
+    const adminFee = isFree ? 0 : 5000;
     const totalPrice = isFree ? 0 : finalBootcampPrice + adminFee;
+    const [showPassword, setShowPassword] = useState(false);
+
+    const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
+        name: '',
+        email: '',
+        phone_number: '',
+        password: '',
+        password_confirmation: '',
+    });
+
+    useEffect(() => {
+        if (!data.email || !data.email.includes('@')) {
+            setEmailExists(false);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setCheckingEmail(true);
+            try {
+                const response = await axios.post('/api/check-email', {
+                    email: data.email
+                });
+
+                if (response.data.exists) {
+                    setEmailExists(true);
+                    setData('name', response.data.name || '');
+                    setData('phone_number', response.data.phone_number || '');
+                } else {
+                    setEmailExists(false);
+                }
+            } catch (error) {
+                console.error('Error checking email:', error);
+                setEmailExists(false);
+            } finally {
+                setCheckingEmail(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [data.email]);
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        post(route('register'), {
+            onFinish: () => reset('password', 'password_confirmation'),
+        });
+    };
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -198,33 +245,29 @@ export default function RegisterBootcamp({
         setPromoError('');
 
         try {
-            const response = await fetch('/api/discount-codes/validate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    code: promoCode,
-                    amount: bootcamp.price,
-                    product_type: 'bootcamp',
-                    product_id: bootcamp.id,
-                }),
-            });
+            const requestData: any = {
+                code: promoCode,
+                amount: bootcamp.price,
+                product_type: 'bootcamp',
+                product_id: bootcamp.id,
+            };
 
-            const data = await response.json();
+            if (!isLoggedIn && emailExists && data.email) {
+                requestData.email = data.email;
+            }
 
-            if (data.valid) {
-                setDiscountData(data);
+            const response = await axios.post('/api/discount-codes/validate', requestData);
+
+            if (response.data.valid) {
+                setDiscountData(response.data);
                 setPromoError('');
             } else {
                 setDiscountData(null);
-                setPromoError(data.message || 'Kode promo tidak valid');
+                setPromoError(response.data.message || 'Kode promo tidak valid');
             }
-        } catch {
+        } catch (error: any) {
             setDiscountData(null);
-            setPromoError('Terjadi kesalahan saat memvalidasi kode promo');
+            setPromoError(error.response?.data?.message || 'Terjadi kesalahan saat memvalidasi kode promo');
         } finally {
             setPromoLoading(false);
         }
@@ -285,90 +328,176 @@ export default function RegisterBootcamp({
     };
 
     const handleCheckout = async (e: React.FormEvent) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (!isProfileComplete) {
-            alert('Profil Anda belum lengkap! Harap lengkapi nomor telepon terlebih dahulu.');
-            window.location.href = route('profile.edit');
-            return;
-        }
-
-        if (!termsAccepted && !isFree) {
-            alert('Anda harus menyetujui syarat dan ketentuan!');
+    // Jika belum login, lakukan registrasi/login terlebih dahulu
+    if (!isLoggedIn) {
+        if (!data.email || !data.name || !data.phone_number) {
+            toast.error('Lengkapi data terlebih dahulu');
             return;
         }
 
         setLoading(true);
 
-        if (isFree) {
-            setShowFreeForm(true);
-            setLoading(false);
-            return;
-        }
-
-        const submitPayment = async (retryCount = 0): Promise<void> => {
-            const originalDiscountAmount = bootcamp.strikethrough_price > 0 ? bootcamp.strikethrough_price - bootcamp.price : 0;
-            const promoDiscountAmount = discountData?.discount_amount || 0;
-
-            const invoiceData: InvoiceData = {
-                type: 'bootcamp',
-                id: bootcamp.id,
-                discount_amount: originalDiscountAmount + promoDiscountAmount,
-                nett_amount: finalBootcampPrice,
-                total_amount: totalPrice,
-                // payment_channel: selectedChannel?.code,
-            };
-
-            if (discountData?.valid) {
-                invoiceData.discount_code_id = discountData.discount_code.id;
-                invoiceData.discount_code_amount = discountData.discount_amount;
-            }
-
-            try {
-                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-
-                const res = await fetch(route('invoice.store'), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken || '',
-                        Accept: 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(invoiceData),
+        try {
+            if (emailExists) {
+                // Gunakan axios yang sudah auto-handle CSRF token
+                const response = await axios.post('/auto-login', {
+                    email: data.email,
+                    phone_number: data.phone_number,
                 });
 
-                // Handle 419 error with retry
-                if (res.status === 419 && retryCount < 2) {
-                    console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
-                    await refreshCSRFToken();
-                    return submitPayment(retryCount + 1);
+                if (!response.data.success) {
+                    throw new Error(response.data.message || 'Login gagal. Pastikan nomor telepon sesuai dengan yang terdaftar.');
                 }
 
-                const data = await res.json();
+                toast.success('Login berhasil! Menyiapkan pembayaran...');
 
-                if (res.ok && data.success) {
-                    if (data.payment_url) {
-                        window.location.href = data.payment_url;
-                    } else {
-                        throw new Error('Payment URL not received');
-                    }
-                } else {
-                    throw new Error(data.message || 'Gagal membuat invoice.');
+                sessionStorage.setItem('pendingCheckout', JSON.stringify({
+                    bootcampId: bootcamp.id,
+                    productType: 'bootcamp',
+                    termsAccepted: termsAccepted,
+                    promoCode: promoCode,
+                    discountData: discountData,
+                    timestamp: Date.now()
+                }));
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                window.location.reload();
+                return;
+
+            } else {
+                // Registrasi juga menggunakan axios
+                const response = await axios.post('/register', {
+                    name: data.name,
+                    email: data.email,
+                    phone_number: data.phone_number,
+                    password: data.phone_number,
+                    password_confirmation: data.phone_number,
+                });
+
+                if (!(response.data.success || response.status === 200 || response.status === 201)) {
+                    throw new Error('Registrasi gagal');
                 }
-            } catch (error) {
-                console.error('Payment error:', error);
-                throw error;
+
+                toast.success('Registrasi berhasil! Menyiapkan pembayaran...');
+
+                sessionStorage.setItem('pendingCheckout', JSON.stringify({
+                    bootcampId: bootcamp.id,
+                    productType: 'bootcamp',
+                    termsAccepted: termsAccepted,
+                    promoCode: promoCode,
+                    discountData: discountData,
+                    timestamp: Date.now()
+                }));
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                window.location.reload();
+                return;
             }
+
+        } catch (error: any) {
+            console.error('Login/Register error:', error);
+            setLoading(false);
+            
+            // Better error messages
+            if (error.response?.status === 419) {
+                toast.error('Sesi telah berakhir. Silakan muat ulang halaman.');
+            } else {
+                toast.error(error.response?.data?.message || error.message || 'Gagal login/registrasi');
+            }
+            return;
+        }
+    }
+
+    // Validasi terms untuk pembayaran berbayar
+    if (!termsAccepted && !isFree) {
+        toast.error('Anda harus menyetujui syarat dan ketentuan!');
+        setLoading(false);
+        return;
+    }
+
+    if (!loading) {
+        setLoading(true);
+    }
+
+    if (isFree) {
+        setShowFreeForm(true);
+        setLoading(false);
+        return;
+    }
+
+    // Lanjutkan ke submit payment
+    const submitPayment = async (retryCount = 0): Promise<void> => {
+        const originalDiscountAmount = bootcamp.strikethrough_price > 0 ? bootcamp.strikethrough_price - bootcamp.price : 0;
+        const promoDiscountAmount = discountData?.discount_amount || 0;
+
+        const invoiceData: InvoiceData = {
+            type: 'bootcamp',
+            id: bootcamp.id,
+            discount_amount: originalDiscountAmount + promoDiscountAmount,
+            nett_amount: finalBootcampPrice,
+            total_amount: totalPrice,
         };
 
+        if (discountData?.valid) {
+            invoiceData.discount_code_id = discountData.discount_code.id;
+            invoiceData.discount_code_amount = discountData.discount_amount;
+        }
+
         try {
-            await submitPayment();
-        } catch (error: any) {
-            alert(error.message || 'Terjadi kesalahan saat proses pembayaran.');
-            setLoading(false);
+            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+
+            const res = await fetch(route('invoice.store'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(invoiceData),
+            });
+
+            if (res.status === 419 && retryCount < 2) {
+                console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
+                await refreshCSRFToken();
+                return submitPayment(retryCount + 1);
+            }
+
+            if (res.status === 401 && retryCount < 2) {
+                console.log('Unauthorized, retrying after session refresh...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                return submitPayment(retryCount + 1);
+            }
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                if (data.payment_url) {
+                    // Hapus pending checkout setelah berhasil
+                    sessionStorage.removeItem('pendingCheckout');
+                    window.location.href = data.payment_url;
+                } else {
+                    throw new Error('Payment URL not received');
+                }
+            } else {
+                throw new Error(data.message || 'Gagal membuat invoice.');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            throw error;
         }
     };
+
+    try {
+        await submitPayment();
+    } catch (error: any) {
+        toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
+        setLoading(false);
+    }
+};
 
     const validateFileSize = (file: File, maxSizeMB: number = 2): boolean => {
         const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -464,66 +593,212 @@ export default function RegisterBootcamp({
         }
     };
 
-    if (!isLoggedIn) {
-        const currentUrl = window.location.href;
-        const loginUrl = route('login', { redirect: currentUrl });
+// Ganti useEffect yang ada dengan ini (letakkan setelah deklarasi semua state, sebelum return)
+useEffect(() => {
+    console.log('useEffect triggered', { isLoggedIn, bootcampId: bootcamp.id }); // Debug log
+    
+    const pendingCheckout = sessionStorage.getItem('pendingCheckout');
+    console.log('pendingCheckout from sessionStorage:', pendingCheckout); // Debug log
+    
+    if (pendingCheckout && isLoggedIn) {
+        try {
+            const checkoutData = JSON.parse(pendingCheckout);
+            console.log('Parsed checkout data:', checkoutData); // Debug log
+            
+            // Validasi timestamp (maksimal 5 menit)
+            const timestamp = checkoutData.timestamp || 0;
+            const now = Date.now();
+            const fiveMinutes = 5 * 60 * 1000;
+            
+            if ((now - timestamp) > fiveMinutes) {
+                console.log('Checkout data expired'); // Debug log
+                sessionStorage.removeItem('pendingCheckout');
+                toast.error('Sesi checkout telah kadaluarsa');
+                return;
+            }
+            
+            // Validasi bootcamp ID
+            if (checkoutData.bootcampId !== bootcamp.id) {
+                console.log('Bootcamp ID mismatch'); // Debug log
+                sessionStorage.removeItem('pendingCheckout');
+                return;
+            }
+            
+            console.log('Processing pending checkout...'); // Debug log
+            
+            // Restore state
+            if (checkoutData.promoCode) {
+                setPromoCode(checkoutData.promoCode);
+            }
+            if (checkoutData.discountData) {
+                setDiscountData(checkoutData.discountData);
+            }
+            setTermsAccepted(checkoutData.termsAccepted || false);
+            
+            // Toast notification
+            toast.success('Melanjutkan pembayaran...');
+            
+            // Auto-submit setelah delay
+            setTimeout(async () => {
+                console.log('Starting payment submission...'); // Debug log
+                setLoading(true);
+                
+                const submitPayment = async (retryCount = 0): Promise<void> => {
+                    const originalDiscountAmount = bootcamp.strikethrough_price > 0 
+                        ? bootcamp.strikethrough_price - bootcamp.price 
+                        : 0;
+                    const promoDiscountAmount = checkoutData.discountData?.discount_amount || 0;
+                    const finalPrice = bootcamp.price - promoDiscountAmount;
+                    const totalAmount = finalPrice + 5000; // Admin fee
 
-        return (
-            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-                <Head title="Login Required" />
-                <section className="flex min-h-screen items-center justify-center px-4 py-12">
-                    <div className="w-full max-w-md">
-                        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                            <div className="rounded-full bg-blue-100 p-6 dark:bg-blue-900/30">
-                                <User size={48} className="text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div className="text-center">
-                                <h2 className="mb-2 text-2xl font-bold">Login Diperlukan</h2>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Silakan login terlebih dahulu untuk mendaftar bootcamp
-                                    {referralInfo.hasActive && '. Kode referral Anda akan tetap tersimpan'}
-                                </p>
-                            </div>
-                            <div className="flex w-full gap-3">
-                                <Button asChild className="flex-1" size="lg">
-                                    <a href={loginUrl}>Login</a>
-                                </Button>
-                                <Button asChild variant="outline" className="flex-1" size="lg">
-                                    <Link href={route('register', referralInfo.code ? { ref: referralInfo.code } : {})}>Daftar</Link>
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        );
-    }
+                    const invoiceData: InvoiceData = {
+                        type: 'bootcamp',
+                        id: bootcamp.id,
+                        discount_amount: originalDiscountAmount + promoDiscountAmount,
+                        nett_amount: finalPrice,
+                        total_amount: totalAmount,
+                    };
 
-    if (!isProfileComplete) {
-        return (
-            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-                <Head title="Daftar Bootcamp" />
-                <section className="flex min-h-screen items-center justify-center px-4 py-12">
-                    <div className="w-full max-w-md">
-                        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                            <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
-                                <User size={48} className="text-orange-600 dark:text-orange-400" />
-                            </div>
-                            <div className="text-center">
-                                <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pendaftaran
-                                </p>
-                            </div>
-                            <Button asChild className="w-full" size="lg">
-                                <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
-                            </Button>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        );
+                    if (checkoutData.discountData?.valid) {
+                        invoiceData.discount_code_id = checkoutData.discountData.discount_code.id;
+                        invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
+                    }
+
+                    console.log('Invoice data:', invoiceData); // Debug log
+
+                    try {
+                        const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+                        console.log('CSRF token:', csrfToken); // Debug log
+
+                        const res = await fetch(route('invoice.store'), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken || '',
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(invoiceData),
+                        });
+
+                        console.log('Response status:', res.status); // Debug log
+
+                        if (res.status === 419 && retryCount < 2) {
+                            console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
+                            await refreshCSRFToken();
+                            return submitPayment(retryCount + 1);
+                        }
+
+                        if (res.status === 401 && retryCount < 2) {
+                            console.log('Unauthorized, retrying...');
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            return submitPayment(retryCount + 1);
+                        }
+
+                        const data = await res.json();
+                        console.log('Response data:', data); // Debug log
+
+                        if (res.ok && data.success) {
+                            if (data.payment_url) {
+                                console.log('Redirecting to payment...'); // Debug log
+                                sessionStorage.removeItem('pendingCheckout');
+                                window.location.href = data.payment_url;
+                            } else {
+                                throw new Error('Payment URL not received');
+                            }
+                        } else {
+                            throw new Error(data.message || 'Gagal membuat invoice.');
+                        }
+                    } catch (error) {
+                        console.error('Payment error:', error);
+                        throw error;
+                    }
+                };
+
+                try {
+                    await submitPayment();
+                } catch (error: any) {
+                    console.error('Failed to process payment:', error);
+                    toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
+                    sessionStorage.removeItem('pendingCheckout');
+                    setLoading(false);
+                }
+            }, 2000); // Tingkatkan delay jadi 2 detik
+            
+        } catch (error) {
+            console.error('Error processing pending checkout:', error);
+            sessionStorage.removeItem('pendingCheckout');
+            toast.error('Gagal memproses checkout');
+        }
+    } else {
+        console.log('Conditions not met:', { 
+            hasPendingCheckout: !!pendingCheckout, 
+            isLoggedIn 
+        }); // Debug log
     }
+}, [isLoggedIn, bootcamp.id]); // Dependency array
+
+    // if (!isLoggedIn) {
+    //     const currentUrl = window.location.href;
+    //     const loginUrl = route('login', { redirect: currentUrl });
+
+    //     return (
+    //         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
+    //             <Head title="Login Required" />
+    //             <section className="flex min-h-screen items-center justify-center px-4 py-12">
+    //                 <div className="w-full max-w-md">
+    //                     <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+    //                         <div className="rounded-full bg-blue-100 p-6 dark:bg-blue-900/30">
+    //                             <User size={48} className="text-blue-600 dark:text-blue-400" />
+    //                         </div>
+    //                         <div className="text-center">
+    //                             <h2 className="mb-2 text-2xl font-bold">Login Diperlukan</h2>
+    //                             <p className="text-gray-600 dark:text-gray-400">
+    //                                 Silakan login terlebih dahulu untuk mendaftar bootcamp
+    //                                 {referralInfo.hasActive && '. Kode referral Anda akan tetap tersimpan'}
+    //                             </p>
+    //                         </div>
+    //                         <div className="flex w-full gap-3">
+    //                             <Button asChild className="flex-1" size="lg">
+    //                                 <a href={loginUrl}>Login</a>
+    //                             </Button>
+    //                             <Button asChild variant="outline" className="flex-1" size="lg">
+    //                                 <Link href={route('register', referralInfo.code ? { ref: referralInfo.code } : {})}>Daftar</Link>
+    //                             </Button>
+    //                         </div>
+    //                     </div>
+    //                 </div>
+    //             </section>
+    //         </div>
+    //     );
+    // }
+
+    // if (!isProfileComplete) {
+    //     return (
+    //         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
+    //             <Head title="Daftar Bootcamp" />
+    //             <section className="flex min-h-screen items-center justify-center px-4 py-12">
+    //                 <div className="w-full max-w-md">
+    //                     <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+    //                         <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
+    //                             <User size={48} className="text-orange-600 dark:text-orange-400" />
+    //                         </div>
+    //                         <div className="text-center">
+    //                             <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
+    //                             <p className="text-gray-600 dark:text-gray-400">
+    //                                 Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pendaftaran
+    //                             </p>
+    //                         </div>
+    //                         <Button asChild className="w-full" size="lg">
+    //                             <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
+    //                         </Button>
+    //                     </div>
+    //                 </div>
+    //             </section>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
@@ -590,6 +865,125 @@ export default function RegisterBootcamp({
                                     </div>
                                 </div>
                             </div>
+                            {!isLoggedIn && (
+                                <form className="flex flex-col gap-6 p-6 pt-0" onSubmit={submit}>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Input
+                                                    id="email"
+                                                    type="email"
+                                                    required
+                                                    tabIndex={1}
+                                                    autoComplete="email"
+                                                    value={data.email}
+                                                    onChange={(e) => setData('email', e.target.value)}
+                                                    disabled={processing}
+                                                    placeholder="email@example.com"
+                                                    className="pr-10"
+                                                />
+                                                {checkingEmail && (
+                                                    <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                        <LoaderCircle className="h-4 w-4 animate-spin text-gray-400" />
+                                                    </div>
+                                                )}
+                                                {!checkingEmail && emailExists && (
+                                                    <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                        <Check className="h-5 w-5 text-green-600" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={async () => {
+                                                    if (!data.email || !data.email.includes('@')) {
+                                                        toast.error('Masukkan email yang valid');
+                                                        return;
+                                                    }
+
+                                                    setCheckingEmail(true);
+                                                    try {
+                                                        const response = await axios.post('/api/check-email', {
+                                                            email: data.email
+                                                        });
+
+                                                        if (response.data.exists) {
+                                                            setEmailExists(true);
+                                                            setData('name', response.data.name || '');
+                                                            setData('phone_number', response.data.phone_number || '');
+                                                            toast.success('Email ditemukan!');
+                                                        } else {
+                                                            setEmailExists(false);
+                                                            toast.info('Email tidak terdaftar');
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('Error checking email:', error);
+                                                        setEmailExists(false);
+                                                        toast.error('Gagal mengecek email');
+                                                    } finally {
+                                                        setCheckingEmail(false);
+                                                    }
+                                                }}
+                                                disabled={checkingEmail || !data.email}
+                                                className="flex-shrink-0"
+                                            >
+                                                <RefreshCw className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        {emailExists && (
+                                            <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>
+                                        )}
+                                        <InputError message={errors.email} />
+                                    </div>
+
+                                    <div className="grid gap-6">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="name">Nama</Label>
+                                            <Input
+                                                id="name"
+                                                type="text"
+                                                required
+                                                tabIndex={2}
+                                                autoComplete="name"
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
+                                                disabled={processing || emailExists}
+                                                placeholder="Nama lengkap Anda"
+                                            />
+                                            <InputError message={errors.name} className="mt-2" />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="phone_number">No. Telepon</Label>
+                                            <Input
+                                                id="phone_number"
+                                                type="tel"
+                                                required
+                                                tabIndex={3}
+                                                autoComplete="tel"
+                                                value={data.phone_number}
+                                                onChange={(e) => setData('phone_number', e.target.value)}
+                                                disabled={processing || emailExists}
+                                                placeholder="08xxxxxxxxxx"
+                                            />
+                                            {!emailExists && (
+                                                <p className="text-xs text-gray-500">
+                                                    Nomor telepon akan digunakan sebagai password anda
+                                                </p>
+                                            )}
+                                            {emailExists && (
+                                                <p className="text-xs text-blue-600">
+                                                    Pastikan nomor telepon sesuai dengan yang terdaftar
+                                                </p>
+                                            )}
+                                            <InputError message={errors.phone_number} />
+                                        </div>
+                                    </div>
+                                </form>
+                            )}
                         </div>
 
                         {/* Payment Channels Section */}
@@ -867,7 +1261,7 @@ export default function RegisterBootcamp({
                                                 </p>
                                                 <ul className="mt-4 space-y-1 text-left text-sm text-green-700 dark:text-green-300">
                                                     <li>
-                                                        • Follow Instagram{' '}
+                                                        • Follow Instagram
                                                         <a
                                                             href="https://www.instagram.com/brevetpajak_talenta/"
                                                             target="_blank"
@@ -878,7 +1272,7 @@ export default function RegisterBootcamp({
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        • Follow TikTok{' '}
+                                                        • Follow TikTok
                                                         <a
                                                             href="https://www.tiktok.com/@brevetpajak_talenta"
                                                             target="_blank"
@@ -897,29 +1291,47 @@ export default function RegisterBootcamp({
                                                     <Label htmlFor="promo-code" className="text-sm font-medium">
                                                         Punya Kode Promo?
                                                     </Label>
-                                                    <div className="relative">
-                                                        <Input
-                                                            id="promo-code"
-                                                            type="text"
-                                                            placeholder="Masukkan kode promo"
-                                                            value={promoCode}
-                                                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                                            className="pr-10"
-                                                        />
-                                                        {promoLoading && (
-                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2">
-                                                                <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-orange-600"></div>
-                                                            </div>
-                                                        )}
-                                                        {!promoLoading && promoCode && (
-                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2">
-                                                                {discountData?.valid ? (
-                                                                    <Check className="h-5 w-5 text-green-600" />
-                                                                ) : promoError ? (
-                                                                    <X className="h-5 w-5 text-red-600" />
-                                                                ) : null}
-                                                            </div>
-                                                        )}
+                                                    <div className="flex gap-2">
+                                                        <div className="relative flex-1">
+                                                            <Input
+                                                                id="promo-code"
+                                                                type="text"
+                                                                placeholder="Masukkan kode promo"
+                                                                value={promoCode}
+                                                                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                                className="pr-10"
+                                                            />
+                                                            {promoLoading && (
+                                                                <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                                    <LoaderCircle className="h-4 w-4 animate-spin text-gray-400" />
+                                                                </div>
+                                                            )}
+                                                            {!promoLoading && promoCode && (
+                                                                <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                                    {discountData?.valid ? (
+                                                                        <Check className="h-5 w-5 text-green-600" />
+                                                                    ) : promoError ? (
+                                                                        <X className="h-5 w-5 text-red-600" />
+                                                                    ) : null}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            onClick={async () => {
+                                                                if (!promoCode.trim()) {
+                                                                    toast.error('Masukkan kode promo terlebih dahulu');
+                                                                    return;
+                                                                }
+                                                                await validatePromoCode();
+                                                            }}
+                                                            disabled={promoLoading || !promoCode.trim()}
+                                                            className="flex-shrink-0"
+                                                        >
+                                                            <RefreshCw className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
                                                     {promoError && <p className="text-sm text-red-600">{promoError}</p>}
                                                     {discountData?.valid && (
@@ -1004,7 +1416,7 @@ export default function RegisterBootcamp({
                                                         className="mt-1"
                                                     />
                                                     <Label htmlFor="terms" className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                                                        Saya menyetujui{' '}
+                                                        Saya menyetujui {' '}
                                                         <a
                                                             href="/terms-and-conditions"
                                                             target="_blank"
