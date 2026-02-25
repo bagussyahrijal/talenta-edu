@@ -328,176 +328,176 @@ export default function RegisterBootcamp({
     };
 
     const handleCheckout = async (e: React.FormEvent) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    // Jika belum login, lakukan registrasi/login terlebih dahulu
-    if (!isLoggedIn) {
-        if (!data.email || !data.name || !data.phone_number) {
-            toast.error('Lengkapi data terlebih dahulu');
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            if (emailExists) {
-                // Gunakan axios yang sudah auto-handle CSRF token
-                const response = await axios.post('/auto-login', {
-                    email: data.email,
-                    phone_number: data.phone_number,
-                });
-
-                if (!response.data.success) {
-                    throw new Error(response.data.message || 'Login gagal. Pastikan nomor telepon sesuai dengan yang terdaftar.');
-                }
-
-                toast.success('Login berhasil! Menyiapkan pembayaran...');
-
-                sessionStorage.setItem('pendingCheckout', JSON.stringify({
-                    bootcampId: bootcamp.id,
-                    productType: 'bootcamp',
-                    termsAccepted: termsAccepted,
-                    promoCode: promoCode,
-                    discountData: discountData,
-                    timestamp: Date.now()
-                }));
-
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                window.location.reload();
-                return;
-
-            } else {
-                // Registrasi juga menggunakan axios
-                const response = await axios.post('/register', {
-                    name: data.name,
-                    email: data.email,
-                    phone_number: data.phone_number,
-                    password: data.phone_number,
-                    password_confirmation: data.phone_number,
-                });
-
-                if (!(response.data.success || response.status === 200 || response.status === 201)) {
-                    throw new Error('Registrasi gagal');
-                }
-
-                toast.success('Registrasi berhasil! Menyiapkan pembayaran...');
-
-                sessionStorage.setItem('pendingCheckout', JSON.stringify({
-                    bootcampId: bootcamp.id,
-                    productType: 'bootcamp',
-                    termsAccepted: termsAccepted,
-                    promoCode: promoCode,
-                    discountData: discountData,
-                    timestamp: Date.now()
-                }));
-
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                window.location.reload();
+        // Jika belum login, lakukan registrasi/login terlebih dahulu
+        if (!isLoggedIn) {
+            if (!data.email || !data.name || !data.phone_number) {
+                toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
 
-        } catch (error: any) {
-            console.error('Login/Register error:', error);
+            setLoading(true);
+
+            try {
+                if (emailExists) {
+                    // Gunakan axios yang sudah auto-handle CSRF token
+                    const response = await axios.post('/auto-login', {
+                        email: data.email,
+                        phone_number: data.phone_number,
+                    });
+
+                    if (!response.data.success) {
+                        throw new Error(response.data.message || 'Login gagal. Pastikan nomor telepon sesuai dengan yang terdaftar.');
+                    }
+
+                    toast.success('Login berhasil! Menyiapkan pembayaran...');
+
+                    sessionStorage.setItem('pendingCheckout', JSON.stringify({
+                        bootcampId: bootcamp.id,
+                        productType: 'bootcamp',
+                        termsAccepted: termsAccepted,
+                        promoCode: promoCode,
+                        discountData: discountData,
+                        timestamp: Date.now()
+                    }));
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    window.location.reload();
+                    return;
+
+                } else {
+                    // Registrasi juga menggunakan axios
+                    const response = await axios.post('/register', {
+                        name: data.name,
+                        email: data.email,
+                        phone_number: data.phone_number,
+                        password: data.phone_number,
+                        password_confirmation: data.phone_number,
+                    });
+
+                    if (!(response.data.success || response.status === 200 || response.status === 201)) {
+                        throw new Error('Registrasi gagal');
+                    }
+
+                    toast.success('Registrasi berhasil! Menyiapkan pembayaran...');
+
+                    sessionStorage.setItem('pendingCheckout', JSON.stringify({
+                        bootcampId: bootcamp.id,
+                        productType: 'bootcamp',
+                        termsAccepted: termsAccepted,
+                        promoCode: promoCode,
+                        discountData: discountData,
+                        timestamp: Date.now()
+                    }));
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    window.location.reload();
+                    return;
+                }
+
+            } catch (error: any) {
+                console.error('Login/Register error:', error);
+                setLoading(false);
+
+                // Better error messages
+                if (error.response?.status === 419) {
+                    toast.error('Sesi telah berakhir. Silakan muat ulang halaman.');
+                } else {
+                    toast.error(error.response?.data?.message || error.message || 'Gagal login/registrasi');
+                }
+                return;
+            }
+        }
+
+        // Validasi terms untuk pembayaran berbayar
+        if (!termsAccepted && !isFree) {
+            toast.error('Anda harus menyetujui syarat dan ketentuan!');
             setLoading(false);
-            
-            // Better error messages
-            if (error.response?.status === 419) {
-                toast.error('Sesi telah berakhir. Silakan muat ulang halaman.');
-            } else {
-                toast.error(error.response?.data?.message || error.message || 'Gagal login/registrasi');
-            }
             return;
         }
-    }
 
-    // Validasi terms untuk pembayaran berbayar
-    if (!termsAccepted && !isFree) {
-        toast.error('Anda harus menyetujui syarat dan ketentuan!');
-        setLoading(false);
-        return;
-    }
+        if (!loading) {
+            setLoading(true);
+        }
 
-    if (!loading) {
-        setLoading(true);
-    }
+        if (isFree) {
+            setShowFreeForm(true);
+            setLoading(false);
+            return;
+        }
 
-    if (isFree) {
-        setShowFreeForm(true);
-        setLoading(false);
-        return;
-    }
+        // Lanjutkan ke submit payment
+        const submitPayment = async (retryCount = 0): Promise<void> => {
+            const originalDiscountAmount = bootcamp.strikethrough_price > 0 ? bootcamp.strikethrough_price - bootcamp.price : 0;
+            const promoDiscountAmount = discountData?.discount_amount || 0;
 
-    // Lanjutkan ke submit payment
-    const submitPayment = async (retryCount = 0): Promise<void> => {
-        const originalDiscountAmount = bootcamp.strikethrough_price > 0 ? bootcamp.strikethrough_price - bootcamp.price : 0;
-        const promoDiscountAmount = discountData?.discount_amount || 0;
+            const invoiceData: InvoiceData = {
+                type: 'bootcamp',
+                id: bootcamp.id,
+                discount_amount: originalDiscountAmount + promoDiscountAmount,
+                nett_amount: finalBootcampPrice,
+                total_amount: totalPrice,
+            };
 
-        const invoiceData: InvoiceData = {
-            type: 'bootcamp',
-            id: bootcamp.id,
-            discount_amount: originalDiscountAmount + promoDiscountAmount,
-            nett_amount: finalBootcampPrice,
-            total_amount: totalPrice,
+            if (discountData?.valid) {
+                invoiceData.discount_code_id = discountData.discount_code.id;
+                invoiceData.discount_code_amount = discountData.discount_amount;
+            }
+
+            try {
+                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+
+                const res = await fetch(route('invoice.store'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken || '',
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(invoiceData),
+                });
+
+                if (res.status === 419 && retryCount < 2) {
+                    console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
+                    await refreshCSRFToken();
+                    return submitPayment(retryCount + 1);
+                }
+
+                if (res.status === 401 && retryCount < 2) {
+                    console.log('Unauthorized, retrying after session refresh...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return submitPayment(retryCount + 1);
+                }
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    if (data.payment_url) {
+                        // Hapus pending checkout setelah berhasil
+                        sessionStorage.removeItem('pendingCheckout');
+                        window.location.href = data.payment_url;
+                    } else {
+                        throw new Error('Payment URL not received');
+                    }
+                } else {
+                    throw new Error(data.message || 'Gagal membuat invoice.');
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                throw error;
+            }
         };
 
-        if (discountData?.valid) {
-            invoiceData.discount_code_id = discountData.discount_code.id;
-            invoiceData.discount_code_amount = discountData.discount_amount;
-        }
-
         try {
-            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-
-            const res = await fetch(route('invoice.store'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || '',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify(invoiceData),
-            });
-
-            if (res.status === 419 && retryCount < 2) {
-                console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
-                await refreshCSRFToken();
-                return submitPayment(retryCount + 1);
-            }
-
-            if (res.status === 401 && retryCount < 2) {
-                console.log('Unauthorized, retrying after session refresh...');
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                return submitPayment(retryCount + 1);
-            }
-
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-                if (data.payment_url) {
-                    // Hapus pending checkout setelah berhasil
-                    sessionStorage.removeItem('pendingCheckout');
-                    window.location.href = data.payment_url;
-                } else {
-                    throw new Error('Payment URL not received');
-                }
-            } else {
-                throw new Error(data.message || 'Gagal membuat invoice.');
-            }
-        } catch (error) {
-            console.error('Payment error:', error);
-            throw error;
+            await submitPayment();
+        } catch (error: any) {
+            toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
+            setLoading(false);
         }
     };
-
-    try {
-        await submitPayment();
-    } catch (error: any) {
-        toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
-        setLoading(false);
-    }
-};
 
     const validateFileSize = (file: File, maxSizeMB: number = 2): boolean => {
         const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -593,151 +593,151 @@ export default function RegisterBootcamp({
         }
     };
 
-// Ganti useEffect yang ada dengan ini (letakkan setelah deklarasi semua state, sebelum return)
-useEffect(() => {
-    console.log('useEffect triggered', { isLoggedIn, bootcampId: bootcamp.id }); // Debug log
-    
-    const pendingCheckout = sessionStorage.getItem('pendingCheckout');
-    console.log('pendingCheckout from sessionStorage:', pendingCheckout); // Debug log
-    
-    if (pendingCheckout && isLoggedIn) {
-        try {
-            const checkoutData = JSON.parse(pendingCheckout);
-            console.log('Parsed checkout data:', checkoutData); // Debug log
-            
-            // Validasi timestamp (maksimal 5 menit)
-            const timestamp = checkoutData.timestamp || 0;
-            const now = Date.now();
-            const fiveMinutes = 5 * 60 * 1000;
-            
-            if ((now - timestamp) > fiveMinutes) {
-                console.log('Checkout data expired'); // Debug log
-                sessionStorage.removeItem('pendingCheckout');
-                toast.error('Sesi checkout telah kadaluarsa');
-                return;
-            }
-            
-            // Validasi bootcamp ID
-            if (checkoutData.bootcampId !== bootcamp.id) {
-                console.log('Bootcamp ID mismatch'); // Debug log
-                sessionStorage.removeItem('pendingCheckout');
-                return;
-            }
-            
-            console.log('Processing pending checkout...'); // Debug log
-            
-            // Restore state
-            if (checkoutData.promoCode) {
-                setPromoCode(checkoutData.promoCode);
-            }
-            if (checkoutData.discountData) {
-                setDiscountData(checkoutData.discountData);
-            }
-            setTermsAccepted(checkoutData.termsAccepted || false);
-            
-            // Toast notification
-            toast.success('Melanjutkan pembayaran...');
-            
-            // Auto-submit setelah delay
-            setTimeout(async () => {
-                console.log('Starting payment submission...'); // Debug log
-                setLoading(true);
-                
-                const submitPayment = async (retryCount = 0): Promise<void> => {
-                    const originalDiscountAmount = bootcamp.strikethrough_price > 0 
-                        ? bootcamp.strikethrough_price - bootcamp.price 
-                        : 0;
-                    const promoDiscountAmount = checkoutData.discountData?.discount_amount || 0;
-                    const finalPrice = bootcamp.price - promoDiscountAmount;
-                    const totalAmount = finalPrice + 5000; // Admin fee
+    // Ganti useEffect yang ada dengan ini (letakkan setelah deklarasi semua state, sebelum return)
+    useEffect(() => {
+        console.log('useEffect triggered', { isLoggedIn, bootcampId: bootcamp.id }); // Debug log
 
-                    const invoiceData: InvoiceData = {
-                        type: 'bootcamp',
-                        id: bootcamp.id,
-                        discount_amount: originalDiscountAmount + promoDiscountAmount,
-                        nett_amount: finalPrice,
-                        total_amount: totalAmount,
+        const pendingCheckout = sessionStorage.getItem('pendingCheckout');
+        console.log('pendingCheckout from sessionStorage:', pendingCheckout); // Debug log
+
+        if (pendingCheckout && isLoggedIn) {
+            try {
+                const checkoutData = JSON.parse(pendingCheckout);
+                console.log('Parsed checkout data:', checkoutData); // Debug log
+
+                // Validasi timestamp (maksimal 5 menit)
+                const timestamp = checkoutData.timestamp || 0;
+                const now = Date.now();
+                const fiveMinutes = 5 * 60 * 1000;
+
+                if ((now - timestamp) > fiveMinutes) {
+                    console.log('Checkout data expired'); // Debug log
+                    sessionStorage.removeItem('pendingCheckout');
+                    toast.error('Sesi checkout telah kadaluarsa');
+                    return;
+                }
+
+                // Validasi bootcamp ID
+                if (checkoutData.bootcampId !== bootcamp.id) {
+                    console.log('Bootcamp ID mismatch'); // Debug log
+                    sessionStorage.removeItem('pendingCheckout');
+                    return;
+                }
+
+                console.log('Processing pending checkout...'); // Debug log
+
+                // Restore state
+                if (checkoutData.promoCode) {
+                    setPromoCode(checkoutData.promoCode);
+                }
+                if (checkoutData.discountData) {
+                    setDiscountData(checkoutData.discountData);
+                }
+                setTermsAccepted(checkoutData.termsAccepted || false);
+
+                // Toast notification
+                toast.success('Melanjutkan pembayaran...');
+
+                // Auto-submit setelah delay
+                setTimeout(async () => {
+                    console.log('Starting payment submission...'); // Debug log
+                    setLoading(true);
+
+                    const submitPayment = async (retryCount = 0): Promise<void> => {
+                        const originalDiscountAmount = bootcamp.strikethrough_price > 0
+                            ? bootcamp.strikethrough_price - bootcamp.price
+                            : 0;
+                        const promoDiscountAmount = checkoutData.discountData?.discount_amount || 0;
+                        const finalPrice = bootcamp.price - promoDiscountAmount;
+                        const totalAmount = finalPrice + 5000; // Admin fee
+
+                        const invoiceData: InvoiceData = {
+                            type: 'bootcamp',
+                            id: bootcamp.id,
+                            discount_amount: originalDiscountAmount + promoDiscountAmount,
+                            nett_amount: finalPrice,
+                            total_amount: totalAmount,
+                        };
+
+                        if (checkoutData.discountData?.valid) {
+                            invoiceData.discount_code_id = checkoutData.discountData.discount_code.id;
+                            invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
+                        }
+
+                        console.log('Invoice data:', invoiceData); // Debug log
+
+                        try {
+                            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+                            console.log('CSRF token:', csrfToken); // Debug log
+
+                            const res = await fetch(route('invoice.store'), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken || '',
+                                    Accept: 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify(invoiceData),
+                            });
+
+                            console.log('Response status:', res.status); // Debug log
+
+                            if (res.status === 419 && retryCount < 2) {
+                                console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
+                                await refreshCSRFToken();
+                                return submitPayment(retryCount + 1);
+                            }
+
+                            if (res.status === 401 && retryCount < 2) {
+                                console.log('Unauthorized, retrying...');
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                return submitPayment(retryCount + 1);
+                            }
+
+                            const data = await res.json();
+                            console.log('Response data:', data); // Debug log
+
+                            if (res.ok && data.success) {
+                                if (data.payment_url) {
+                                    console.log('Redirecting to payment...'); // Debug log
+                                    sessionStorage.removeItem('pendingCheckout');
+                                    window.location.href = data.payment_url;
+                                } else {
+                                    throw new Error('Payment URL not received');
+                                }
+                            } else {
+                                throw new Error(data.message || 'Gagal membuat invoice.');
+                            }
+                        } catch (error) {
+                            console.error('Payment error:', error);
+                            throw error;
+                        }
                     };
 
-                    if (checkoutData.discountData?.valid) {
-                        invoiceData.discount_code_id = checkoutData.discountData.discount_code.id;
-                        invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
-                    }
-
-                    console.log('Invoice data:', invoiceData); // Debug log
-
                     try {
-                        const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-                        console.log('CSRF token:', csrfToken); // Debug log
-
-                        const res = await fetch(route('invoice.store'), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken || '',
-                                Accept: 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest',
-                            },
-                            credentials: 'same-origin',
-                            body: JSON.stringify(invoiceData),
-                        });
-
-                        console.log('Response status:', res.status); // Debug log
-
-                        if (res.status === 419 && retryCount < 2) {
-                            console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
-                            await refreshCSRFToken();
-                            return submitPayment(retryCount + 1);
-                        }
-
-                        if (res.status === 401 && retryCount < 2) {
-                            console.log('Unauthorized, retrying...');
-                            await new Promise(resolve => setTimeout(resolve, 2000));
-                            return submitPayment(retryCount + 1);
-                        }
-
-                        const data = await res.json();
-                        console.log('Response data:', data); // Debug log
-
-                        if (res.ok && data.success) {
-                            if (data.payment_url) {
-                                console.log('Redirecting to payment...'); // Debug log
-                                sessionStorage.removeItem('pendingCheckout');
-                                window.location.href = data.payment_url;
-                            } else {
-                                throw new Error('Payment URL not received');
-                            }
-                        } else {
-                            throw new Error(data.message || 'Gagal membuat invoice.');
-                        }
-                    } catch (error) {
-                        console.error('Payment error:', error);
-                        throw error;
+                        await submitPayment();
+                    } catch (error: any) {
+                        console.error('Failed to process payment:', error);
+                        toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
+                        sessionStorage.removeItem('pendingCheckout');
+                        setLoading(false);
                     }
-                };
+                }, 2000); // Tingkatkan delay jadi 2 detik
 
-                try {
-                    await submitPayment();
-                } catch (error: any) {
-                    console.error('Failed to process payment:', error);
-                    toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
-                    sessionStorage.removeItem('pendingCheckout');
-                    setLoading(false);
-                }
-            }, 2000); // Tingkatkan delay jadi 2 detik
-            
-        } catch (error) {
-            console.error('Error processing pending checkout:', error);
-            sessionStorage.removeItem('pendingCheckout');
-            toast.error('Gagal memproses checkout');
+            } catch (error) {
+                console.error('Error processing pending checkout:', error);
+                sessionStorage.removeItem('pendingCheckout');
+                toast.error('Gagal memproses checkout');
+            }
+        } else {
+            console.log('Conditions not met:', {
+                hasPendingCheckout: !!pendingCheckout,
+                isLoggedIn
+            }); // Debug log
         }
-    } else {
-        console.log('Conditions not met:', { 
-            hasPendingCheckout: !!pendingCheckout, 
-            isLoggedIn 
-        }); // Debug log
-    }
-}, [isLoggedIn, bootcamp.id]); // Dependency array
+    }, [isLoggedIn, bootcamp.id]); // Dependency array
 
     // if (!isLoggedIn) {
     //     const currentUrl = window.location.href;

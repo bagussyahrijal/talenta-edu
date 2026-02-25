@@ -541,12 +541,12 @@ class DiscountCodeController extends Controller
                     $userId = $user->id;
                 }
             }
-            elseif (!$userId) {
-                return response()->json([
-                    'valid' => false,
-                    'message' => 'Anda harus login atau masukkan data diri terlebih dahulu'
-                ]);
-            }
+            // elseif (!$userId) {
+            //     return response()->json([
+            //         'valid' => false,
+            //         'message' => 'Anda harus login atau masukkan data diri terlebih dahulu'
+            //     ]);
+            // }
 
             if (!$discountCode->isValid()) {
                 return response()->json([
