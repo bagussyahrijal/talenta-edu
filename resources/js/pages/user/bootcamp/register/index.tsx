@@ -774,31 +774,31 @@ export default function RegisterBootcamp({
     //     );
     // }
 
-    // if (!isProfileComplete) {
-    //     return (
-    //         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-    //             <Head title="Daftar Bootcamp" />
-    //             <section className="flex min-h-screen items-center justify-center px-4 py-12">
-    //                 <div className="w-full max-w-md">
-    //                     <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-    //                         <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
-    //                             <User size={48} className="text-orange-600 dark:text-orange-400" />
-    //                         </div>
-    //                         <div className="text-center">
-    //                             <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
-    //                             <p className="text-gray-600 dark:text-gray-400">
-    //                                 Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pendaftaran
-    //                             </p>
-    //                         </div>
-    //                         <Button asChild className="w-full" size="lg">
-    //                             <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
-    //                         </Button>
-    //                     </div>
-    //                 </div>
-    //             </section>
-    //         </div>
-    //     );
-    // }
+    if (isLoggedIn && !isProfileComplete) {
+        return (
+            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
+                <Head title="Daftar Bootcamp" />
+                <section className="flex min-h-screen items-center justify-center px-4 py-12">
+                    <div className="w-full max-w-md">
+                        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+                            <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
+                                <User size={48} className="text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <div className="text-center">
+                                <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                    Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pendaftaran
+                                </p>
+                            </div>
+                            <Button asChild className="w-full" size="lg">
+                                <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
+                            </Button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
