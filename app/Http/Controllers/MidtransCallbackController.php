@@ -255,12 +255,12 @@ class MidtransCallbackController extends Controller
 
             $statusText = $midtransStatus ? " (status: {$midtransStatus})" : '';
 
-            $message = "*[Sekolah Pajak - Pembayaran {$itemType} Gagal]*\n\n";
+            $message = "*[Talenta - Pembayaran {$itemType} Gagal]*\n\n";
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Maaf, pembayaran {$itemType} untuk invoice *{$invoice->invoice_code}* tidak berhasil atau telah kadaluarsa{$statusText}.\n\n";
             $message .= "Silakan melakukan pembelian ulang jika Anda masih berminat.\n\n";
             $message .= "Terima kasih atas perhatiannya.\n\n";
-            $message .= "*Sekolah Pajak Customer Support*";
+            $message .= "*Talenta Customer Support*";
 
             $waData = [
                 [
@@ -304,7 +304,7 @@ class MidtransCallbackController extends Controller
 
         $paidAt = $invoice->paid_at ? Carbon::parse($invoice->paid_at)->format('d M Y H:i') : Carbon::now('Asia/Jakarta')->format('d M Y H:i');
 
-        $message = "*[Sekolah Pajak - Pembayaran {$programName} Berhasil]* ✅\n\n";
+        $message = "*[Talenta - Pembayaran {$programName} Berhasil]* ✅\n\n";
         $message .= "Hai *{$user->name}*,\n\n";
         $message .= "Terima kasih! Pembayaran {$programName} Anda telah berhasil diproses.\n\n";
         $message .= "*Detail Pembelian:*\n";
@@ -318,7 +318,7 @@ class MidtransCallbackController extends Controller
         $message .= "1. Login ke akun Anda: {$loginUrl}\n";
         $message .= "2. Kunjungi dashboard: {$profileUrl}\n";
         $message .= "3. Mulai belajar dan raih sertifikat!\n\n";
-        $message .= "*Sekolah Pajak Customer Support*";
+        $message .= "*Talenta Customer Support*";
 
         return $message;
     }
