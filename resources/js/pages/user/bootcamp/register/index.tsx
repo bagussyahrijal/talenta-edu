@@ -318,7 +318,6 @@ export default function RegisterBootcamp({
 
         router.post(route('enroll.free'), formData, {
             onError: (errors) => {
-                console.log('Free enrollment errors:', errors);
                 alert(errors.message || 'Gagal mendaftar bootcamp gratis.');
             },
             onFinish: () => {
@@ -461,13 +460,11 @@ export default function RegisterBootcamp({
                 });
 
                 if (res.status === 419 && retryCount < 2) {
-                    console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
                     await refreshCSRFToken();
                     return submitPayment(retryCount + 1);
                 }
 
                 if (res.status === 401 && retryCount < 2) {
-                    console.log('Unauthorized, retrying after session refresh...');
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     return submitPayment(retryCount + 1);
                 }
@@ -595,15 +592,12 @@ export default function RegisterBootcamp({
 
     // Ganti useEffect yang ada dengan ini (letakkan setelah deklarasi semua state, sebelum return)
     useEffect(() => {
-        console.log('useEffect triggered', { isLoggedIn, bootcampId: bootcamp.id }); // Debug log
 
         const pendingCheckout = sessionStorage.getItem('pendingCheckout');
-        console.log('pendingCheckout from sessionStorage:', pendingCheckout); // Debug log
 
         if (pendingCheckout && isLoggedIn) {
             try {
                 const checkoutData = JSON.parse(pendingCheckout);
-                console.log('Parsed checkout data:', checkoutData); // Debug log
 
                 // Validasi timestamp (maksimal 5 menit)
                 const timestamp = checkoutData.timestamp || 0;
@@ -611,7 +605,6 @@ export default function RegisterBootcamp({
                 const fiveMinutes = 5 * 60 * 1000;
 
                 if ((now - timestamp) > fiveMinutes) {
-                    console.log('Checkout data expired'); // Debug log
                     sessionStorage.removeItem('pendingCheckout');
                     toast.error('Sesi checkout telah kadaluarsa');
                     return;
@@ -619,12 +612,10 @@ export default function RegisterBootcamp({
 
                 // Validasi bootcamp ID
                 if (checkoutData.bootcampId !== bootcamp.id) {
-                    console.log('Bootcamp ID mismatch'); // Debug log
                     sessionStorage.removeItem('pendingCheckout');
                     return;
                 }
 
-                console.log('Processing pending checkout...'); // Debug log
 
                 // Restore state
                 if (checkoutData.promoCode) {
@@ -640,7 +631,6 @@ export default function RegisterBootcamp({
 
                 // Auto-submit setelah delay
                 setTimeout(async () => {
-                    console.log('Starting payment submission...'); // Debug log
                     setLoading(true);
 
                     const submitPayment = async (retryCount = 0): Promise<void> => {
@@ -664,11 +654,9 @@ export default function RegisterBootcamp({
                             invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
                         }
 
-                        console.log('Invoice data:', invoiceData); // Debug log
 
                         try {
                             const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-                            console.log('CSRF token:', csrfToken); // Debug log
 
                             const res = await fetch(route('invoice.store'), {
                                 method: 'POST',
@@ -682,26 +670,21 @@ export default function RegisterBootcamp({
                                 body: JSON.stringify(invoiceData),
                             });
 
-                            console.log('Response status:', res.status); // Debug log
 
                             if (res.status === 419 && retryCount < 2) {
-                                console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
                                 await refreshCSRFToken();
                                 return submitPayment(retryCount + 1);
                             }
 
                             if (res.status === 401 && retryCount < 2) {
-                                console.log('Unauthorized, retrying...');
                                 await new Promise(resolve => setTimeout(resolve, 2000));
                                 return submitPayment(retryCount + 1);
                             }
 
                             const data = await res.json();
-                            console.log('Response data:', data); // Debug log
 
                             if (res.ok && data.success) {
                                 if (data.payment_url) {
-                                    console.log('Redirecting to payment...'); // Debug log
                                     sessionStorage.removeItem('pendingCheckout');
                                     window.location.href = data.payment_url;
                                 } else {
@@ -731,11 +714,6 @@ export default function RegisterBootcamp({
                 sessionStorage.removeItem('pendingCheckout');
                 toast.error('Gagal memproses checkout');
             }
-        } else {
-            console.log('Conditions not met:', {
-                hasPendingCheckout: !!pendingCheckout,
-                isLoggedIn
-            }); // Debug log
         }
     }, [isLoggedIn, bootcamp.id]); // Dependency array
 
