@@ -180,6 +180,8 @@ class MidtransCallbackController extends Controller
                 'bootcampItems.bootcamp',
                 'webinarItems.webinar',
                 'bundleEnrollments.bundle',
+                'bundleEnrollments.bundle.bundleItems',
+                'discountUsage.discountCode',
             ]);
 
             $user = $invoice->user;
@@ -285,39 +287,134 @@ class MidtransCallbackController extends Controller
         $loginUrl = route('login');
         $profileUrl = route('profile.index');
 
-        $programName = 'Program';
-        $programTitle = '';
+        $invoice->load('discountUsage.discountCode');
+
+        $itemType = null;
+        $typeInfo = [
+            'icon' => '📘',
+            'name' => 'Program',
+            'menu' => 'Dashboard',
+            'title' => '-',
+            'item' => null,
+        ];
 
         if ($invoice->bundleEnrollments->count() > 0) {
-            $programName = 'Bundle';
-            $programTitle = $invoice->bundleEnrollments->first()->bundle->title ?? '';
+            $itemType = 'bundle';
+            $bundle = $invoice->bundleEnrollments->first()->bundle;
+
+            $typeInfo = [
+                'icon' => '📦',
+                'name' => 'Paket Bundling',
+                'menu' => 'Dashboard',
+                'title' => $bundle->title ?? '-',
+                'item' => $bundle,
+            ];
         } elseif ($invoice->courseItems->count() > 0) {
-            $programName = 'Kelas Online';
-            $programTitle = $invoice->courseItems->first()->course->title ?? '';
+            $itemType = 'course';
+            $course = $invoice->courseItems->first()->course;
+
+            $typeInfo = [
+                'icon' => '📚',
+                'name' => 'Kelas Online',
+                'menu' => 'Kelas Saya',
+                'title' => $course->title ?? '-',
+                'item' => $course,
+            ];
         } elseif ($invoice->bootcampItems->count() > 0) {
-            $programName = 'Bootcamp';
-            $programTitle = $invoice->bootcampItems->first()->bootcamp->title ?? '';
+            $itemType = 'bootcamp';
+            $bootcamp = $invoice->bootcampItems->first()->bootcamp;
+
+            $typeInfo = [
+                'icon' => '🎯',
+                'name' => 'Bootcamp',
+                'menu' => 'Bootcamp Saya',
+                'title' => $bootcamp->title ?? '-',
+                'item' => $bootcamp,
+            ];
         } elseif ($invoice->webinarItems->count() > 0) {
-            $programName = 'Webinar';
-            $programTitle = $invoice->webinarItems->first()->webinar->title ?? '';
+            $itemType = 'webinar';
+            $webinar = $invoice->webinarItems->first()->webinar;
+
+            $typeInfo = [
+                'icon' => '📺',
+                'name' => 'Webinar',
+                'menu' => 'Webinar Saya',
+                'title' => $webinar->title ?? '-',
+                'item' => $webinar,
+            ];
         }
 
-        $paidAt = $invoice->paid_at ? Carbon::parse($invoice->paid_at)->format('d M Y H:i') : Carbon::now('Asia/Jakarta')->format('d M Y H:i');
+        $paidAt = $invoice->paid_at
+            ? Carbon::parse($invoice->paid_at)->format('d M Y H:i')
+            : Carbon::now('Asia/Jakarta')->format('d M Y H:i');
 
-        $message = "*[Talenta - Pembayaran {$programName} Berhasil]* ✅\n\n";
+        $message = "*[Talenta - Pembayaran {$typeInfo['name']} Berhasil]* ✅\n\n";
         $message .= "Hai *{$user->name}*,\n\n";
-        $message .= "Terima kasih! Pembayaran {$programName} Anda telah berhasil diproses.\n\n";
+        $message .= "Terima kasih! Pembayaran {$typeInfo['name']} Anda telah berhasil diproses.\n\n";
+
         $message .= "*Detail Pembelian:*\n";
         $message .= "🧾 Invoice: *{$invoice->invoice_code}*\n";
-        if ($programTitle) {
-            $message .= "📚 {$programName}: *{$programTitle}*\n";
+        $message .= "{$typeInfo['icon']} {$typeInfo['name']}: *{$typeInfo['title']}*\n";
+
+        if ($itemType === 'bundle' && $typeInfo['item']) {
+            $bundle = $typeInfo['item'];
+            $bundleItemsCount = $bundle->bundle_items_count ?? ($bundle->bundleItems->count() ?? 0);
+            $message .= "📦 Berisi: *{$bundleItemsCount} Program*\n";
         }
+
+        if ($invoice->discountUsage && $invoice->discountUsage->discountCode) {
+            $discountCode = $invoice->discountUsage->discountCode;
+            $message .= "🏷️ Kode Promo: *{$discountCode->code}* (-Rp " . number_format((int) $invoice->discountUsage->discount_amount, 0, ',', '.') . ")\n";
+        }
+
         $message .= "💰 Total: *Rp " . number_format((int) $invoice->amount, 0, ',', '.') . "*\n";
         $message .= "📅 Dibayar: {$paidAt}\n\n";
+
         $message .= "*Cara Mengakses:*\n";
         $message .= "1. Login ke akun Anda: {$loginUrl}\n";
         $message .= "2. Kunjungi dashboard: {$profileUrl}\n";
-        $message .= "3. Mulai belajar dan raih sertifikat!\n\n";
+        if ($itemType === 'bundle') {
+            $message .= "3. Semua program sudah bisa diakses dari menu masing-masing\n";
+            $message .= "4. Mulai belajar dan raih sertifikat untuk setiap program! 🎓\n\n";
+        } else {
+            $message .= "3. Pilih menu '{$typeInfo['menu']}'\n";
+            $message .= "4. Mulai belajar dan raih sertifikat! 🎓\n\n";
+        }
+
+        if ($itemType === 'webinar' && $typeInfo['item']) {
+            $webinar = $typeInfo['item'];
+            $startTime = Carbon::parse($webinar->start_time);
+            $message .= "*Jadwal Webinar:*\n";
+            $message .= "📅 {$startTime->format('d M Y')}\n";
+            $message .= "🕐 {$startTime->format('H:i')} WIB\n\n";
+
+            if (!empty($webinar->group_url)) {
+                $message .= "*Join Group Webinar:*\n";
+                $message .= "👥 {$webinar->group_url}\n\n";
+                $message .= "⚠️ *Penting:* \n";
+                $message .= "• Bergabung dengan group untuk update terbaru\n";
+                $message .= "• Jangan lupa attend sesuai jadwal!\n\n";
+            } else {
+                $message .= "⚠️ *Penting:* Jangan lupa bergabung sesuai jadwal!\n\n";
+            }
+        } elseif ($itemType === 'bootcamp' && $typeInfo['item']) {
+            $bootcamp = $typeInfo['item'];
+            $startDate = Carbon::parse($bootcamp->start_date);
+            $endDate = Carbon::parse($bootcamp->end_date);
+            $message .= "*Periode Bootcamp:*\n";
+            $message .= "📅 {$startDate->format('d M Y')} - {$endDate->format('d M Y')}\n\n";
+
+            if (!empty($bootcamp->group_url)) {
+                $message .= "*Join Group Bootcamp:*\n";
+                $message .= "👥 {$bootcamp->group_url}\n\n";
+                $message .= "⚠️ *Penting:* \n";
+                $message .= "• Bergabung dengan group untuk mendapatkan info penting dan diskusi\n";
+                $message .= "• Aktif mengikuti seluruh kegiatan bootcamp\n\n";
+            }
+        }
+
+        $message .= "Jika ada pertanyaan, jangan ragu untuk menghubungi kami.\n\n";
+        $message .= "Selamat belajar! 🚀\n\n";
         $message .= "*Talenta Customer Support*";
 
         return $message;
