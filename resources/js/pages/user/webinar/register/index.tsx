@@ -315,7 +315,6 @@ export default function RegisterWebinar({
 
         router.post(route('enroll.free'), formData, {
             onError: (errors) => {
-                console.log('Free enrollment errors:', errors);
                 alert(errors.message || 'Gagal mendaftar webinar gratis.');
             },
             onFinish: () => {
@@ -395,7 +394,7 @@ export default function RegisterWebinar({
             } catch (error: any) {
                 console.error('Login/Register error:', error);
                 setLoading(false);
-                
+
                 // Better error messages
                 if (error.response?.status === 419) {
                     toast.error('Sesi telah berakhir. Silakan muat ulang halaman.');
@@ -446,7 +445,6 @@ export default function RegisterWebinar({
 
             try {
                 const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-                console.log('CSRF token:', csrfToken);
 
                 const res = await fetch(route('invoice.store'), {
                     method: 'POST',
@@ -461,19 +459,16 @@ export default function RegisterWebinar({
                 });
 
                 if (res.status === 419 && retryCount < 2) {
-                    console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
                     await refreshCSRFToken();
                     return submitPayment(retryCount + 1);
                 }
 
                 if (res.status === 401 && retryCount < 2) {
-                    console.log('Unauthorized, retrying after session refresh...');
                     await new Promise(resolve => setTimeout(resolve, 2000));
                     return submitPayment(retryCount + 1);
                 }
 
                 const data = await res.json();
-                console.log('Response data:', data);
 
                 if (res.ok && data.success) {
                     if (data.payment_url) {
@@ -501,15 +496,12 @@ export default function RegisterWebinar({
 
     // useEffect untuk auto-submit setelah reload
     useEffect(() => {
-        console.log('useEffect triggered', { isLoggedIn, webinarId: webinar.id });
 
         const pendingCheckout = sessionStorage.getItem('pendingCheckout');
-        console.log('pendingCheckout from sessionStorage:', pendingCheckout);
 
         if (pendingCheckout && isLoggedIn) {
             try {
                 const checkoutData = JSON.parse(pendingCheckout);
-                console.log('Parsed checkout data:', checkoutData);
 
                 // Validasi timestamp (maksimal 5 menit)
                 const timestamp = checkoutData.timestamp || 0;
@@ -517,7 +509,6 @@ export default function RegisterWebinar({
                 const fiveMinutes = 5 * 60 * 1000;
 
                 if ((now - timestamp) > fiveMinutes) {
-                    console.log('Checkout data expired');
                     sessionStorage.removeItem('pendingCheckout');
                     toast.error('Sesi checkout telah kadaluarsa');
                     return;
@@ -525,12 +516,10 @@ export default function RegisterWebinar({
 
                 // Validasi webinar ID dan product type
                 if (checkoutData.webinarId !== webinar.id || checkoutData.productType !== 'webinar') {
-                    console.log('Webinar ID or product type mismatch');
                     sessionStorage.removeItem('pendingCheckout');
                     return;
                 }
 
-                console.log('Processing pending checkout...');
 
                 // Restore state
                 if (checkoutData.promoCode) {
@@ -545,7 +534,6 @@ export default function RegisterWebinar({
 
                 // Auto-submit setelah delay
                 setTimeout(async () => {
-                    console.log('Starting payment submission...');
                     setLoading(true);
 
                     const submitPayment = async (retryCount = 0): Promise<void> => {
@@ -569,11 +557,9 @@ export default function RegisterWebinar({
                             invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
                         }
 
-                        console.log('Invoice data:', invoiceData);
 
                         try {
                             const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-                            console.log('CSRF token:', csrfToken);
 
                             const res = await fetch(route('invoice.store'), {
                                 method: 'POST',
@@ -587,26 +573,21 @@ export default function RegisterWebinar({
                                 body: JSON.stringify(invoiceData),
                             });
 
-                            console.log('Response status:', res.status);
 
                             if (res.status === 419 && retryCount < 2) {
-                                console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
                                 await refreshCSRFToken();
                                 return submitPayment(retryCount + 1);
                             }
 
                             if (res.status === 401 && retryCount < 2) {
-                                console.log('Unauthorized, retrying...');
                                 await new Promise(resolve => setTimeout(resolve, 2000));
                                 return submitPayment(retryCount + 1);
                             }
 
                             const data = await res.json();
-                            console.log('Response data:', data);
 
                             if (res.ok && data.success) {
                                 if (data.payment_url) {
-                                    console.log('Redirecting to payment...');
                                     sessionStorage.removeItem('pendingCheckout');
                                     window.location.href = data.payment_url;
                                 } else {
@@ -636,11 +617,6 @@ export default function RegisterWebinar({
                 sessionStorage.removeItem('pendingCheckout');
                 toast.error('Gagal memproses checkout');
             }
-        } else {
-            console.log('Conditions not met:', {
-                hasPendingCheckout: !!pendingCheckout,
-                isLoggedIn
-            });
         }
     }, [isLoggedIn, webinar.id]);
 
@@ -747,31 +723,31 @@ export default function RegisterWebinar({
     //     );
     // }
 
-    // if (!isProfileComplete) {
-    //     return (
-    //         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-    //             <Head title="Daftar Webinar" />
-    //             <section className="flex min-h-screen items-center justify-center px-4 py-12">
-    //                 <div className="w-full max-w-md">
-    //                     <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-    //                         <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
-    //                             <User size={48} className="text-orange-600 dark:text-orange-400" />
-    //                         </div>
-    //                         <div className="text-center">
-    //                             <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
-    //                             <p className="text-gray-600 dark:text-gray-400">
-    //                                 Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pendaftaran
-    //                             </p>
-    //                         </div>
-    //                         <Button asChild className="w-full" size="lg">
-    //                             <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
-    //                         </Button>
-    //                     </div>
-    //                 </div>
-    //             </section>
-    //         </div>
-    //     );
-    // }
+    if (isLoggedIn && !isProfileComplete) {
+        return (
+            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
+                <Head title="Daftar Webinar" />
+                <section className="flex min-h-screen items-center justify-center px-4 py-12">
+                    <div className="w-full max-w-md">
+                        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+                            <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
+                                <User size={48} className="text-orange-600 dark:text-orange-400" />
+                            </div>
+                            <div className="text-center">
+                                <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
+                                <p className="text-gray-600 dark:text-gray-400">
+                                    Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pendaftaran
+                                </p>
+                            </div>
+                            <Button asChild className="w-full" size="lg">
+                                <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
+                            </Button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
