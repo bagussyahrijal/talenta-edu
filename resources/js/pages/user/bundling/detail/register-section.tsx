@@ -75,24 +75,9 @@ export default function RegisterSection({
     let warningMessage: string | null = null;
     let isDisabled = false;
 
-    if (hasOwnedItems) {
-        registrationUrl = '#';
-        buttonText = 'Tidak Dapat Mendaftar';
-        warningMessage = 'Anda sudah memiliki beberapa produk dalam bundle ini!';
-        isDisabled = true;
-    } else if (!isLoggedIn) {
-        registrationUrl = bundle.registration_url;
-        buttonText = 'Login untuk Mendaftar';
-        warningMessage = 'Anda harus login terlebih dahulu!';
-    } else if (!isProfileComplete) {
-        registrationUrl = route('profile.edit', { redirect: window.location.href });
-        buttonText = 'Lengkapi Profil untuk Mendaftar';
-        warningMessage = 'Profil Anda belum lengkap!';
-    } else {
-        registrationUrl = bundle.registration_url;
-        buttonText = 'Daftar Sekarang';
-        warningMessage = null;
-    }
+    registrationUrl = bundle.registration_url;
+    buttonText = 'Daftar Sekarang';
+    warningMessage = null;
 
     const getProductUrl = (type: string, slug: string) => {
         const typeNormalized = type.toLowerCase().replace('app\\models\\', '');
@@ -147,7 +132,7 @@ export default function RegisterSection({
     return (
         <section className="mx-auto mt-4 md:mt-8 mb-8 sm:mb-12 w-full max-w-7xl px-4 sm:px-6 lg:px-8" id="register">
             <Badge className='border-yellow-400 bg-white text-yellow-400 px-2 py-1 text-xs sm:text-sm'>Paket Bundling</Badge>
-            
+
             {/* Warning if user already owns items */}
             {hasOwnedItems && (
                 <Alert variant="destructive" className="mt-4 sm:mt-6">
@@ -271,8 +256,8 @@ export default function RegisterSection({
                             </div>
                         )}
                     </div>
-                    
-                    
+
+
                 </div>
 
                 {/* Right Column - Price Card */}
@@ -299,24 +284,22 @@ export default function RegisterSection({
                         </h3>
 
                         {warningMessage && (
-                            <div className={`mb-3 sm:mb-4 p-2 sm:p-3 text-center rounded-lg ${
-                                hasOwnedItems 
-                                    ? 'bg-red-50 dark:bg-red-900/20' 
+                            <div className={`mb-3 sm:mb-4 p-2 sm:p-3 text-center rounded-lg ${hasOwnedItems
+                                    ? 'bg-red-50 dark:bg-red-900/20'
                                     : 'bg-red-50 dark:bg-red-900/20'
-                            }`}>
-                                <p className={`text-xs sm:text-sm ${
-                                    hasOwnedItems 
-                                        ? 'text-red-600 dark:text-red-400 font-semibold' 
-                                        : 'text-red-600 dark:text-red-400'
                                 }`}>
+                                <p className={`text-xs sm:text-sm ${hasOwnedItems
+                                        ? 'text-red-600 dark:text-red-400 font-semibold'
+                                        : 'text-red-600 dark:text-red-400'
+                                    }`}>
                                     {warningMessage}
                                 </p>
                             </div>
                         )}
 
-                        <Button 
-                            className="mb-4 sm:mb-6 w-full rounded-lg text-sm sm:text-base py-5 sm:py-6" 
-                            asChild={!isDisabled} 
+                        <Button
+                            className="mb-4 sm:mb-6 w-full rounded-lg text-sm sm:text-base py-5 sm:py-6"
+                            asChild={!isDisabled}
                             disabled={isDisabled}
                         >
                             {isDisabled ? <span>{buttonText}</span> : <Link href={registrationUrl}>{buttonText}</Link>}
@@ -353,7 +336,7 @@ export default function RegisterSection({
                             </>
                         )}
                     </div>
-                    
+
                     {/* Benefits Section for Mobile - Shown only on mobile */}
                     <div className="block sm:hidden mt-6">
                         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
