@@ -12,13 +12,13 @@ export default function BootcampTransaction({ transactions }: BootcampTransactio
                 <h2 className="text-lg font-medium">Data Transaksi Pembayaran</h2>
                 {transactions.length > 0 && (
                     <div className="text-muted-foreground text-sm">
-                        Total Transaksi:{' '}
+                        Total Transaksi Berhasil:{' '}
                         <span className="text-foreground font-semibold">{transactions.filter((t) => t.status === 'paid').length}</span>
                     </div>
                 )}
             </div>
 
-            {transactions.length > 0 ? (
+            {transactions && transactions.length > 0 ? (
                 <DataTable columns={transactionColumns} data={transactions} />
             ) : (
                 <div className="flex flex-col items-center justify-center gap-4 py-12">

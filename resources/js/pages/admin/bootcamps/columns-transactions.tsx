@@ -178,6 +178,11 @@ export const transactionColumns: ColumnDef<Invoice>[] = [
         header: ({ column }) => <DataTableColumnHeader column={column} title="Tgl. Pembelian" />,
         cell: ({ row }) => <p>{format(new Date(row.original.created_at), 'dd MMM yyyy, HH:mm', { locale: id })}</p>,
     },
+        {
+        accessorKey: 'paid_at',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Tgl. Pembayaran" />,
+        cell: ({ row }) => <p>{format(new Date(row.original.paid_at ? row.original.paid_at : new Date()), 'dd MMM yyyy, HH:mm', { locale: id })}</p>,
+    },
     {
         id: 'actions',
         header: () => <div className="text-center">Aksi</div>,

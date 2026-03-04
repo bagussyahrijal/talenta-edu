@@ -1,11 +1,15 @@
 import { columns, type Invoice } from './columns-transactions';
 import { DataTable } from './data-table-transactions';
 
-export default function CourseTransaction({ transactions }: { transactions: Invoice[] }) {
+interface CourseTransactionProps {
+    transactions: Invoice[];
+}
+
+export default function CourseTransaction({ transactions }: CourseTransactionProps) {
     return (
         <div className="h-full space-y-6 rounded-lg border p-4">
             <h2 className="text-lg font-medium">Transaksi</h2>
-            {transactions.length > 0 ? (
+            {transactions && transactions.length > 0 ? (
                 <DataTable columns={columns} data={transactions} />
             ) : (
                 <div className="flex flex-col items-center justify-center gap-4 py-12">

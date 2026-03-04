@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TransactionsExport;
 use App\Models\AffiliateEarning;
 use App\Models\Bootcamp;
 use App\Models\Bundle;
@@ -32,10 +33,8 @@ use Illuminate\Support\Facades\Log;
 use Xendit\Configuration;
 use Xendit\Invoice\CreateInvoiceRequest;
 use Xendit\Invoice\InvoiceApi;
-
 use App\Services\MidtransService;
-
-
+use Maatwebsite\Excel\Facades\Excel;
 
 class InvoiceController extends Controller
 {
@@ -51,20 +50,62 @@ class InvoiceController extends Controller
         $this->midtransService = $midtransService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::with([
+        // Ambil filter tanggal dari request
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $status = $request->input('status');
+        $paymentType = $request->input('payment_type');
+        $productType = $request->input('product_type');
+
+        // Buat query dasar
+        $invoicesQuery = Invoice::with([
             'user',
             'referrer',
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
             'bundleEnrollments.bundle'
-        ])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        ]);
 
-        // ✅ Calculate Statistics
+        // Apply date filter jika ada
+                if ($startDate && $endDate) {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
+
+            $invoicesQuery->where(function ($q) use ($start, $end) {
+                $q->where(function ($q2) use ($start, $end) {
+                    $q2->where('status', 'paid')
+                       ->whereBetween('paid_at', [$start, $end]);
+                })->orWhere(function ($q2) use ($start, $end) {
+                    $q2->whereIn('status', ['pending', 'failed'])
+                       ->whereBetween('created_at', [$start, $end]);
+                });
+            });
+        }
+
+        // ✅ PERBAIKAN: Apply status filter HANYA jika ada status yang dipilih
+        if ($status && !empty($status)) {
+            $invoicesQuery->where('status', $status);
+        }
+
+        // Apply payment type filter (free vs paid)
+        if ($paymentType === 'free') {
+            $invoicesQuery->where('nett_amount', 0);
+        } elseif ($paymentType === 'paid') {
+            $invoicesQuery->where('nett_amount', '>', 0);
+        }
+
+        // Apply product type filter
+        if ($productType && !empty($productType)) {
+            $invoicesQuery->whereHas($productType . 'Items');
+        }
+
+        // Get filtered invoices
+        $invoices = $invoicesQuery->orderBy('paid_at', 'desc')->get();
+
+        // ✅ Calculate Statistics (berdasarkan data yang sudah difilter)
         $totalTransactions = $invoices->count();
         $paidTransactions = $invoices->where('status', 'paid')->count();
         $pendingTransactions = $invoices->where('status', 'pending')->count();
@@ -92,7 +133,7 @@ class InvoiceController extends Controller
             ->sum('nett_amount');
 
         $todayTransactions = $invoices->filter(function ($inv) {
-            return Carbon::parse($inv->created_at)->isToday();
+            return Carbon::parse($inv->paid_at)->isToday();
         })->count();
 
         $todayRevenue = $invoices
@@ -102,9 +143,8 @@ class InvoiceController extends Controller
             })
             ->sum('nett_amount');
 
-        $thisMonthTransactions = $invoices
-            ->filter(function ($inv) {
-                return $inv->paid_at && Carbon::parse($inv->paid_at)->isCurrentMonth();
+        $thisMonthTransactions = $invoices->filter(function ($inv) {
+            return Carbon::parse($inv->paid_at)->isCurrentMonth();
         })->count();
 
         $thisMonthRevenue = $invoices
@@ -157,6 +197,13 @@ class InvoiceController extends Controller
         return Inertia::render('admin/transactions/index', [
             'invoices' => $invoices,
             'statistics' => $statistics,
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'status' => $status,
+                'payment_type' => $paymentType,
+                'product_type' => $productType,
+            ],
         ]);
     }
 
@@ -179,7 +226,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TAL2025') {
+            if ($referralCode && $referralCode !== 'SPJ2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -187,7 +234,7 @@ class InvoiceController extends Controller
             }
 
             if (!$referredByUserId) {
-                $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
+                $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
                 }
@@ -257,7 +304,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'TLT-' . date('y')
+                'prefix' => 'SPK-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -286,7 +333,15 @@ class InvoiceController extends Controller
                 $discountCode->incrementUsage();
             }
 
-            // Create Midtrans transaction
+            // $tripayResponse = $this->tripayService->requestTransaction(
+            //     $invoice_code,
+            //     $paymentChannel,
+            //     $item->title,
+            //     (int)$nettAmount,
+            //     Auth::user()->name,
+            //     Auth::user()->email
+            // );
+
             $midtransParams = [
                 'transaction_details' => [
                     'order_id' => $invoice_code,
@@ -328,7 +383,20 @@ class InvoiceController extends Controller
                 throw new \Exception($midtransResponse['message'] ?? 'Gagal membuat transaksi Midtrans');
             }
 
+            // if (!isset($tripayResponse->success) || !$tripayResponse->success) {
+            //     throw new \Exception($tripayResponse->message ?? 'Gagal membuat transaksi Tripay');
+            // }
+
+            // if (!isset($tripayResponse->data)) {
+            //     throw new \Exception('Invalid response format from Tripay');
+            // }
+
+            // $transaction = $tripayResponse->data;
+
             $invoice->update([
+                // 'payment_reference' => $transaction->reference,
+                // 'va_number' => $transaction->pay_code ?? null,
+                // 'qr_code_url' => $transaction->qr_url ?? null,
                 'payment_reference' => $invoice_code,
             ]);
 
@@ -384,7 +452,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TAL2025') {
+            if ($referralCode && $referralCode !== 'SPJ2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -392,7 +460,7 @@ class InvoiceController extends Controller
             }
 
             if (!$referredByUserId) {
-                $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
+                $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
                 }
@@ -460,7 +528,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'TLT-' . date('y')
+                'prefix' => 'SPK-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -505,13 +573,25 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            // Pastikan peserta langsung ditambahkan ke sertifikat untuk setiap item bundle
-            foreach ($bundle->bundleItems as $item) {
-                $type = $item->getTypeSlug();
-                $this->addToCertificateParticipants($type, $item->bundleable_id, $userId);
-            }
+            // $tripayResponse = $this->tripayService->requestTransaction(
+            //     $invoice_code,
+            //     $paymentChannel,
+            //     'Paket Bundling: ' . $bundle->title,
+            //     (int)$nettAmount,
+            //     Auth::user()->name,
+            //     Auth::user()->email
+            // );
 
-            // Create Midtrans transaction for bundle
+            // if (!isset($tripayResponse->success) || !$tripayResponse->success) {
+            //     throw new \Exception($tripayResponse->message ?? 'Gagal membuat transaksi Tripay');
+            // }
+
+            // if (!isset($tripayResponse->data)) {
+            //     throw new \Exception('Invalid response format from Tripay');
+            // }
+
+            // $transaction = $tripayResponse->data;
+
             $midtransParams = [
                 'transaction_details' => [
                     'order_id' => $invoice_code,
@@ -552,6 +632,9 @@ class InvoiceController extends Controller
             }
 
             $invoice->update([
+                // 'payment_reference' => $transaction->reference,
+                // 'va_number' => $transaction->pay_code ?? null,
+                // 'qr_code_url' => $transaction->qr_url ?? null,
                 'payment_reference' => $invoice_code,
             ]);
 
@@ -591,7 +674,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TAL2025') {
+            if ($referralCode && $referralCode !== 'SPJ2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -638,7 +721,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change'  => true,
-                'prefix' => 'TLT-' . date('y')
+                'prefix' => 'SPK-' . date('y')
             ]);
 
             $invoice = Invoice::create([
@@ -841,7 +924,9 @@ class InvoiceController extends Controller
                 throw new \Exception('Payment channel tidak ditemukan');
             }
 
-            // Midtrans returns array, not object
+            // $flatFee = $selectedChannel->fee_customer->flat ?? 0;
+            // $percentFee = round($nettAmount * (($selectedChannel->fee_customer->percent ?? 0) / 100));
+
             $feeCustomer = is_array($selectedChannel) ? $selectedChannel['fee_customer'] : $selectedChannel->fee_customer;
             $flatFee = is_array($feeCustomer) ? ($feeCustomer['flat'] ?? 0) : ($feeCustomer->flat ?? 0);
             $percentValue = is_array($feeCustomer) ? ($feeCustomer['percent'] ?? 0) : ($feeCustomer->percent ?? 0);
@@ -981,6 +1066,9 @@ class InvoiceController extends Controller
 
     /**
      * Kirim notifikasi WhatsApp setelah pembayaran berhasil
+     *
+     * @param Invoice $invoice
+     * @return void
      */
     private function sendWhatsAppNotification(Invoice $invoice)
     {
@@ -1022,6 +1110,9 @@ class InvoiceController extends Controller
 
     /**
      * Kirim notifikasi WhatsApp untuk pembayaran gagal
+     *
+     * @param Invoice $invoice
+     * @return void
      */
     private function sendWhatsAppPaymentFailed(Invoice $invoice)
     {
@@ -1043,12 +1134,12 @@ class InvoiceController extends Controller
                 $itemType = 'Webinar';
             }
 
-            $message = "*[Talenta - Pembayaran {$itemType} Gagal]*\n\n";
+            $message = "*[Sekolah Pajak - Pembayaran {$itemType} Gagal]*\n\n";
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Maaf, pembayaran {$itemType} untuk invoice *{$invoice->invoice_code}* tidak berhasil atau telah kadaluarsa.\n\n";
             $message .= "Silakan melakukan pembelian ulang jika Anda masih berminat.\n\n";
             $message .= "Terima kasih atas perhatiannya.\n\n";
-            $message .= "*Talenta - Customer Support*";
+            $message .= "*Sekolah Pajak Customer Support*";
 
             $waData = [
                 [
@@ -1132,11 +1223,11 @@ class InvoiceController extends Controller
         $isFreePurchase = $invoice->amount == 0;
 
         if ($isFreePurchase) {
-            $message = "*[Talenta - Pendaftaran {$typeInfo['name']} Berhasil]* ✅\n\n";
+            $message = "*[Sekolah Pajak - Pendaftaran {$typeInfo['name']} Berhasil]* ✅\n\n";
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Selamat! Anda telah berhasil mendaftar untuk {$typeInfo['name']} GRATIS.\n\n";
         } else {
-            $message = "*[Talenta - Pembayaran {$typeInfo['name']} Berhasil]* ✅\n\n";
+            $message = "*[Sekolah Pajak - Pembayaran {$typeInfo['name']} Berhasil]* ✅\n\n";
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Terima kasih! Pembayaran {$typeInfo['name']} Anda telah berhasil diproses.\n\n";
         }
@@ -1206,13 +1297,13 @@ class InvoiceController extends Controller
         }
 
         if ($isFreePurchase) {
-            $message .= "Terima kasih telah bergabung dengan Talenta! 🚀\n\n";
+            $message .= "Terima kasih telah bergabung dengan Sekolah Pajak! 🚀\n\n";
         } else {
             $message .= "Jika ada pertanyaan, jangan ragu untuk menghubungi kami.\n\n";
             $message .= "Selamat belajar! 🚀\n\n";
         }
 
-        $message .= "*Talenta - Customer Support*";
+        $message .= "*Sekolah Pajak Customer Support*";
 
         return $message;
     }
@@ -1312,7 +1403,7 @@ class InvoiceController extends Controller
                 ]);
             }
         } else {
-            $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
+            $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
 
             if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && $defaultAffiliate->commission > 0) {
                 $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
@@ -1438,11 +1529,11 @@ class InvoiceController extends Controller
         $data = [
             'invoice' => $invoice,
             'company' => [
-                'name' => 'Talenta',
+                'name' => 'Sekolah Pajak',
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
-                'phone' => '+6285606391730',
-                'email' => 'talentaskill.academic@gmail.com',
-                'website' => 'www.talentaedu.id'
+                'phone' => '+6281252683108',
+                'email' => 'sekolahpajak15@gmail.com',
+                'website' => 'www.sekolahpajak.id'
             ]
         ];
 
@@ -1450,5 +1541,21 @@ class InvoiceController extends Controller
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->stream("invoice-{$invoice->invoice_code}.pdf");
+    }
+
+    public function export(Request $request)
+    {
+        $filters = $request->only(['start_date', 'end_date', 'status', 'payment_type', 'product_type']);
+
+        $filename = 'Laporan_Transaksi';
+
+        if ($request->start_date && $request->end_date) {
+            $filename .= '_' . Carbon::parse($request->start_date)->format('dmY')
+                . '-' . Carbon::parse($request->end_date)->format('dmY');
+        }
+
+        $filename .= '_' . now()->format('YmdHis') . '.xlsx';
+
+        return Excel::download(new TransactionsExport($filters), $filename);
     }
 }
