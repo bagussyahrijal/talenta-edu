@@ -226,7 +226,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'SPJ2025') {
+            if ($referralCode && $referralCode !== 'TLT2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -234,7 +234,7 @@ class InvoiceController extends Controller
             }
 
             if (!$referredByUserId) {
-                $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
+                $defaultAffiliate = User::where('affiliate_code', 'TLT2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
                 }
@@ -304,7 +304,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'SPK-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -452,7 +452,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'SPJ2025') {
+            if ($referralCode && $referralCode !== 'TLT2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -460,7 +460,7 @@ class InvoiceController extends Controller
             }
 
             if (!$referredByUserId) {
-                $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
+                $defaultAffiliate = User::where('affiliate_code', 'TLT2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
                 }
@@ -528,7 +528,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'SPK-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -571,6 +571,11 @@ class InvoiceController extends Controller
                     'invoice_code' => $invoice->invoice_code,
                     'bundle_id' => $bundle->id
                 ]);
+            }
+
+            foreach ($bundle->bundleItems as $item) {
+                $type = $item->getTypeSlug();
+                $this->addToCertificateParticipants($type, $item->bundleable_id, $userId);
             }
 
             // $tripayResponse = $this->tripayService->requestTransaction(
@@ -674,7 +679,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'SPJ2025') {
+            if ($referralCode && $referralCode !== 'TLT2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -721,7 +726,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change'  => true,
-                'prefix' => 'SPK-' . date('y')
+                'prefix' => 'TLT-' . date('y')
             ]);
 
             $invoice = Invoice::create([
@@ -1134,12 +1139,12 @@ class InvoiceController extends Controller
                 $itemType = 'Webinar';
             }
 
-            $message = "*[Sekolah Pajak - Pembayaran {$itemType} Gagal]*\n\n";
+            $message = "*[Talenta - Pembayaran {$itemType} Gagal]*\n\n";
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Maaf, pembayaran {$itemType} untuk invoice *{$invoice->invoice_code}* tidak berhasil atau telah kadaluarsa.\n\n";
             $message .= "Silakan melakukan pembelian ulang jika Anda masih berminat.\n\n";
             $message .= "Terima kasih atas perhatiannya.\n\n";
-            $message .= "*Sekolah Pajak Customer Support*";
+            $message .= "*Talenta Customer Support*";
 
             $waData = [
                 [
@@ -1223,11 +1228,11 @@ class InvoiceController extends Controller
         $isFreePurchase = $invoice->amount == 0;
 
         if ($isFreePurchase) {
-            $message = "*[Sekolah Pajak - Pendaftaran {$typeInfo['name']} Berhasil]* ✅\n\n";
+            $message = "*[Talenta - Pendaftaran {$typeInfo['name']} Berhasil]* ✅\n\n";
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Selamat! Anda telah berhasil mendaftar untuk {$typeInfo['name']} GRATIS.\n\n";
         } else {
-            $message = "*[Sekolah Pajak - Pembayaran {$typeInfo['name']} Berhasil]* ✅\n\n";
+            $message = "*[Talenta - Pembayaran {$typeInfo['name']} Berhasil]* ✅\n\n";
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Terima kasih! Pembayaran {$typeInfo['name']} Anda telah berhasil diproses.\n\n";
         }
@@ -1297,13 +1302,13 @@ class InvoiceController extends Controller
         }
 
         if ($isFreePurchase) {
-            $message .= "Terima kasih telah bergabung dengan Sekolah Pajak! 🚀\n\n";
+            $message .= "Terima kasih telah bergabung dengan Talenta! 🚀\n\n";
         } else {
             $message .= "Jika ada pertanyaan, jangan ragu untuk menghubungi kami.\n\n";
             $message .= "Selamat belajar! 🚀\n\n";
         }
 
-        $message .= "*Sekolah Pajak Customer Support*";
+        $message .= "*Talenta Customer Support*";
 
         return $message;
     }
@@ -1403,7 +1408,7 @@ class InvoiceController extends Controller
                 ]);
             }
         } else {
-            $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
+            $defaultAffiliate = User::where('affiliate_code', 'TLT2025')->first();
 
             if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && $defaultAffiliate->commission > 0) {
                 $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
@@ -1529,11 +1534,11 @@ class InvoiceController extends Controller
         $data = [
             'invoice' => $invoice,
             'company' => [
-                'name' => 'Sekolah Pajak',
+                'name' => 'Talenta',
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
-                'phone' => '+6281252683108',
-                'email' => 'sekolahpajak15@gmail.com',
-                'website' => 'www.sekolahpajak.id'
+                'phone' => '+6285606391730',
+                'email' => 'talentaskill.academic@gmail.com',
+                'website' => 'www.talentaedu.id'
             ]
         ];
 
