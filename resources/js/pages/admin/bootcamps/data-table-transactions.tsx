@@ -128,7 +128,13 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         if (startDate) params.append('start_date', format(startDate, 'yyyy-MM-dd'));
         if (endDate) params.append('end_date', format(endDate, 'yyyy-MM-dd'));
 
-        // Column filters
+        // Column/search filters
+        const titleFilter = table.getColumn('title')?.getFilterValue() as string;
+        if (titleFilter) params.append('title', titleFilter);
+
+        const userNameFilter = table.getColumn('user_name')?.getFilterValue() as string;
+        if (userNameFilter) params.append('user_name', userNameFilter);
+
         const statusFilter = table.getColumn('status')?.getFilterValue();
         if (statusFilter) params.append('status', String(statusFilter));
 
@@ -137,7 +143,6 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 
         params.append('product_type', 'bootcamp');
 
-        // Download
         window.location.href = route('transactions.export') + '?' + params.toString();
     };
 

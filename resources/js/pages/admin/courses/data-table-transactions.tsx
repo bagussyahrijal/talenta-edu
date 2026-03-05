@@ -122,24 +122,29 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     };
 
     const handleExportToExcel = () => {
-        const params = new URLSearchParams();
-
-        // Date filter
-        if (startDate) params.append('start_date', format(startDate, 'yyyy-MM-dd'));
-        if (endDate) params.append('end_date', format(endDate, 'yyyy-MM-dd'));
-
-        // Column filters
-        const statusFilter = table.getColumn('status')?.getFilterValue();
-        if (statusFilter) params.append('status', String(statusFilter));
-
-        const paymentTypeFilter = table.getColumn('payment_type')?.getFilterValue();
-        if (paymentTypeFilter) params.append('payment_type', String(paymentTypeFilter));
-
-        params.append('product_type', 'course');
-
-        // Download
-        window.location.href = route('transactions.export') + '?' + params.toString();
-    };
+            const params = new URLSearchParams();
+    
+            // Date filter
+            if (startDate) params.append('start_date', format(startDate, 'yyyy-MM-dd'));
+            if (endDate) params.append('end_date', format(endDate, 'yyyy-MM-dd'));
+    
+            // Column/search filters
+            const titleFilter = table.getColumn('title')?.getFilterValue() as string;
+            if (titleFilter) params.append('title', titleFilter);
+    
+            const userNameFilter = table.getColumn('user_name')?.getFilterValue() as string;
+            if (userNameFilter) params.append('user_name', userNameFilter);
+    
+            const statusFilter = table.getColumn('status')?.getFilterValue();
+            if (statusFilter) params.append('status', String(statusFilter));
+    
+            const paymentTypeFilter = table.getColumn('payment_type')?.getFilterValue();
+            if (paymentTypeFilter) params.append('payment_type', String(paymentTypeFilter));
+    
+            params.append('product_type', 'course');
+    
+            window.location.href = route('transactions.export') + '?' + params.toString();
+        };
 
     return (
         <div>
