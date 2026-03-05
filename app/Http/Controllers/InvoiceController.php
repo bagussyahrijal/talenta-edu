@@ -226,7 +226,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TLT2025') {
+            if ($referralCode && $referralCode !== 'TAL2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -234,7 +234,7 @@ class InvoiceController extends Controller
             }
 
             if (!$referredByUserId) {
-                $defaultAffiliate = User::where('affiliate_code', 'TLT2025')->first();
+                $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
                 }
@@ -452,7 +452,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TLT2025') {
+            if ($referralCode && $referralCode !== 'TAL2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -460,7 +460,7 @@ class InvoiceController extends Controller
             }
 
             if (!$referredByUserId) {
-                $defaultAffiliate = User::where('affiliate_code', 'TLT2025')->first();
+                $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
                 }
@@ -679,7 +679,7 @@ class InvoiceController extends Controller
             $referralCode = session('referral_code');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TLT2025') {
+            if ($referralCode && $referralCode !== 'TAL2025') {
                 $referrer = User::where('affiliate_code', $referralCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -1408,7 +1408,7 @@ class InvoiceController extends Controller
                 ]);
             }
         } else {
-            $defaultAffiliate = User::where('affiliate_code', 'TLT2025')->first();
+            $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
 
             if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && $defaultAffiliate->commission > 0) {
                 $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
