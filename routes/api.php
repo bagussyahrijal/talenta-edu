@@ -32,6 +32,7 @@ Route::post('/check-email', function (Request $request) {
             'exists' => true,
             'name' => $user->name,
             'phone_number' => $user->phone_number,
+            'instance' => $user->instance,
         ]);
     }
     

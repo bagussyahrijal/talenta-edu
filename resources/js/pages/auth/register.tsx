@@ -13,6 +13,7 @@ type RegisterForm = {
     name: string;
     email: string;
     phone_number: string;
+    instance: string;
     password: string;
     password_confirmation: string;
 };
@@ -24,6 +25,7 @@ export default function Register() {
         name: '',
         email: '',
         phone_number: '',
+        instance: '',
         password: '',
         password_confirmation: '',
     });
@@ -87,6 +89,24 @@ export default function Register() {
                             placeholder="08xxxxxxxxxx"
                         />
                         <InputError message={errors.phone_number} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="instance">Instansi</Label>
+                        <Input
+                            id="instance"
+                            type="text"
+                            tabIndex={3}
+                            autoComplete="instance"
+                            value={data.instance}
+                            onChange={(e) => setData('instance', e.target.value)}
+                            disabled={processing}
+                            placeholder="Nama instansi Anda"
+                        />
+                        <p className="text-xs text-gray-500">
+                            Kosongkan jika tidak memiliki instansi
+                        </p>
+                        <InputError message={errors.instance} />
                     </div>
 
                     <div className="grid gap-2">
