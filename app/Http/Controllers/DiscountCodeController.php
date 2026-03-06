@@ -132,7 +132,7 @@ class DiscountCodeController extends Controller
         $courses = Course::select('id', 'title', 'price')->where('status', 'published')->get();
 
         $bootcamps = Bootcamp::select('id', 'title', 'price', 'registration_deadline', 'start_date', 'batch')
-            ->where('status', 'published')
+            ->whereIn('status', ['published', 'hidden'])
             ->get()
             ->map(function ($bootcamp) {
                 return [
@@ -326,7 +326,7 @@ class DiscountCodeController extends Controller
         $courses = Course::select('id', 'title', 'price')->where('status', 'published')->get();
 
         $bootcamps = Bootcamp::select('id', 'title', 'price', 'registration_deadline', 'start_date', 'batch')
-            ->where('status', 'published')
+            ->whereIn('status', ['published', 'hidden'])
             ->get()
             ->map(function ($bootcamp) {
                 return [
@@ -533,7 +533,7 @@ class DiscountCodeController extends Controller
             // Check if user is logged in or email is provided
             $userId = Auth::id();
             $userEmail = $request->email;
-            
+
             // If email is provided and user not logged in, check by email
             if (!$userId && $userEmail) {
                 $user = \App\Models\User::where('email', $userEmail)->first();
