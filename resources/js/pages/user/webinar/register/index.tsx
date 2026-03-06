@@ -357,7 +357,8 @@ export default function RegisterWebinar({
                         termsAccepted: termsAccepted,
                         promoCode: promoCode,
                         discountData: discountData,
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        source: 'login'
                     }));
 
                     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -386,7 +387,8 @@ export default function RegisterWebinar({
                         termsAccepted: termsAccepted,
                         promoCode: promoCode,
                         discountData: discountData,
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        source: 'register'
                     }));
 
                     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -523,6 +525,10 @@ export default function RegisterWebinar({
                     return;
                 }
 
+                if (checkoutData.source !== 'register') {
+                    sessionStorage.removeItem('pendingCheckout');
+                    return;
+                }
 
                 // Restore state
                 if (checkoutData.promoCode) {
