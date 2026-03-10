@@ -48,9 +48,10 @@ export const status = [
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    courseId?: string;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, courseId }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -62,6 +63,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     const [isStartDateOpen, setIsStartDateOpen] = useState(false);
     const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
+    // Filter data by date range (client-side)
     const filteredData = useMemo(() => {
         if (!startDate || !endDate) {
             return data;
@@ -122,29 +124,33 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     };
 
     const handleExportToExcel = () => {
-            const params = new URLSearchParams();
-    
-            // Date filter
-            if (startDate) params.append('start_date', format(startDate, 'yyyy-MM-dd'));
-            if (endDate) params.append('end_date', format(endDate, 'yyyy-MM-dd'));
-    
-            // Column/search filters
-            const titleFilter = table.getColumn('title')?.getFilterValue() as string;
-            if (titleFilter) params.append('title', titleFilter);
-    
-            const userNameFilter = table.getColumn('user_name')?.getFilterValue() as string;
-            if (userNameFilter) params.append('user_name', userNameFilter);
-    
-            const statusFilter = table.getColumn('status')?.getFilterValue();
-            if (statusFilter) params.append('status', String(statusFilter));
-    
-            const paymentTypeFilter = table.getColumn('payment_type')?.getFilterValue();
-            if (paymentTypeFilter) params.append('payment_type', String(paymentTypeFilter));
-    
-            params.append('product_type', 'course');
-    
-            window.location.href = route('transactions.export') + '?' + params.toString();
-        };
+        const params = new URLSearchParams();
+
+        // Date filter
+        if (startDate) params.append('start_date', format(startDate, 'yyyy-MM-dd'));
+        if (endDate) params.append('end_date', format(endDate, 'yyyy-MM-dd'));
+
+        // Column/search filters
+        const titleFilter = table.getColumn('title')?.getFilterValue() as string;
+        if (titleFilter) params.append('title', titleFilter);
+
+        const userNameFilter = table.getColumn('user_name')?.getFilterValue() as string;
+        if (userNameFilter) params.append('user_name', userNameFilter);
+
+        const statusFilter = table.getColumn('status')?.getFilterValue();
+        if (statusFilter) params.append('status', String(statusFilter));
+
+        const paymentTypeFilter = table.getColumn('payment_type')?.getFilterValue();
+        if (paymentTypeFilter) params.append('payment_type', String(paymentTypeFilter));
+
+        params.append('product_type', 'course');
+
+        if (courseId) {
+            params.append('course_id', courseId);
+        }
+
+        window.location.href = route('transactions.export') + '?' + params.toString();
+    };
 
     return (
         <div>

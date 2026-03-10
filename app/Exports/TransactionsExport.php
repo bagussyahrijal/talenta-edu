@@ -23,6 +23,9 @@ class TransactionsExport implements
     protected $status;
     protected $paymentType;
     protected $productType;
+    protected $bootcampId;  
+    protected $webinarId;   
+    protected $courseId;    
 
     public function __construct($filters = [])
     {
@@ -31,6 +34,9 @@ class TransactionsExport implements
         $this->status = $filters['status'] ?? null;
         $this->paymentType = $filters['payment_type'] ?? null;
         $this->productType = $filters['product_type'] ?? null;
+        $this->bootcampId = $filters['bootcamp_id'] ?? null;  
+        $this->webinarId = $filters['webinar_id'] ?? null;    
+        $this->courseId = $filters['course_id'] ?? null;      
     }
 
     public function query()
@@ -68,13 +74,37 @@ class TransactionsExport implements
         if ($this->productType) {
             switch ($this->productType) {
                 case 'course':
-                    $query->whereHas('courseItems');
+                    if ($this->courseId) {
+                        // Filter by specific course
+                        $query->whereHas('courseItems', function($q) {
+                            $q->where('course_id', $this->courseId);
+                        });
+                    } else {
+                        // All courses
+                        $query->whereHas('courseItems');
+                    }
                     break;
                 case 'bootcamp':
-                    $query->whereHas('bootcampItems');
+                    if ($this->bootcampId) {
+                        // Filter by specific bootcamp
+                        $query->whereHas('bootcampItems', function($q) {
+                            $q->where('bootcamp_id', $this->bootcampId);
+                        });
+                    } else {
+                        // All bootcamps
+                        $query->whereHas('bootcampItems');
+                    }
                     break;
                 case 'webinar':
-                    $query->whereHas('webinarItems');
+                    if ($this->webinarId) {
+                        // Filter by specific webinar
+                        $query->whereHas('webinarItems', function($q) {
+                            $q->where('webinar_id', $this->webinarId);
+                        });
+                    } else {
+                        // All webinars
+                        $query->whereHas('webinarItems');
+                    }
                     break;
                 case 'bundle':
                     $query->whereHas('bundleEnrollments');

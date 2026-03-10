@@ -1,7 +1,7 @@
 import { columns, type Invoice } from './columns-transactions';
 import { DataTable } from './data-table-transactions';
 
-export default function WebinarTransaction({ transactions }: { transactions: Invoice[] }) {
+export default function WebinarTransaction({ transactions, webinarId }: { transactions: Invoice[]; webinarId: string }) {
     const paidTransactions = transactions.filter((t) => t.status === 'paid');
 
     return (
@@ -16,7 +16,7 @@ export default function WebinarTransaction({ transactions }: { transactions: Inv
             </div>
 
             {transactions && transactions.length > 0 ? (
-                <DataTable columns={columns} data={transactions} />
+                <DataTable columns={columns} data={transactions} webinarId={webinarId} />
             ) : (
                 <div className="flex flex-col items-center justify-center gap-4 py-12">
                     <img src="/assets/images/not-found.webp" alt="Transaksi Tidak Tersedia" className="w-48" />

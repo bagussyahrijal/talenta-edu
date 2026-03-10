@@ -3,9 +3,10 @@ import { DataTable } from './data-table-transactions';
 
 interface BootcampTransactionProps {
     transactions: Invoice[];
+    bootcampId: string;
 }
 
-export default function BootcampTransaction({ transactions }: BootcampTransactionProps) {
+export default function BootcampTransaction({ transactions, bootcampId }: BootcampTransactionProps) {
     return (
         <div className="h-full space-y-6 rounded-lg border p-4">
             <div className="flex items-center justify-between">
@@ -19,7 +20,7 @@ export default function BootcampTransaction({ transactions }: BootcampTransactio
             </div>
 
             {transactions && transactions.length > 0 ? (
-                <DataTable columns={transactionColumns} data={transactions} />
+                <DataTable columns={transactionColumns} data={transactions} bootcampId={bootcampId} />
             ) : (
                 <div className="flex flex-col items-center justify-center gap-4 py-12">
                     <img src="/assets/images/not-found.webp" alt="Transaksi Tidak Tersedia" className="w-48" />

@@ -70,17 +70,17 @@ class InvoiceController extends Controller
         ]);
 
         // Apply date filter jika ada
-                if ($startDate && $endDate) {
+        if ($startDate && $endDate) {
             $start = Carbon::parse($startDate)->startOfDay();
             $end = Carbon::parse($endDate)->endOfDay();
 
             $invoicesQuery->where(function ($q) use ($start, $end) {
                 $q->where(function ($q2) use ($start, $end) {
                     $q2->where('status', 'paid')
-                       ->whereBetween('paid_at', [$start, $end]);
+                        ->whereBetween('paid_at', [$start, $end]);
                 })->orWhere(function ($q2) use ($start, $end) {
                     $q2->whereIn('status', ['pending', 'failed'])
-                       ->whereBetween('created_at', [$start, $end]);
+                        ->whereBetween('created_at', [$start, $end]);
                 });
             });
         }
@@ -1550,8 +1550,16 @@ class InvoiceController extends Controller
 
     public function export(Request $request)
     {
-        $filters = $request->only(['start_date', 'end_date', 'status', 'payment_type', 'product_type']);
-
+        $filters = $request->only([
+            'start_date',
+            'end_date',
+            'status',
+            'payment_type',
+            'product_type',
+            'bootcamp_id',
+            'webinar_id',
+            'course_id'
+        ]);
         $filename = 'Laporan_Transaksi';
 
         if ($request->start_date && $request->end_date) {
