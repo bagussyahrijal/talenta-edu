@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/input-error';
+import { any } from 'zod';
 
 interface Product {
     id: string;
@@ -390,17 +391,18 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         }
 
         const submitPayment = async (retryCount = 0): Promise<void> => {
-            const invoiceData = {
+            const invoiceData: any = {
                 bundle_id: bundle.id,
                 discount_amount: bundleDiscount,
                 nett_amount: bundle.price - (discountData?.discount_amount || 0),
                 transaction_fee: adminFee,
                 total_amount: totalPrice,
-                ...(discountData?.valid ? {
-                    discount_code_id: discountData.discount_code.id,
-                    discount_code_amount: discountData.discount_amount,
-                } : {}),
             };
+
+            if (discountData?.valid) {
+                invoiceData.discount_code_id = discountData.discount_code.id;
+                invoiceData.discount_code_amount = discountData.discount_amount;
+            }
 
             try {
                 const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
@@ -521,6 +523,11 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                 // Restore state
                 setTermsAccepted(checkoutData.termsAccepted || false);
 
+                // Restore promo code jika ada
+                if (checkoutData.discountData?.valid) {
+                    setPromoCode(checkoutData.discountData.discount_code.code);
+                    setDiscountData(checkoutData.discountData);
+                }
                 toast.success('Melanjutkan pembayaran...');
 
                 // Auto-submit setelah delay
@@ -528,14 +535,27 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                     setLoading(true);
 
                     const submitPayment = async (retryCount = 0): Promise<void> => {
-                        const invoiceData = {
+                        // Hitung ulang total dengan diskon dari sessionStorage
+                        let calculatedNettAmount = bundle.price;
+                        let calculatedTotalAmount = bundle.price + adminFee;
+
+                        if (checkoutData.discountData?.valid) {
+                            calculatedNettAmount = bundle.price - checkoutData.discountData.discount_amount;
+                            calculatedTotalAmount = calculatedNettAmount + adminFee;
+                        }
+
+                        const invoiceData: any = {
                             bundle_id: bundle.id,
                             discount_amount: bundleDiscount,
-                            nett_amount: bundle.price,
+                            nett_amount: calculatedNettAmount,
                             transaction_fee: adminFee,
-                            total_amount: totalPrice,
+                            total_amount: calculatedTotalAmount,
                         };
 
+                        if (checkoutData.discountData?.valid) {
+                            invoiceData.discount_code_id = checkoutData.discountData.discount_code.id;
+                            invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
+                        }
 
                         try {
                             const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
@@ -597,7 +617,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
             }
         }
 
-    }, [isLoggedIn, bundle.id, bundle.price, bundleDiscount, adminFee, totalPrice]);
+    }, [isLoggedIn, bundle.id]);
 
     if (isLoggedIn && !isProfileComplete) {
         return (
