@@ -308,7 +308,7 @@
             <div class="footer">
                 <div class="signature-container">
                     <div class="signature-date">
-                        {{ \Carbon\Carbon::parse($data['participant_issued_at'])->locale('id')->translatedFormat('d F Y') }}
+                        {{ \Carbon\Carbon::parse($certificate->issued_date)->locale('id')->translatedFormat('d F Y') }}
                     </div>
                     <div class="signature-space">
                         @if ($certificate->sign && $certificate->sign->image)
