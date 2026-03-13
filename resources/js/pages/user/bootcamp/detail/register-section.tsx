@@ -19,12 +19,6 @@ interface Bootcamp {
     registration_deadline: string;
     registration_url: string;
     thumbnail?: string | null;
-    user?: {
-        id: string;
-        name: string;
-        bio?: string;
-        avatar?: string;
-    };
 }
 
 export default function RegisterSection({ bootcamp }: { bootcamp: Bootcamp }) {
@@ -49,15 +43,6 @@ export default function RegisterSection({ bootcamp }: { bootcamp: Bootcamp }) {
 
     const deadline = new Date(bootcamp.registration_deadline);
     const isRegistrationOpen = new Date() < deadline;
-
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
 
     return (
         <section className="mx-auto mt-4 md:mt-8 mb-8 sm:mb-12 w-full max-w-7xl px-4 sm:px-6 lg:px-8" id="register">
@@ -110,31 +95,6 @@ export default function RegisterSection({ bootcamp }: { bootcamp: Bootcamp }) {
                         alt={bootcamp.title}
                         className="w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg sm:rounded-xl object-cover border border-primary/50"
                     />
-
-                    {/* Mentor Section - Hidden on mobile, shown on tablet+ */}
-                    {bootcamp.user && (
-                        <div className="hidden sm:block">
-                            <Link
-                                href={`/mentor/${bootcamp.user.id}`}
-                                className="flex items-center justify-between gap-4 dark:border-zinc-700 dark:bg-zinc-800"
-                            >
-                                <div className="flex w-full items-center gap-4">
-                                    <Avatar className="ring-primary/20 h-12 w-12 ring-4 md:h-16 md:w-16">
-                                        <AvatarImage src={bootcamp.user.avatar} alt={bootcamp.user.name} />
-                                        <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold md:text-3xl">
-                                            {getInitials(bootcamp.user.name)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="w-full">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{bootcamp.user.name}</h3>
-                                        </div>
-                                        <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">{bootcamp.user.bio}</p>
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                    )}
                 </div>
 
                 {/* Right Column - Price Card */}
@@ -253,31 +213,6 @@ export default function RegisterSection({ bootcamp }: { bootcamp: Bootcamp }) {
                         </div>
                     </div>
 
-                    {/* Mentor Section for Mobile - Shown only on mobile */}
-                    {bootcamp.user && (
-                        <div className="block sm:hidden mt-6">
-                            <p className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                                Mentor Bootcamp
-                            </p>
-                            <Link
-                                href={`/mentor/${bootcamp.user.id}`}
-                                className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-md transition active:shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
-                            >
-                                <div className="flex w-full items-center gap-4">
-                                    <Avatar className="ring-primary/20 h-12 w-12 ring-4">
-                                        <AvatarImage src={bootcamp.user.avatar} alt={bootcamp.user.name} />
-                                        <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
-                                            {getInitials(bootcamp.user.name)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div className="w-full">
-                                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{bootcamp.user.name}</h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">{bootcamp.user.bio}</p>
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                    )}
                 </div>
             </div>
         </section>

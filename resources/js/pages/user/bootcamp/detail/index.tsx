@@ -2,13 +2,16 @@ import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
 import { useEffect } from 'react';
 import AboutSection from './about-section';
-import HeroSection from './hero-section';
 import MentorSection from './mentor-section';
 import RegisterSection from './register-section';
 import RelatedProduct from './related-product';
-import RequirementSection from './requirement-section';
-import TimelineSection from './timeline-section';
-import ToolsSection from './tools-section';
+
+interface Mentor {
+    id: string;
+    name: string;
+    bio?: string;
+    avatar?: string;
+}
 
 interface Bootcamp {
     id: string;
@@ -33,12 +36,8 @@ interface Bootcamp {
     instructions?: string | null;
     requirements?: string | null;
     curriculum?: string | null;
-    user?: {
-        id: string;
-        name: string;
-        bio?: string;
-        avatar?: string;
-    };
+    mentors?: Mentor[];
+    user?: Mentor;
     created_at: string | Date;
 }
 
@@ -88,12 +87,8 @@ export default function Bootcamp({
             <Head title={`${bootcamp.title} - Bootcamp`} />
 
             <RegisterSection bootcamp={bootcamp} />
-            {/* <HeroSection bootcamp={bootcamp} /> */}
-            <AboutSection bootcamp={bootcamp}/>
-            {/* <TimelineSection bootcamp={bootcamp} />
-            <RequirementSection bootcamp={bootcamp} />
-            <ToolsSection bootcamp={bootcamp} />
-            <MentorSection bootcamp={bootcamp} /> */}
+            <AboutSection bootcamp={bootcamp} />
+            <MentorSection bootcamp={bootcamp} />
             <RelatedProduct relatedBootcamps={relatedBootcamps} myBootcampIds={myBootcampIds} />
         </UserLayout>
     );

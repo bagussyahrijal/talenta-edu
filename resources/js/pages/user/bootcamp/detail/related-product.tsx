@@ -28,7 +28,9 @@ export default function RelatedProduct({ relatedBootcamps, myBootcampIds }: Rela
 
     return (
         <section className="mx-auto mt-16 w-full max-w-7xl px-4" id="related">
-            <h2 className="dark:text-primary-foreground mb-4 text-center text-3xl font-bold text-gray-900 italic md:text-4xl">Bootcamp Serupa</h2>
+            <h2 className="dark:text-primary-foreground font-literata mb-4 text-center text-3xl font-bold text-gray-900 md:text-4xl">
+                Bootcamp Serupa
+            </h2>
             <p className="mb-8 text-center text-gray-600 dark:text-gray-400">Bootcamp lain yang mungkin menarik untuk Anda</p>
 
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

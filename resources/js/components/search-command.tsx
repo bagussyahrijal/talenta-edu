@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 interface SearchResult {
     id: string;
     title: string;
-    type: 'course' | 'bootcamp' | 'webinar';
+    type: 'course' | 'bootcamp' | 'webinar' | 'bundle';
     href: string;
     description?: string;
     price?: string;
@@ -87,6 +87,8 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                 return 'Bootcamp';
             case 'webinar':
                 return 'Webinar';
+            case 'bundle':
+                return 'Bundle';
             default:
                 return type;
         }
@@ -100,6 +102,8 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                 return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
             case 'webinar':
                 return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+            case 'bundle':
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
             default:
                 return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
         }
@@ -149,7 +153,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
 
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange}>
-            <CommandInput placeholder="Cari kelas, bootcamp, atau webinar..." value={query} onValueChange={setQuery} />
+            <CommandInput placeholder="Cari kelas, bootcamp, webinar, atau bundle..." value={query} onValueChange={setQuery} />
             <CommandList className="max-h-[400px]">
                 {/* Loading state */}
                 {loading && <div className="text-muted-foreground py-6 text-center text-sm">Mencari...</div>}
@@ -164,7 +168,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
 
                 {/* No query state */}
                 {!hasQuery && !loading && (
-                    <div className="text-muted-foreground py-6 text-center text-sm">Ketik untuk mencari kelas, bootcamp, atau webinar...</div>
+                    <div className="text-muted-foreground py-6 text-center text-sm">Ketik untuk mencari kelas, bootcamp, webinar, atau bundle...</div>
                 )}
 
                 {/* Results */}
@@ -198,7 +202,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                                     <div className="min-w-0 flex-1 space-y-1">
                                         <div className="flex items-center space-x-2">
                                             <span className="truncate text-sm font-medium">{item.title}</span>
-                                            <Badge  className={`px-1.5 py-0.5 text-xs ${getTypeColor(item.type)}`}>
+                                            <Badge variant="secondary" className={`px-1.5 py-0.5 text-xs ${getTypeColor(item.type)}`}>
                                                 {getTypeLabel(item.type)}
                                             </Badge>
                                             {item.has_access && (

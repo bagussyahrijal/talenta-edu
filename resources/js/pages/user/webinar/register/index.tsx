@@ -7,10 +7,10 @@ import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
 import { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { BadgeCheck, Calendar, Check, Eye, EyeOff, Hourglass, LoaderCircle, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
+import axios from 'axios';
+import { BadgeCheck, Calendar, Check, Hourglass, LoaderCircle, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import axios from 'axios';
 
 interface Webinar {
     id: string;
@@ -24,6 +24,9 @@ interface Webinar {
     description?: string | null;
     benefits?: string | null;
     group_url?: string | null;
+    requirement_1?: string | null;
+    requirement_2?: string | null;
+    requirement_3?: string | null;
 }
 
 interface DiscountData {
@@ -142,20 +145,19 @@ export default function RegisterWebinar({
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoError, setPromoError] = useState('');
     const [showFreeForm, setShowFreeForm] = useState(false);
-    const [freeFormData, setFreeFormData] = useState({
-        ig_follow_proof: null as File | null,
-        tiktok_follow_proof: null as File | null,
-        tag_friend_proof: null as File | null,
+    const [freeFormData, setFreeFormData] = useState<Record<string, File | null>>({
+        requirement_1_proof: null,
+        requirement_2_proof: null,
+        requirement_3_proof: null,
     });
-    const [fileErrors, setFileErrors] = useState({
-        ig_follow_proof: false,
-        tiktok_follow_proof: false,
-        tag_friend_proof: false,
+    const [fileErrors, setFileErrors] = useState<Record<string, boolean>>({
+        requirement_1_proof: false,
+        requirement_2_proof: false,
+        requirement_3_proof: false,
     });
 
     const [emailExists, setEmailExists] = useState(false);
     const [checkingEmail, setCheckingEmail] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
 
     const isFree = webinar.price === 0;
     const basePrice = webinar.price;
@@ -184,7 +186,7 @@ export default function RegisterWebinar({
             setCheckingEmail(true);
             try {
                 const response = await axios.post('/api/check-email', {
-                    email: data.email
+                    email: data.email,
                 });
 
                 if (response.data.exists) {
@@ -302,7 +304,7 @@ export default function RegisterWebinar({
             return;
         }
 
-        if (!freeFormData.ig_follow_proof || !freeFormData.tiktok_follow_proof || !freeFormData.tag_friend_proof) {
+        if (!freeFormData.requirement_1_proof || !freeFormData.requirement_2_proof || !freeFormData.requirement_3_proof) {
             alert('Harap upload semua bukti yang diperlukan!');
             return;
         }
@@ -312,9 +314,9 @@ export default function RegisterWebinar({
         const formData = new FormData();
         formData.append('type', 'webinar');
         formData.append('id', webinar.id);
-        formData.append('ig_follow_proof', freeFormData.ig_follow_proof);
-        formData.append('tiktok_follow_proof', freeFormData.tiktok_follow_proof);
-        formData.append('tag_friend_proof', freeFormData.tag_friend_proof);
+        formData.append('requirement_1_proof', freeFormData.requirement_1_proof);
+        formData.append('requirement_2_proof', freeFormData.requirement_2_proof);
+        formData.append('requirement_3_proof', freeFormData.requirement_3_proof);
 
         router.post(route('enroll.free'), formData, {
             onError: (errors) => {
@@ -351,20 +353,22 @@ export default function RegisterWebinar({
 
                     toast.success('Login berhasil! Menyiapkan pembayaran...');
 
-                    sessionStorage.setItem('pendingCheckout', JSON.stringify({
-                        webinarId: webinar.id,
-                        productType: 'webinar',
-                        termsAccepted: termsAccepted,
-                        promoCode: promoCode,
-                        discountData: discountData,
-                        timestamp: Date.now(),
-                        source: 'login'
-                    }));
+                    sessionStorage.setItem(
+                        'pendingCheckout',
+                        JSON.stringify({
+                            webinarId: webinar.id,
+                            productType: 'webinar',
+                            termsAccepted: termsAccepted,
+                            promoCode: promoCode,
+                            discountData: discountData,
+                            timestamp: Date.now(),
+                            source: 'login',
+                        }),
+                    );
 
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
                     window.location.reload();
                     return;
-
                 } else {
                     // Registrasi juga menggunakan axios
                     const response = await axios.post('/register', {
@@ -381,21 +385,23 @@ export default function RegisterWebinar({
 
                     toast.success('Registrasi berhasil! Menyiapkan pembayaran...');
 
-                    sessionStorage.setItem('pendingCheckout', JSON.stringify({
-                        webinarId: webinar.id,
-                        productType: 'webinar',
-                        termsAccepted: termsAccepted,
-                        promoCode: promoCode,
-                        discountData: discountData,
-                        timestamp: Date.now(),
-                        source: 'register'
-                    }));
+                    sessionStorage.setItem(
+                        'pendingCheckout',
+                        JSON.stringify({
+                            webinarId: webinar.id,
+                            productType: 'webinar',
+                            termsAccepted: termsAccepted,
+                            promoCode: promoCode,
+                            discountData: discountData,
+                            timestamp: Date.now(),
+                            source: 'register',
+                        }),
+                    );
 
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
                     window.location.reload();
                     return;
                 }
-
             } catch (error: any) {
                 console.error('Login/Register error:', error);
                 setLoading(false);
@@ -428,9 +434,7 @@ export default function RegisterWebinar({
         }
 
         const submitPayment = async (retryCount = 0): Promise<void> => {
-            const originalDiscountAmount = webinar.strikethrough_price > 0
-                ? webinar.strikethrough_price - webinar.price
-                : 0;
+            const originalDiscountAmount = webinar.strikethrough_price > 0 ? webinar.strikethrough_price - webinar.price : 0;
             const promoDiscountAmount = discountData?.discount_amount || 0;
             const finalPrice = webinar.price - promoDiscountAmount;
             const totalAmount = finalPrice + 5000;
@@ -469,7 +473,7 @@ export default function RegisterWebinar({
                 }
 
                 if (res.status === 401 && retryCount < 2) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await new Promise((resolve) => setTimeout(resolve, 2000));
                     return submitPayment(retryCount + 1);
                 }
 
@@ -501,7 +505,6 @@ export default function RegisterWebinar({
 
     // useEffect untuk auto-submit setelah reload
     useEffect(() => {
-
         const pendingCheckout = sessionStorage.getItem('pendingCheckout');
 
         if (pendingCheckout && isLoggedIn) {
@@ -513,7 +516,7 @@ export default function RegisterWebinar({
                 const now = Date.now();
                 const fiveMinutes = 5 * 60 * 1000;
 
-                if ((now - timestamp) > fiveMinutes) {
+                if (now - timestamp > fiveMinutes) {
                     sessionStorage.removeItem('pendingCheckout');
                     toast.error('Sesi checkout telah kadaluarsa');
                     return;
@@ -546,9 +549,7 @@ export default function RegisterWebinar({
                     setLoading(true);
 
                     const submitPayment = async (retryCount = 0): Promise<void> => {
-                        const originalDiscountAmount = webinar.strikethrough_price > 0
-                            ? webinar.strikethrough_price - webinar.price
-                            : 0;
+                        const originalDiscountAmount = webinar.strikethrough_price > 0 ? webinar.strikethrough_price - webinar.price : 0;
                         const promoDiscountAmount = checkoutData.discountData?.discount_amount || 0;
                         const finalPrice = webinar.price - promoDiscountAmount;
                         const totalAmount = finalPrice + 5000;
@@ -566,7 +567,6 @@ export default function RegisterWebinar({
                             invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
                         }
 
-
                         try {
                             const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
 
@@ -582,14 +582,13 @@ export default function RegisterWebinar({
                                 body: JSON.stringify(invoiceData),
                             });
 
-
                             if (res.status === 419 && retryCount < 2) {
                                 await refreshCSRFToken();
                                 return submitPayment(retryCount + 1);
                             }
 
                             if (res.status === 401 && retryCount < 2) {
-                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                await new Promise((resolve) => setTimeout(resolve, 2000));
                                 return submitPayment(retryCount + 1);
                             }
 
@@ -620,7 +619,6 @@ export default function RegisterWebinar({
                         setLoading(false);
                     }
                 }, 2000);
-
             } catch (error) {
                 console.error('Error processing pending checkout:', error);
                 sessionStorage.removeItem('pendingCheckout');
@@ -858,7 +856,7 @@ export default function RegisterWebinar({
                                                     setCheckingEmail(true);
                                                     try {
                                                         const response = await axios.post('/api/check-email', {
-                                                            email: data.email
+                                                            email: data.email,
                                                         });
 
                                                         if (response.data.exists) {
@@ -884,9 +882,7 @@ export default function RegisterWebinar({
                                                 <RefreshCw className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        {emailExists && (
-                                            <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>
-                                        )}
+                                        {emailExists && <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>}
                                         <InputError message={errors.email} />
                                     </div>
 
@@ -921,14 +917,10 @@ export default function RegisterWebinar({
                                                 placeholder="08xxxxxxxxxx"
                                             />
                                             {!emailExists && (
-                                                <p className="text-xs text-gray-500">
-                                                    Nomor telepon akan digunakan sebagai password anda
-                                                </p>
+                                                <p className="text-xs text-gray-500">Nomor telepon akan digunakan sebagai password anda</p>
                                             )}
                                             {emailExists && (
-                                                <p className="text-xs text-blue-600">
-                                                    Pastikan nomor telepon sesuai dengan yang terdaftar
-                                                </p>
+                                                <p className="text-xs text-blue-600">Pastikan nomor telepon sesuai dengan yang terdaftar</p>
                                             )}
                                             <InputError message={errors.phone_number} />
                                         </div>
@@ -945,18 +937,13 @@ export default function RegisterWebinar({
                                                 disabled={processing || emailExists}
                                                 placeholder="Instansi atau perusahaan Anda"
                                             />
-                                            {!emailExists && (
-                                                <p className="text-xs text-gray-500">
-                                                    Kosongkan jika tidak memiliki instansi
-                                                </p>
-                                            )}
+                                            {!emailExists && <p className="text-xs text-gray-500">Kosongkan jika tidak memiliki instansi</p>}
                                             <InputError message={errors.instance} />
                                         </div>
                                     </div>
                                 </form>
                             )}
                         </div>
-
 
                         {/* Payment Channels Section */}
                         {/* {!isFree && channels.length > 0 && !pendingInvoice && !hasAccess && (
@@ -1232,29 +1219,9 @@ export default function RegisterWebinar({
                                                     Dapatkan akses dengan mengikuti persyaratan berikut
                                                 </p>
                                                 <ul className="mt-4 space-y-1 text-left text-sm text-green-700 dark:text-green-300">
-                                                    <li>
-                                                        • Follow Instagram{' '}
-                                                        <a
-                                                            href="https://www.instagram.com/brevetpajak_talenta/"
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="font-medium underline"
-                                                        >
-                                                            @brevetpajak_talenta
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        • Follow TikTok{' '}
-                                                        <a
-                                                            href="https://www.tiktok.com/@brevetpajak_talenta"
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="font-medium underline"
-                                                        >
-                                                            @brevetpajak_talenta
-                                                        </a>
-                                                    </li>
-                                                    <li>• Tag 3 teman di postingan Instagram kami</li>
+                                                    {webinar.requirement_1 && <li>• {webinar.requirement_1}</li>}
+                                                    {webinar.requirement_2 && <li>• {webinar.requirement_2}</li>}
+                                                    {webinar.requirement_3 && <li>• {webinar.requirement_3}</li>}
                                                 </ul>
                                             </div>
                                         ) : (
@@ -1409,51 +1376,29 @@ export default function RegisterWebinar({
                                     </div>
 
                                     <div className="space-y-4 p-6">
-                                        <div>
-                                            <Label htmlFor="ig_follow_proof">Bukti Follow Instagram</Label>
-                                            <Input
-                                                id="ig_follow_proof"
-                                                data-field="ig_follow_proof"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => handleFileChange('ig_follow_proof', e.target.files?.[0] || null)}
-                                                className={fileErrors.ig_follow_proof ? 'border-red-500' : ''}
-                                                required
-                                            />
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                Screenshot profil Instagram @brevetpajak_talenta yang menunjukkan follow (Maks. 2MB)
-                                            </p>
-                                        </div>
+                                        {[1, 2, 3].map((index) => {
+                                            const requirementKey = `requirement_${index}`;
+                                            const proofKey = `${requirementKey}_proof` as const;
+                                            const requirementText = webinar[requirementKey as keyof Webinar] as string | null | undefined;
 
-                                        <div>
-                                            <Label htmlFor="tiktok_follow_proof">Bukti Follow TikTok</Label>
-                                            <Input
-                                                id="tiktok_follow_proof"
-                                                data-field="tiktok_follow_proof"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => handleFileChange('tiktok_follow_proof', e.target.files?.[0] || null)}
-                                                className={fileErrors.tiktok_follow_proof ? 'border-red-500' : ''}
-                                                required
-                                            />
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                Screenshot profil TikTok @brevetpajak_talenta yang menunjukkan follow (Maks. 2MB)
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <Label htmlFor="tag_friend_proof">Bukti Tag 3 Teman</Label>
-                                            <Input
-                                                id="tag_friend_proof"
-                                                data-field="tag_friend_proof"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => handleFileChange('tag_friend_proof', e.target.files?.[0] || null)}
-                                                className={fileErrors.tag_friend_proof ? 'border-red-500' : ''}
-                                                required
-                                            />
-                                            <p className="mt-1 text-xs text-gray-500">Screenshot komentar yang menunjukkan tag 3 teman (Maks. 2MB)</p>
-                                        </div>
+                                            return (
+                                                <div key={index}>
+                                                    <Label htmlFor={proofKey}>
+                                                        Bukti Persyaratan {index}: {requirementText || `Persyaratan ${index}`}
+                                                    </Label>
+                                                    <Input
+                                                        id={proofKey}
+                                                        data-field={proofKey}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleFileChange(proofKey, e.target.files?.[0] || null)}
+                                                        className={fileErrors[proofKey] ? 'border-red-500' : ''}
+                                                        required
+                                                    />
+                                                    <p className="mt-1 text-xs text-gray-500">{requirementText} (Maks. 2MB)</p>
+                                                </div>
+                                            );
+                                        })}
 
                                         <div className="flex gap-2">
                                             <Button
@@ -1461,8 +1406,16 @@ export default function RegisterWebinar({
                                                 variant="outline"
                                                 onClick={() => {
                                                     setShowFreeForm(false);
-                                                    setFileErrors({ ig_follow_proof: false, tiktok_follow_proof: false, tag_friend_proof: false });
-                                                    setFreeFormData({ ig_follow_proof: null, tiktok_follow_proof: null, tag_friend_proof: null });
+                                                    setFileErrors({
+                                                        requirement_1_proof: false,
+                                                        requirement_2_proof: false,
+                                                        requirement_3_proof: false,
+                                                    });
+                                                    setFreeFormData({
+                                                        requirement_1_proof: null,
+                                                        requirement_2_proof: null,
+                                                        requirement_3_proof: null,
+                                                    });
                                                 }}
                                                 className="flex-1"
                                             >
@@ -1472,9 +1425,9 @@ export default function RegisterWebinar({
                                                 type="submit"
                                                 disabled={
                                                     loading ||
-                                                    !freeFormData.ig_follow_proof ||
-                                                    !freeFormData.tiktok_follow_proof ||
-                                                    !freeFormData.tag_friend_proof ||
+                                                    !freeFormData.requirement_1_proof ||
+                                                    !freeFormData.requirement_2_proof ||
+                                                    !freeFormData.requirement_3_proof ||
                                                     Object.values(fileErrors).some((e) => e)
                                                 }
                                                 className="flex-1"

@@ -1,5 +1,4 @@
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -8,10 +7,10 @@ import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
 import { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { BadgeCheck, Calendar, Check, Eye, EyeOff, Hourglass, LoaderCircle, LoaderCircleIcon, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
+import axios from 'axios';
+import { BadgeCheck, Calendar, Check, Hourglass, LoaderCircle, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import axios from 'axios';
 
 interface Bootcamp {
     id: string;
@@ -28,6 +27,9 @@ interface Bootcamp {
     requirements?: string | null;
     curriculum?: string | null;
     group_url?: string | null;
+    requirement_1?: string | null;
+    requirement_2?: string | null;
+    requirement_3?: string | null;
     level?: 'beginner' | 'intermediate' | 'advanced';
 }
 
@@ -146,15 +148,15 @@ export default function RegisterBootcamp({
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoError, setPromoError] = useState('');
     const [showFreeForm, setShowFreeForm] = useState(false);
-    const [freeFormData, setFreeFormData] = useState({
-        ig_follow_proof: null as File | null,
-        tiktok_follow_proof: null as File | null,
-        tag_friend_proof: null as File | null,
+    const [freeFormData, setFreeFormData] = useState<Record<string, File | null>>({
+        requirement_1_proof: null,
+        requirement_2_proof: null,
+        requirement_3_proof: null,
     });
-    const [fileErrors, setFileErrors] = useState({
-        ig_follow_proof: false,
-        tiktok_follow_proof: false,
-        tag_friend_proof: false,
+    const [fileErrors, setFileErrors] = useState<Record<string, boolean>>({
+        requirement_1_proof: false,
+        requirement_2_proof: false,
+        requirement_3_proof: false,
     });
 
     const [emailExists, setEmailExists] = useState(false);
@@ -166,7 +168,6 @@ export default function RegisterBootcamp({
     const finalBootcampPrice = basePrice - discountAmount;
     const adminFee = isFree ? 0 : 5000;
     const totalPrice = isFree ? 0 : finalBootcampPrice + adminFee;
-    const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
@@ -187,7 +188,7 @@ export default function RegisterBootcamp({
             setCheckingEmail(true);
             try {
                 const response = await axios.post('/api/check-email', {
-                    email: data.email
+                    email: data.email,
                 });
 
                 if (response.data.exists) {
@@ -305,7 +306,7 @@ export default function RegisterBootcamp({
             return;
         }
 
-        if (!freeFormData.ig_follow_proof || !freeFormData.tiktok_follow_proof || !freeFormData.tag_friend_proof) {
+        if (!freeFormData.requirement_1_proof || !freeFormData.requirement_2_proof || !freeFormData.requirement_3_proof) {
             alert('Harap upload semua bukti yang diperlukan!');
             return;
         }
@@ -315,9 +316,9 @@ export default function RegisterBootcamp({
         const formData = new FormData();
         formData.append('type', 'bootcamp');
         formData.append('id', bootcamp.id);
-        formData.append('ig_follow_proof', freeFormData.ig_follow_proof);
-        formData.append('tiktok_follow_proof', freeFormData.tiktok_follow_proof);
-        formData.append('tag_friend_proof', freeFormData.tag_friend_proof);
+        formData.append('requirement_1_proof', freeFormData.requirement_1_proof);
+        formData.append('requirement_2_proof', freeFormData.requirement_2_proof);
+        formData.append('requirement_3_proof', freeFormData.requirement_3_proof);
 
         router.post(route('enroll.free'), formData, {
             onError: (errors) => {
@@ -355,20 +356,22 @@ export default function RegisterBootcamp({
 
                     toast.success('Login berhasil! Menyiapkan pembayaran...');
 
-                    sessionStorage.setItem('pendingCheckout', JSON.stringify({
-                        bootcampId: bootcamp.id,
-                        productType: 'bootcamp',
-                        termsAccepted: termsAccepted,
-                        promoCode: promoCode,
-                        discountData: discountData,
-                        timestamp: Date.now(),
-                        source: 'login'
-                    }));
+                    sessionStorage.setItem(
+                        'pendingCheckout',
+                        JSON.stringify({
+                            bootcampId: bootcamp.id,
+                            productType: 'bootcamp',
+                            termsAccepted: termsAccepted,
+                            promoCode: promoCode,
+                            discountData: discountData,
+                            timestamp: Date.now(),
+                            source: 'login',
+                        }),
+                    );
 
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
                     window.location.reload();
                     return;
-
                 } else {
                     // Registrasi juga menggunakan axios
                     const response = await axios.post('/register', {
@@ -385,21 +388,23 @@ export default function RegisterBootcamp({
 
                     toast.success('Registrasi berhasil! Menyiapkan pembayaran...');
 
-                    sessionStorage.setItem('pendingCheckout', JSON.stringify({
-                        bootcampId: bootcamp.id,
-                        productType: 'bootcamp',
-                        termsAccepted: termsAccepted,
-                        promoCode: promoCode,
-                        discountData: discountData,
-                        timestamp: Date.now(),
-                        source: 'register'
-                    }));
+                    sessionStorage.setItem(
+                        'pendingCheckout',
+                        JSON.stringify({
+                            bootcampId: bootcamp.id,
+                            productType: 'bootcamp',
+                            termsAccepted: termsAccepted,
+                            promoCode: promoCode,
+                            discountData: discountData,
+                            timestamp: Date.now(),
+                            source: 'register',
+                        }),
+                    );
 
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
                     window.location.reload();
                     return;
                 }
-
             } catch (error: any) {
                 console.error('Login/Register error:', error);
                 setLoading(false);
@@ -470,7 +475,7 @@ export default function RegisterBootcamp({
                 }
 
                 if (res.status === 401 && retryCount < 2) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await new Promise((resolve) => setTimeout(resolve, 2000));
                     return submitPayment(retryCount + 1);
                 }
 
@@ -597,7 +602,6 @@ export default function RegisterBootcamp({
 
     // Ganti useEffect yang ada dengan ini (letakkan setelah deklarasi semua state, sebelum return)
     useEffect(() => {
-
         const pendingCheckout = sessionStorage.getItem('pendingCheckout');
 
         if (pendingCheckout && isLoggedIn) {
@@ -609,7 +613,7 @@ export default function RegisterBootcamp({
                 const now = Date.now();
                 const fiveMinutes = 5 * 60 * 1000;
 
-                if ((now - timestamp) > fiveMinutes) {
+                if (now - timestamp > fiveMinutes) {
                     sessionStorage.removeItem('pendingCheckout');
                     toast.error('Sesi checkout telah kadaluarsa');
                     return;
@@ -643,9 +647,7 @@ export default function RegisterBootcamp({
                     setLoading(true);
 
                     const submitPayment = async (retryCount = 0): Promise<void> => {
-                        const originalDiscountAmount = bootcamp.strikethrough_price > 0
-                            ? bootcamp.strikethrough_price - bootcamp.price
-                            : 0;
+                        const originalDiscountAmount = bootcamp.strikethrough_price > 0 ? bootcamp.strikethrough_price - bootcamp.price : 0;
                         const promoDiscountAmount = checkoutData.discountData?.discount_amount || 0;
                         const finalPrice = bootcamp.price - promoDiscountAmount;
                         const totalAmount = finalPrice + 5000; // Admin fee
@@ -663,7 +665,6 @@ export default function RegisterBootcamp({
                             invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
                         }
 
-
                         try {
                             const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
 
@@ -679,14 +680,13 @@ export default function RegisterBootcamp({
                                 body: JSON.stringify(invoiceData),
                             });
 
-
                             if (res.status === 419 && retryCount < 2) {
                                 await refreshCSRFToken();
                                 return submitPayment(retryCount + 1);
                             }
 
                             if (res.status === 401 && retryCount < 2) {
-                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                await new Promise((resolve) => setTimeout(resolve, 2000));
                                 return submitPayment(retryCount + 1);
                             }
 
@@ -717,7 +717,6 @@ export default function RegisterBootcamp({
                         setLoading(false);
                     }
                 }, 2000); // Tingkatkan delay jadi 2 detik
-
             } catch (error) {
                 console.error('Error processing pending checkout:', error);
                 sessionStorage.removeItem('pendingCheckout');
@@ -895,7 +894,7 @@ export default function RegisterBootcamp({
                                                     setCheckingEmail(true);
                                                     try {
                                                         const response = await axios.post('/api/check-email', {
-                                                            email: data.email
+                                                            email: data.email,
                                                         });
 
                                                         if (response.data.exists) {
@@ -921,9 +920,7 @@ export default function RegisterBootcamp({
                                                 <RefreshCw className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        {emailExists && (
-                                            <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>
-                                        )}
+                                        {emailExists && <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>}
                                         <InputError message={errors.email} />
                                     </div>
 
@@ -958,14 +955,10 @@ export default function RegisterBootcamp({
                                                 placeholder="08xxxxxxxxxx"
                                             />
                                             {!emailExists && (
-                                                <p className="text-xs text-gray-500">
-                                                    Nomor telepon akan digunakan sebagai password anda
-                                                </p>
+                                                <p className="text-xs text-gray-500">Nomor telepon akan digunakan sebagai password anda</p>
                                             )}
                                             {emailExists && (
-                                                <p className="text-xs text-blue-600">
-                                                    Pastikan nomor telepon sesuai dengan yang terdaftar
-                                                </p>
+                                                <p className="text-xs text-blue-600">Pastikan nomor telepon sesuai dengan yang terdaftar</p>
                                             )}
                                             <InputError message={errors.phone_number} />
                                         </div>
@@ -982,11 +975,7 @@ export default function RegisterBootcamp({
                                                 disabled={processing || emailExists}
                                                 placeholder="Instansi atau perusahaan Anda"
                                             />
-                                            {!emailExists && (
-                                                <p className="text-xs text-gray-500">
-                                                    Kosongkan jika tidak memiliki instansi
-                                                </p>
-                                            )}
+                                            {!emailExists && <p className="text-xs text-gray-500">Kosongkan jika tidak memiliki instansi</p>}
                                             <InputError message={errors.instance} />
                                         </div>
                                     </div>
@@ -1268,29 +1257,9 @@ export default function RegisterBootcamp({
                                                     Dapatkan akses dengan mengikuti persyaratan berikut
                                                 </p>
                                                 <ul className="mt-4 space-y-1 text-left text-sm text-green-700 dark:text-green-300">
-                                                    <li>
-                                                        • Follow Instagram
-                                                        <a
-                                                            href="https://www.instagram.com/brevetpajak_talenta/"
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="font-medium underline"
-                                                        >
-                                                            @brevetpajak_talenta
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        • Follow TikTok
-                                                        <a
-                                                            href="https://www.tiktok.com/@brevetpajak_talenta"
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="font-medium underline"
-                                                        >
-                                                            @brevetpajak_talenta
-                                                        </a>
-                                                    </li>
-                                                    <li>• Tag 3 teman di postingan Instagram kami</li>
+                                                    {bootcamp.requirement_1 && <li>• {bootcamp.requirement_1}</li>}
+                                                    {bootcamp.requirement_2 && <li>• {bootcamp.requirement_2}</li>}
+                                                    {bootcamp.requirement_3 && <li>• {bootcamp.requirement_3}</li>}
                                                 </ul>
                                             </div>
                                         ) : (
@@ -1424,7 +1393,7 @@ export default function RegisterBootcamp({
                                                         className="mt-1"
                                                     />
                                                     <Label htmlFor="terms" className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                                                        Saya menyetujui {' '}
+                                                        Saya menyetujui{' '}
                                                         <a
                                                             href="/terms-and-conditions"
                                                             target="_blank"
@@ -1463,51 +1432,29 @@ export default function RegisterBootcamp({
                                     </div>
 
                                     <div className="space-y-4 p-6">
-                                        <div>
-                                            <Label htmlFor="ig_follow_proof">Bukti Follow Instagram</Label>
-                                            <Input
-                                                id="ig_follow_proof"
-                                                data-field="ig_follow_proof"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => handleFileChange('ig_follow_proof', e.target.files?.[0] || null)}
-                                                className={fileErrors.ig_follow_proof ? 'border-red-500' : ''}
-                                                required
-                                            />
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                Screenshot profil Instagram @brevetpajak_talenta yang menunjukkan follow (Maks. 2MB)
-                                            </p>
-                                        </div>
+                                        {[1, 2, 3].map((index) => {
+                                            const requirementKey = `requirement_${index}` as keyof Bootcamp;
+                                            const proofKey = `requirement_${index}_proof` as const;
+                                            const requirementText = (bootcamp[requirementKey] as string | null | undefined) || `Persyaratan ${index}`;
 
-                                        <div>
-                                            <Label htmlFor="tiktok_follow_proof">Bukti Follow TikTok</Label>
-                                            <Input
-                                                id="tiktok_follow_proof"
-                                                data-field="tiktok_follow_proof"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => handleFileChange('tiktok_follow_proof', e.target.files?.[0] || null)}
-                                                className={fileErrors.tiktok_follow_proof ? 'border-red-500' : ''}
-                                                required
-                                            />
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                Screenshot profil TikTok @brevetpajak_talenta yang menunjukkan follow (Maks. 2MB)
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <Label htmlFor="tag_friend_proof">Bukti Tag 3 Teman</Label>
-                                            <Input
-                                                id="tag_friend_proof"
-                                                data-field="tag_friend_proof"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={(e) => handleFileChange('tag_friend_proof', e.target.files?.[0] || null)}
-                                                className={fileErrors.tag_friend_proof ? 'border-red-500' : ''}
-                                                required
-                                            />
-                                            <p className="mt-1 text-xs text-gray-500">Screenshot komentar yang menunjukkan tag 3 teman (Maks. 2MB)</p>
-                                        </div>
+                                            return (
+                                                <div key={index}>
+                                                    <Label htmlFor={proofKey}>Bukti: {requirementText}</Label>
+                                                    <Input
+                                                        id={proofKey}
+                                                        data-field={proofKey}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleFileChange(proofKey, e.target.files?.[0] || null)}
+                                                        className={fileErrors[proofKey] ? 'border-red-500' : ''}
+                                                        required
+                                                    />
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        Screenshot atau bukti untuk: {requirementText} (Maks. 2MB)
+                                                    </p>
+                                                </div>
+                                            );
+                                        })}
 
                                         <div className="flex gap-2">
                                             <Button
@@ -1515,8 +1462,16 @@ export default function RegisterBootcamp({
                                                 variant="outline"
                                                 onClick={() => {
                                                     setShowFreeForm(false);
-                                                    setFileErrors({ ig_follow_proof: false, tiktok_follow_proof: false, tag_friend_proof: false });
-                                                    setFreeFormData({ ig_follow_proof: null, tiktok_follow_proof: null, tag_friend_proof: null });
+                                                    setFileErrors({
+                                                        requirement_1_proof: false,
+                                                        requirement_2_proof: false,
+                                                        requirement_3_proof: false,
+                                                    });
+                                                    setFreeFormData({
+                                                        requirement_1_proof: null,
+                                                        requirement_2_proof: null,
+                                                        requirement_3_proof: null,
+                                                    });
                                                 }}
                                                 className="flex-1"
                                             >
@@ -1526,9 +1481,9 @@ export default function RegisterBootcamp({
                                                 type="submit"
                                                 disabled={
                                                     loading ||
-                                                    !freeFormData.ig_follow_proof ||
-                                                    !freeFormData.tiktok_follow_proof ||
-                                                    !freeFormData.tag_friend_proof ||
+                                                    !freeFormData.requirement_1_proof ||
+                                                    !freeFormData.requirement_2_proof ||
+                                                    !freeFormData.requirement_3_proof ||
                                                     Object.values(fileErrors).some((e) => e)
                                                 }
                                                 className="flex-1"

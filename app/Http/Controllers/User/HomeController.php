@@ -58,13 +58,15 @@ class HomeController extends Controller
                 ];
             });
 
-        $bootcamps = Bootcamp::with(['category', 'user'])
+        $bootcamps = Bootcamp::with(['category', 'mentors'])
             ->where('status', 'published')
             ->where('start_date', '>=', now())
             ->orderBy('created_at', 'desc')
             ->take(6)
             ->get()
-            ->map(function ($bootcamp) {
+             ->map(function ($bootcamp) {
+                $firstMentor = $bootcamp->mentors->first();
+
                 return [
                     'id' => $bootcamp->id,
                     'title' => $bootcamp->title,
@@ -75,10 +77,16 @@ class HomeController extends Controller
                     'start_date' => $bootcamp->start_date,
                     'end_date' => $bootcamp->end_date,
                     'category' => $bootcamp->category,
-                    'mentor' => [
-                        'name' => $bootcamp->user->name,
-                        'avatar' => $bootcamp->user->avatar,
-                    ],
+                    'mentor' => $firstMentor ? [
+                        'name' => $firstMentor->name,
+                        'avatar' => $firstMentor->avatar,
+                    ] : null,
+                    'mentors' => $bootcamp->mentors->map(function ($mentor) {
+                        return [
+                            'name' => $mentor->name,
+                            'avatar' => $mentor->avatar,
+                        ];
+                    })->values(),
                     'type' => 'bootcamp',
                     'created_at' => $bootcamp->created_at,
                 ];

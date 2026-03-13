@@ -26,7 +26,7 @@ class BootcampController extends Controller
     public function index()
     {
         $categories = Category::all();
-        $bootcamps = Bootcamp::with(['category', 'user'])
+        $bootcamps = Bootcamp::with(['category', 'mentors'])
             ->where('status', 'published')
             ->where('registration_deadline', '>=', now())
             ->orderBy('start_date', 'asc')
@@ -64,9 +64,9 @@ class BootcampController extends Controller
             ])->toResponse($request)->setStatusCode(404);
         }
 
-        $bootcamp->load(['category', 'schedules', 'tools', 'user']);
+        $bootcamp->load(['category', 'schedules', 'tools', 'mentors']);
 
-        $relatedBootcamps = Bootcamp::with(['category', 'user'])
+        $relatedBootcamps = Bootcamp::with(['category', 'mentors'])
             ->where('status', 'published')
             ->where('category_id', $bootcamp->category_id)
             ->where('id', '!=', $bootcamp->id)
@@ -118,7 +118,7 @@ class BootcampController extends Controller
         //     return redirect()->route('login', ['redirect' => $currentUrl]);
         // }
 
-        $bootcamp->load(['schedules', 'tools', 'user', 'category']);
+        $bootcamp->load(['schedules', 'tools', 'category', 'mentors']);
         $hasAccess = false;
         $pendingInvoice = null;
         $transactionDetail = null;
