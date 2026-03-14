@@ -1574,7 +1574,8 @@ class InvoiceController extends Controller
             'product_type',
             'bootcamp_id',
             'webinar_id',
-            'course_id'
+            'course_id',
+            'bundle_id'
         ]);
         $filename = 'Laporan_Transaksi';
 
