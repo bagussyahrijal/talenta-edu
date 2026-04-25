@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/magnetic-B6R8Pgny.js
 import{c as R}from"./createLucideIcon-CnCwA6Yy.js";import{r as a,j as X}from"./app--jvR6p3S.js";import{u as x}from"./use-motion-value-BMHSVY3O.js";import{u as L}from"./spotlight-CRCdJEvx.js";import{m as Y}from"./proxy-Q8TdOISe.js";/**
-========
-import{c as R}from"./createLucideIcon-KxXbWh3R.js";import{r as a,j as X}from"./app-xX8ZYxOm.js";import{u as x}from"./use-motion-value-BKKvJ8Py.js";import{u as L}from"./spotlight-Cgf8en5N.js";import{m as Y}from"./proxy-Dk8YaCHE.js";/**
->>>>>>>> 51986e13e99b0e85ef2b53c593ad5b8c1e45ca12:public/build/assets/magnetic-BwHtybuB.js
  * @license lucide-react v0.475.0 - ISC
  *
  * This source code is licensed under the ISC license.

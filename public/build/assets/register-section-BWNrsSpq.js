@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/register-section-BWNrsSpq.js
 import{K as C,j as e,$ as m}from"./app--jvR6p3S.js";import{B as L}from"./badge-De3mHGUl.js";import{B as S}from"./button-CSyXb-hk.js";import{c as I}from"./createLucideIcon-CnCwA6Yy.js";import{C as A}from"./calendar-vN3VIhyv.js";import{U as l}from"./user-CYHDkNU4.js";import{B as D}from"./book-open-Bh95YV5j.js";import{B as R}from"./badge-check-BjhZAfDL.js";import{M as $}from"./message-circle-Bkeo5CqJ.js";import{F as v}from"./file-text-Da_IiOFD.js";import{M as E}from"./monitor-Cm3QTWxK.js";/* empty css            */import"./index-CAxXyXoV.js";import"./index-upIF8iJd.js";import"./utils-CUfXokLi.js";/**
-========
-import{K as C,j as e,$ as m}from"./app-xX8ZYxOm.js";import{B as L}from"./badge-CQ1t0xe1.js";import{B as S}from"./button-B3sFwdtJ.js";import{c as I}from"./createLucideIcon-KxXbWh3R.js";import{C as A}from"./calendar-BB1Mfh2a.js";import{U as l}from"./user-BULk9mGA.js";import{B as D}from"./book-open-D9I8bHqZ.js";import{B as R}from"./badge-check-KtsrXy9_.js";import{M as $}from"./message-circle-C7-iOujz.js";import{F as v}from"./file-text-mNrxooLi.js";import{M as E}from"./monitor-DeRkuHsc.js";/* empty css            */import"./index-CB1knYpF.js";import"./index-BJZzwN9x.js";import"./utils-D2E8JqO_.js";/**
->>>>>>>> 51986e13e99b0e85ef2b53c593ad5b8c1e45ca12:public/build/assets/register-section-D1OVDc2H.js
  * @license lucide-react v0.475.0 - ISC
  *
  * This source code is licensed under the ISC license.

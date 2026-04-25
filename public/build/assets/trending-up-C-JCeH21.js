@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:public/build/assets/trending-up-C-JCeH21.js
 import{c as n}from"./createLucideIcon-CnCwA6Yy.js";/**
-========
-import{c as n}from"./createLucideIcon-KxXbWh3R.js";/**
->>>>>>>> 51986e13e99b0e85ef2b53c593ad5b8c1e45ca12:public/build/assets/trending-up-xz0wzy2_.js
  * @license lucide-react v0.475.0 - ISC
  *
  * This source code is licensed under the ISC license.
