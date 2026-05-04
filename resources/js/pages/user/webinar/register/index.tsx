@@ -332,7 +332,7 @@ export default function RegisterWebinar({
         e.preventDefault();
 
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number) {
+            if (!data.email || !data.name || !data.phone_number || (!emailExists && !data.instance)) {
                 toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
@@ -936,8 +936,8 @@ export default function RegisterWebinar({
                                                 onChange={(e) => setData('instance', e.target.value)}
                                                 disabled={processing || emailExists}
                                                 placeholder="Instansi atau perusahaan Anda"
+                                                required
                                             />
-                                            {!emailExists && <p className="text-xs text-gray-500">Kosongkan jika tidak memiliki instansi</p>}
                                             <InputError message={errors.instance} />
                                         </div>
                                     </div>

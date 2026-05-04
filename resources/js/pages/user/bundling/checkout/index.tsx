@@ -1,17 +1,16 @@
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
 import { SharedData } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import { BadgeCheck, Check, Hourglass, LoaderCircle, Package, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import axios from 'axios';
-import { Input } from '@/components/ui/input';
-import InputError from '@/components/input-error';
-import { any } from 'zod';
 
 interface Product {
     id: string;
@@ -230,7 +229,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
             setCheckingEmail(true);
             try {
                 const response = await axios.post('/api/check-email', {
-                    email: data.email
+                    email: data.email,
                 });
                 console.log('Email check response:', response.data);
 
@@ -295,7 +294,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         e.preventDefault();
 
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number) {
+            if (!data.email || !data.name || !data.phone_number || (!emailExists && !data.instance)) {
                 toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
@@ -323,7 +322,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                             termsAccepted,
                             timestamp: Date.now(),
                             discountData: discountData,
-                            source: 'login'
+                            source: 'login',
                         }),
                     );
 
@@ -353,7 +352,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                             termsAccepted,
                             timestamp: Date.now(),
                             discountData: discountData,
-                            source: 'register'
+                            source: 'register',
                         }),
                     );
 
@@ -491,7 +490,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
     };
 
     useEffect(() => {
-
         const pendingCheckout = sessionStorage.getItem('pendingCheckout');
 
         if (pendingCheckout && isLoggedIn) {
@@ -572,7 +570,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                 body: JSON.stringify(invoiceData),
                             });
 
-
                             if (res.status === 419 && retryCount < 2) {
                                 await refreshCSRFToken();
                                 return submitPayment(retryCount + 1);
@@ -616,7 +613,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                 toast.error('Gagal memproses checkout');
             }
         }
-
     }, [isLoggedIn, bundle.id]);
 
     if (isLoggedIn && !isProfileComplete) {
@@ -714,8 +710,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                                         {item.bundleable_type.includes('Course')
                                                             ? 'Kelas Online'
                                                             : item.bundleable_type.includes('Bootcamp')
-                                                                ? 'Bootcamp'
-                                                                : 'Webinar'}
+                                                              ? 'Bootcamp'
+                                                              : 'Webinar'}
                                                     </p>
                                                 </div>
                                                 <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -756,10 +752,12 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                     </ul>
                                 </div>
                             </div>
-
                         </div>
                         {!isLoggedIn && (
-                            <form className="flex flex-col gap-6 p-6 mt-6 rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95" onSubmit={submit}>
+                            <form
+                                className="mt-6 flex flex-col gap-6 rounded-2xl border bg-white/95 p-6 shadow-xl backdrop-blur-sm dark:bg-gray-800/95"
+                                onSubmit={submit}
+                            >
                                 <h1 className="text-xl font-bold">Masukkan Data Diri Anda</h1>
                                 <div className="grid gap-2">
                                     <Label htmlFor="email">Email</Label>
@@ -801,7 +799,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                                 setCheckingEmail(true);
                                                 try {
                                                     const response = await axios.post('/api/check-email', {
-                                                        email: data.email
+                                                        email: data.email,
                                                     });
 
                                                     if (response.data.exists) {
@@ -827,9 +825,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             <RefreshCw className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                    {emailExists && (
-                                        <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>
-                                    )}
+                                    {emailExists && <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>}
                                     <InputError message={errors.email} />
                                 </div>
 
@@ -863,16 +859,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             disabled={processing || emailExists}
                                             placeholder="08xxxxxxxxxx"
                                         />
-                                        {!emailExists && (
-                                            <p className="text-xs text-gray-500">
-                                                Nomor telepon akan digunakan sebagai password anda
-                                            </p>
-                                        )}
-                                        {emailExists && (
-                                            <p className="text-xs text-blue-600">
-                                                Pastikan nomor telepon sesuai dengan yang terdaftar
-                                            </p>
-                                        )}
+                                        {!emailExists && <p className="text-xs text-gray-500">Nomor telepon akan digunakan sebagai password anda</p>}
+                                        {emailExists && <p className="text-xs text-blue-600">Pastikan nomor telepon sesuai dengan yang terdaftar</p>}
                                         <InputError message={errors.phone_number} />
                                     </div>
                                     <div className="grid gap-2 pb-2">
@@ -886,12 +874,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             onChange={(e) => setData('instance', e.target.value)}
                                             disabled={processing || emailExists}
                                             placeholder="Instansi atau perusahaan Anda"
+                                            required
                                         />
-                                        {!emailExists && (
-                                            <p className="text-xs text-gray-500">
-                                                Kosongkan jika tidak memiliki instansi
-                                            </p>
-                                        )}
                                         <InputError message={errors.instance} />
                                     </div>
                                 </div>
