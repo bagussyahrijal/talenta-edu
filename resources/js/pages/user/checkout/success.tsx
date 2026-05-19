@@ -12,6 +12,9 @@ interface BootcampItem {
 interface WebinarItem {
     webinar: { title: string; slug: string; thumbnail: string };
 }
+interface CertificationProgramItem {
+    certification_program: { title: string; slug: string; thumbnail: string; group_url?: string | null };
+}
 
 interface Invoice {
     id: string;
@@ -19,6 +22,7 @@ interface Invoice {
     course_items?: CourseItem[];
     bootcamp_items?: BootcampItem[];
     webinar_items?: WebinarItem[];
+    certification_program_items?: CertificationProgramItem[];
 }
 
 interface InvoiceProps {
@@ -29,6 +33,7 @@ export default function CheckoutSuccess({ invoice }: InvoiceProps) {
     const courseItems = invoice.course_items ?? [];
     const bootcampItems = invoice.bootcamp_items ?? [];
     const webinarItems = invoice.webinar_items ?? [];
+    const certificationProgramItems = invoice.certification_program_items ?? [];
 
     let title = '';
     let link = '';
@@ -50,6 +55,11 @@ export default function CheckoutSuccess({ invoice }: InvoiceProps) {
         link = `/profile/my-webinars/${webinarItems[0].webinar.slug}`;
         label = 'Akses Webinar Sekarang';
         subtitle = 'Webinar';
+    } else if (certificationProgramItems.length > 0) {
+        title = `Checkout Sertifikasi Program "${certificationProgramItems[0].certification_program.title}" Berhasil!`;
+        link = `/profile/my-certification-programs/${certificationProgramItems[0].certification_program.slug}`;
+        label = 'Akses Sertifikasi';
+        subtitle = 'Sertifikasi Program';
     } else {
         title = 'Pembelian Anda';
         link = '/profile';

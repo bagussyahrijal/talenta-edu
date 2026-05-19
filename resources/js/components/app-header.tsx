@@ -20,14 +20,18 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Album, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, Search, User } from 'lucide-react';
+import { Album, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { SearchCommand } from './search-command';
-import { NavigationMenuHeader } from './ui/nav-header';
 
 const layananMenu = [
     { href: '/course', title: 'Kelas Online', description: 'Belajar dengan video pembelajaran terstruktur dan materi lengkap', icon: BookText },
-    { href: '/bootcamp', title: 'Bootcamp', description: 'Program intensif dengan mentor profesional dan project-based learning', icon: Presentation },
+    {
+        href: '/bootcamp',
+        title: 'Bootcamp',
+        description: 'Program intensif dengan mentor profesional dan project-based learning',
+        icon: Presentation,
+    },
     { href: '/webinar', title: 'Webinar', description: 'Seminar online dengan topik terkini dan expert speaker', icon: MonitorPlay },
     { href: '/bundle', title: 'Bundling', description: 'Paket bundling dengan harga spesial dan materi lengkap', icon: Album },
 ];
@@ -112,7 +116,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
                     <div className="ml-auto hidden h-full items-center space-x-6 lg:flex">
                         <NavigationMenu className="flex h-full items-stretch">
-                            <NavigationMenuList className="flex h-full items-stretch space-x-2 gap-1">
+                            <NavigationMenuList className="flex h-full items-stretch gap-1 space-x-2">
                                 {/* Beranda */}
                                 <NavigationMenuItem className="relative flex h-full items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
@@ -140,8 +144,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[600px] gap-3 p-4 md:grid-cols-[.75fr_1fr]">
-                                            
-
                                             {/* 3 Produk Utama */}
                                             <ListItem href="/course" title="Kelas Online">
                                                 Belajar dengan video pembelajaran terstruktur dan materi lengkap
@@ -164,9 +166,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
 
                                 {/* Publikasi */}
                                 <NavigationMenuItem className="relative flex h-full items-center">
-                                    <NavigationMenuTrigger
-                                        className={cn('hover:bg-primary/5 dark:hover:bg-primary/40 h-9 px-3')}
-                                    >
+                                    <NavigationMenuTrigger className={cn('hover:bg-primary/5 dark:hover:bg-primary/40 h-9 px-3')}>
                                         Publikasi
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
@@ -205,21 +205,19 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 <NavigationMenuItem className="relative flex h-full items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                                         <Link
-                                            href="/certification"
+                                            href="/certification-programs"
                                             className={cn(
                                                 'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
-                                                page.url.startsWith('/certification') && activeItemStyles,
+                                                page.url.startsWith('/certification-programs') && activeItemStyles,
                                             )}
                                         >
-                                            
                                             Sertifikasi
                                         </Link>
                                     </NavigationMenuLink>
-                                    {page.url.startsWith('/certification') && (
+                                    {page.url.startsWith('/certification-programs') && (
                                         <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
                                     )}
                                 </NavigationMenuItem>
-
 
                                 {/* Profil Saya (if logged in) */}
                                 {auth.user && (
@@ -306,7 +304,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <span className="text-center text-xs leading-none font-medium">Program & Layanan</span>
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent side="top" align="center" className="mb-2 w-72 sm:w-80 p-3" sideOffset={8}>
+                            <PopoverContent side="top" align="center" className="mb-2 w-72 p-3 sm:w-80" sideOffset={8}>
                                 <div className="space-y-1">
                                     <h4 className="mb-3 px-2 text-sm font-semibold">Program & Layanan</h4>
                                     {layananMenu.map((item) => {
@@ -354,7 +352,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <span className="text-center text-xs leading-none font-medium">Publikasi</span>
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent side="top" align="center" className="mb-2 w-72 sm:w-80 p-3" sideOffset={8}>
+                            <PopoverContent side="top" align="center" className="mb-2 w-72 p-3 sm:w-80" sideOffset={8}>
                                 <div className="space-y-1">
                                     <h4 className="mb-3 px-2 text-sm font-semibold">Publikasi</h4>
                                     {publikasiMenu.map((item) => {
@@ -431,4 +429,3 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         </>
     );
 }
-

@@ -9,13 +9,15 @@ import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { BookTextIcon, ExternalLink, GraduationCap, MessageCircle, MonitorPlay, Play, Presentation } from 'lucide-react';
+import { BookTextIcon, BriefcaseBusiness, ExternalLink, GraduationCap, MessageCircle, MonitorPlay, Play, Presentation } from 'lucide-react';
 
 interface Product {
     id: string;
     title: string;
     slug: string;
-    type: 'course' | 'bootcamp' | 'webinar';
+    type: 'course' | 'bootcamp' | 'webinar' | 'certification-program';
+    routeParam?: string;
+    is_scholarship?: boolean;
     progress?: number;
     completed_at?: string;
     start_date?: string;
@@ -31,6 +33,7 @@ interface ProfileProps {
         courses: number;
         bootcamps: number;
         webinars: number;
+        certificationPrograms: number;
         total: number;
     };
     recentProducts: Product[];
@@ -45,6 +48,8 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                 return 'Bootcamp';
             case 'webinar':
                 return 'Webinar';
+            case 'certification-program':
+                return 'Sertifikasi Program';
             default:
                 return 'Produk';
         }
@@ -58,6 +63,8 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                 return <Presentation className="h-4 w-4" />;
             case 'webinar':
                 return <MonitorPlay className="h-4 w-4" />;
+            case 'certification-program':
+                return <BriefcaseBusiness className="h-4 w-4" />;
             default:
                 return <GraduationCap className="h-4 w-4" />;
         }
@@ -86,6 +93,12 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
             return endTime ? `${startTime} - ${endTime}` : startTime;
         }
 
+        if (product.type === 'certification-program') {
+            const startDate = format(new Date(product.start_date!), 'dd MMM yyyy', { locale: id });
+            const endDate = product.end_date ? format(new Date(product.end_date), 'dd MMM yyyy', { locale: id }) : '';
+            return endDate ? `${startDate} - ${endDate}` : startDate;
+        }
+
         return '-';
     };
 
@@ -95,7 +108,7 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
             <ProfileLayout>
                 <Heading title="Dashboard" description="Pantau aktivitas dan progres belajar Anda di sini." />
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
@@ -134,6 +147,16 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.webinars}</div>
                             <p className="text-muted-foreground text-xs">Webinar yang Anda ikuti</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Sertifikasi Program</CardTitle>
+                            <BriefcaseBusiness className="text-muted-foreground h-4 w-4" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.certificationPrograms}</div>
+                            <p className="text-muted-foreground text-xs">Sertifikasi Program yang Anda ikuti</p>
                         </CardContent>
                     </Card>
                 </div>

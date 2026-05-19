@@ -3,30 +3,29 @@ import { Instagram } from 'lucide-react';
 
 export default function AppFooter() {
     return (
-        <footer className="w-full bg-gradient-to-b from-background to-primary py-8 sm:py-12">
-            <div className="relative mx-auto max-w-7xl p-4 sm:p-8 rounded-2xl bg-white">
+        <footer className="from-background to-primary w-full bg-gradient-to-b py-8 sm:py-12">
+            <div className="relative mx-auto max-w-7xl rounded-2xl bg-white p-4 sm:p-8">
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-9">
                     {/* Column 1: Logo and Description */}
-                    <div className="lg:col-span-5 flex flex-col">
+                    <div className="flex flex-col lg:col-span-5">
                         <div className="mb-6 flex items-center gap-2">
                             <img src="/assets/images/logo-primary-2.png" alt="Talenta Logo" className="h-10 sm:h-12" />
                         </div>
-                        <p className="mb-6 text-sm leading-relaxed text-gray-700">
-                            Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja
-                        </p>
+                        <p className="mb-6 text-sm leading-relaxed text-gray-700">Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja</p>
                         <div>
                             <h5 className="mb-2 font-semibold text-gray-900">Talenta Academy</h5>
                             <p className="text-sm text-gray-700">
-                                Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo<br />
+                                Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo
+                                <br />
                                 Kota Batu Prov. Jawa Timur, 65324
                             </p>
                         </div>
                     </div>
 
-                    <div className="lg:col-span-4 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:col-span-4">
                         {/* Column 2: Company Links */}
                         <div>
-                            <h4 className="mb-4 sm:mb-6 text-base sm:text-lg font-bold text-gray-900">Menu</h4>
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">Menu</h4>
                             <ul className="space-y-2 sm:space-y-3">
                                 <li>
                                     <Link href="/" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
@@ -51,7 +50,7 @@ export default function AppFooter() {
                             </ul>
                         </div>
                         <div>
-                            <h4 className="mb-4 sm:mb-6 text-base sm:text-lg font-bold text-gray-900">Layanan</h4>
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">Layanan</h4>
                             <ul className="space-y-2 sm:space-y-3">
                                 <li>
                                     <Link href="/bootcamp" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
@@ -76,7 +75,7 @@ export default function AppFooter() {
                             </ul>
                         </div>
                         <div>
-                            <h4 className="mb-4 sm:mb-6 text-base sm:text-lg font-bold text-gray-900">Lainnya</h4>
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">Lainnya</h4>
                             <ul className="space-y-2 sm:space-y-3">
                                 <li>
                                     <Link href="/terms-and-conditions" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
@@ -101,8 +100,8 @@ export default function AppFooter() {
                             </ul>
                         </div>
                         {/* Social Media on mobile/tablet */}
-                        <div className="sm:col-span-2 md:col-span-3 lg:hidden sm:mt-8">
-                            <h4 className="mb-4 text-base sm:text-lg font-bold text-gray-900">Media Sosial</h4>
+                        <div className="sm:col-span-2 sm:mt-8 md:col-span-3 lg:hidden">
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:text-lg">Media Sosial</h4>
                             <div className="flex items-center gap-4">
                                 <a
                                     href="https://www.instagram.com/brevetpajak_talenta/"
@@ -136,7 +135,7 @@ export default function AppFooter() {
                         </div>
                     </div>
                     {/* Social Media on desktop */}
-                    <div className="hidden lg:block lg:col-span-2 mt-4">
+                    <div className="mt-4 hidden lg:col-span-2 lg:block">
                         <h4 className="mb-4 text-lg font-bold text-gray-900">Media Sosial</h4>
                         <div className="flex items-center gap-4">
                             <a
@@ -176,9 +175,7 @@ export default function AppFooter() {
 
                 {/* Copyright */}
                 <div className="text-center">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                        Copyright © Talentaacademy, All rights reserved.
-                    </p>
+                    <p className="text-xs font-medium text-gray-900 sm:text-sm">Copyright © Talentaacademy, All rights reserved.</p>
                 </div>
             </div>
         </footer>

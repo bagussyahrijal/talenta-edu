@@ -36,6 +36,11 @@ class Invoice extends Model
         return $this->hasMany(EnrollmentWebinar::class);
     }
 
+    public function certificationProgramItems()
+    {
+        return $this->hasMany(EnrollmentCertificationProgram::class);
+    }
+
     public function bundleEnrollments()
     {
         return $this->hasMany(EnrollmentBundle::class);
@@ -87,6 +92,10 @@ class Invoice extends Model
             return 'webinar';
         }
 
+        if ($this->certificationProgramItems->count() > 0) {
+            return 'certification_program';
+        }
+
         return 'unknown';
     }
 
@@ -100,6 +109,7 @@ class Invoice extends Model
             'courses' => $this->courseItems()->with('course')->get(),
             'bootcamps' => $this->bootcampItems()->with('bootcamp')->get(),
             'webinars' => $this->webinarItems()->with('webinar')->get(),
+            'certification_programs' => $this->certificationProgramItems()->with('certificationProgram')->get(),
         ];
     }
 
@@ -129,6 +139,14 @@ class Invoice extends Model
                 'type' => 'webinar',
                 'enrollment' => $item,
                 'item' => $item->webinar,
+            ];
+        }));
+
+        $items = $items->merge($this->certificationProgramItems()->with('certificationProgram')->get()->map(function ($item) {
+            return [
+                'type' => 'certification_program',
+                'enrollment' => $item,
+                'item' => $item->certificationProgram,
             ];
         }));
 
@@ -165,6 +183,9 @@ class Invoice extends Model
             case 'bundle':
                 return $this->bundleEnrollments()->where('bundle_id', $productId)->exists();
 
+            case 'certification_program':
+                return $this->certificationProgramItems()->where('certification_program_id', $productId)->exists();
+
             default:
                 return false;
         }
@@ -177,6 +198,7 @@ class Invoice extends Model
         $count += $this->courseItems->count();
         $count += $this->bootcampItems->count();
         $count += $this->webinarItems->count();
+        $count += $this->certificationProgramItems->count();
 
         // Count items from bundles
         foreach ($this->bundleEnrollments as $bundleEnrollment) {

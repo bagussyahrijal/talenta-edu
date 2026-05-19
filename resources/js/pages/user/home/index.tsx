@@ -1,17 +1,13 @@
-import FakeNotifications from '@/components/fake-notifications';
 import PromotionPopup from '@/components/promotion-popup';
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
 import { useEffect } from 'react';
 import AboutSection from './about-section';
 import CarouselSection from './carousel-section';
-import CtaSection from './cta-section';
 import FaqSection from './faq-section';
 import LatestProductsSection from './latest-products-section';
-import ProgramSection from './program-section';
-import TestimonySection from './testimony-section';
-import ToolsSection from './tools-section';
 import MentorSection from './mentor-section';
+import TestimonySection from './testimony-section';
 
 interface Tool {
     id: string;
@@ -40,7 +36,7 @@ interface Product {
     duration_days?: number;
     bundle_url?: string;
     category?: Category;
-    type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'partnership';
+    type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'certification-program';
     created_at: string;
 }
 
@@ -49,7 +45,7 @@ interface MyProductIds {
     bootcamps: string[];
     webinars: string[];
     bundles: string[];
-    partnerships: string[];
+    certificationPrograms: string[];
 }
 
 interface ReferralInfo {
@@ -73,14 +69,14 @@ interface HomeProps {
     allProducts: Array<{
         id: string;
         title: string;
-        type: 'course' | 'bootcamp' | 'webinar';
+        type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'certification-program';
         price: number;
     }>;
     activePromotion?: Promotion | null;
     referralInfo: ReferralInfo;
 }
 
-export default function Home({ tools, latestProducts, myProductIds, allProducts, activePromotion, referralInfo }: HomeProps) {
+export default function Home({ latestProducts, myProductIds, activePromotion, referralInfo }: HomeProps) {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const refFromUrl = urlParams.get('ref');
@@ -111,14 +107,10 @@ export default function Home({ tools, latestProducts, myProductIds, allProducts,
                 href="https://wa.me/+6285606391730?text=Halo%20Admin%20Talenta,%20saya%20ingin%20bertanya%20tentang%20kelas%20online."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="fixed right-4 bottom-28 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 shadow-lg transition duration-500 hover:bg-primary md:right-8 md:bottom-10 md:h-14 md:w-14 lg:right-10 lg:bottom-6 lg:h-16 lg:w-16"
+                className="hover:bg-primary fixed right-4 bottom-28 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 shadow-lg transition duration-500 md:right-8 md:bottom-10 md:h-14 md:w-14 lg:right-10 lg:bottom-6 lg:h-16 lg:w-16"
                 aria-label="Chat WhatsApp"
             >
-                <img
-                    src="/assets/images/wa-icon.webp"
-                    alt="WhatsApp"
-                    className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12"
-                />
+                <img src="/assets/images/wa-icon.webp" alt="WhatsApp" className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12" />
             </a>
         </UserLayout>
     );
