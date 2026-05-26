@@ -24,12 +24,22 @@ class CertificationProgramController extends Controller
     public function index()
     {
         $categories = Category::all();
-        $programs = CertificationProgram::with(['category'])
+        $programs = CertificationProgram::with(['category', 'mentors'])
             ->where('status', 'published')
-            ->where('type', '!=', 'scholarship')
             ->where(function ($query) {
-                $query->whereNull('registration_deadline')
-                    ->orWhere('registration_deadline', '>=', now());
+                $query->where(function ($q) {
+                    $q->where('type', 'scholarship')
+                        ->where(function ($sq) {
+                            $sq->whereNull('socialization_registration_deadline')
+                                ->orWhere('socialization_registration_deadline', '>=', now());
+                        });
+                })->orWhere(function ($q) {
+                    $q->where('type', 'regular')
+                        ->where(function ($rq) {
+                            $rq->whereNull('registration_deadline')
+                                ->orWhere('registration_deadline', '>=', now());
+                        });
+                });
             })
             ->orderBy('registration_deadline', 'asc')
             ->get();
@@ -75,6 +85,21 @@ class CertificationProgramController extends Controller
             ->where('status', 'published')
             ->where('category_id', $program->category_id)
             ->where('id', '!=', $program->id)
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('type', 'scholarship')
+                        ->where(function ($sq) {
+                            $sq->whereNull('socialization_registration_deadline')
+                                ->orWhere('socialization_registration_deadline', '>=', now());
+                        });
+                })->orWhere(function ($q) {
+                    $q->where('type', 'regular')
+                        ->where(function ($rq) {
+                            $rq->whereNull('registration_deadline')
+                                ->orWhere('registration_deadline', '>=', now());
+                        });
+                });
+            })
             ->orderBy('registration_deadline', 'asc')
             ->limit(3)
             ->get();
