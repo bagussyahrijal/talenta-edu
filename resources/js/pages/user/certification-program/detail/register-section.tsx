@@ -199,14 +199,6 @@ export default function RegisterSection({ program, isEnrolled, scholarshipApplic
                                     <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">Batch {program.batch}</span>
                                 </div>
                             )}
-                            {program.mentors.length > 0 && (
-                                <div className="flex items-start gap-2 sm:gap-3">
-                                    <Users className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
-                                    <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                                        Mentor: {program.mentors.map((m) => m.name).join(', ')}
-                                    </span>
-                                </div>
-                            )}
                         </div>
 
                         {program.document_required && (
