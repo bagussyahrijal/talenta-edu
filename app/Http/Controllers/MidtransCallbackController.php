@@ -180,7 +180,7 @@ class MidtransCallbackController extends Controller
                 'bootcampItems.bootcamp',
                 'webinarItems.webinar',
                 'bundleEnrollments.bundle',
-                'bundleEnrollments.bundle.bundleItems',
+                'bundleEnrollments.bundle.bundleItems.bundleable',
                 'discountUsage.discountCode',
             ]);
 
@@ -376,6 +376,24 @@ class MidtransCallbackController extends Controller
         if ($itemType === 'bundle') {
             $message .= "3. Semua program sudah bisa diakses dari menu masing-masing\n";
             $message .= "4. Mulai belajar dan raih sertifikat untuk setiap program! 🎓\n\n";
+
+            // Tampilkan link grup dari tiap program di dalam bundle
+            if ($typeInfo['item'] && $typeInfo['item']->relationLoaded('bundleItems')) {
+                $groupLinks = [];
+                foreach ($typeInfo['item']->bundleItems as $bundleItem) {
+                    $program = $bundleItem->bundleable;
+                    if ($program && !empty($program->group_url)) {
+                        $programTitle = $program->title ?? 'Program';
+                        $groupLinks[] = "👥 *{$programTitle}*: {$program->group_url}";
+                    }
+                }
+
+                if (!empty($groupLinks)) {
+                    $message .= "*Link Grup Program:*\n";
+                    $message .= implode("\n", $groupLinks) . "\n";
+                    $message .= "⚠️ *Penting:* Segera bergabung ke grup untuk mendapatkan info dan update terbaru!\n\n";
+                }
+            }
         } else {
             $message .= "3. Pilih menu '{$typeInfo['menu']}'\n";
             $message .= "4. Mulai belajar dan raih sertifikat! 🎓\n\n";
