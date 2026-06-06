@@ -33,7 +33,7 @@ export default function FeatureSection() {
     return (
         <section className="mx-auto w-full max-w-7xl px-4">
             <p className="text-primary border-primary bg-background mx-auto mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                Program Sertifikasi Aksademy
+                Program Sertifikasi Talenta
             </p>
             <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-2xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
                 Solusi #1 Tingkatkan Kompetensi & Raih Sertifikasi Profesional
@@ -44,11 +44,10 @@ export default function FeatureSection() {
                         <button
                             key={index}
                             onClick={() => setActiveIndex(index)}
-                            className={`w-full rounded-xl border-2 border-gray-300 p-4 text-sm font-medium shadow transition duration-200 ease-in hover:cursor-pointer dark:border-zinc-100/20 dark:bg-zinc-800/30 ${
-                                activeIndex === index
+                            className={`w-full rounded-xl border-2 border-gray-300 p-4 text-sm font-medium shadow transition duration-200 ease-in hover:cursor-pointer dark:border-zinc-100/20 dark:bg-zinc-800/30 ${activeIndex === index
                                     ? 'border-primary dark:border-primary dark:to-primary text-primary-foreground dark:bg-zinc-800 dark:bg-gradient-to-br dark:from-black dark:text-zinc-100'
                                     : 'border-gray-300 dark:bg-zinc-700 dark:text-zinc-400'
-                            }`}
+                                }`}
                         >
                             <h2 className="dark:text-primary-foreground mb-1 text-lg font-semibold text-gray-900">{item.title}</h2>
                             <p className="text-sm text-gray-600 dark:text-gray-400">{item.subtitle}</p>
