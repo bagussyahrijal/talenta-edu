@@ -411,7 +411,7 @@ class CertificationProgramController extends Controller
 
         if ($application->user?->phone_number) {
             $phoneNumber = $this->formatPhoneNumber($application->user->phone_number);
-            $message = "*[Aksademy - Pendaftaran Sertifikasi Disetujui]* 🎉\n\n";
+            $message = "*[Talenta - Pendaftaran Sertifikasi Disetujui]* 🎉\n\n";
             $message .= "Halo *{$application->user->name}*,\n\n";
             $message .= "Selamat! Pendaftaran Anda untuk program *{$program->title}* telah kami setujui.\n\n";
             $message .= "Langkah selanjutnya:\n";
@@ -458,7 +458,7 @@ class CertificationProgramController extends Controller
 
         if ($application->user?->phone_number) {
             $phoneNumber = $this->formatPhoneNumber($application->user->phone_number);
-            $message = "*[Aksademy - Pendaftaran Sertifikasi Ditolak]*\n\n";
+            $message = "*[Talenta - Pendaftaran Sertifikasi Ditolak]*\n\n";
             $message .= "Hai *{$application->user->name}*,\n\n";
             $message .= "Mohon maaf, pendaftaran Sertifikasi *{$program->title}* Anda belum dapat kami terima.\n\n";
             $message .= "Terima kasih atas ketertarikannya.\n\n";
@@ -497,7 +497,7 @@ class CertificationProgramController extends Controller
             $phoneNumber = $this->formatPhoneNumber($application->phone);
             $paymentUrl = url('/certification-programs/' . $program->slug . '/register?scholarship=1');
 
-            $message = "*[Aksademy - Pengumuman Beasiswa]* 🎉\n\n";
+            $message = "*[Talenta - Pengumuman Beasiswa]* 🎉\n\n";
             $message .= "Hai Kak *{$application->name}*,\n\n";
             $message .= "Selamat! Anda dinyatakan *LOLOS* sebagai penerima Beasiswa *{$program->title}*.\n\n";
             $message .= "Silakan lanjutkan dengan langkah berikut:\n";
@@ -542,7 +542,7 @@ class CertificationProgramController extends Controller
         if (!empty($application->phone)) {
             $phoneNumber = $this->formatPhoneNumber($application->phone);
 
-            $message = "*[Aksademy - Pengumuman Beasiswa]*\n\n";
+            $message = "*[Talenta - Pengumuman Beasiswa]*\n\n";
             $message .= "Hai Kak *{$application->name}*,\n\n";
             $message .= "Mohon maaf, Anda belum lolos sebagai penerima Beasiswa *{$program->title}*.\n\n";
             $message .= "Terima kasih atas partisipasi dan ketertarikannya pada program ini.\n\n";
@@ -626,9 +626,11 @@ class CertificationProgramController extends Controller
         $originalSlug = $slug;
         $counter = 1;
 
-        while (CertificationProgram::when($ignoreId, function ($q) use ($ignoreId) {
-            $q->where('id', '!=', $ignoreId);
-        })->where('slug', $slug)->exists()) {
+        while (
+            CertificationProgram::when($ignoreId, function ($q) use ($ignoreId) {
+                $q->where('id', '!=', $ignoreId);
+            })->where('slug', $slug)->exists()
+        ) {
             $slug = $originalSlug . '-' . $counter++;
         }
 
