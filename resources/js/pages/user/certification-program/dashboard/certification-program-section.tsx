@@ -23,6 +23,7 @@ interface Program {
     strikethrough_price?: number;
     thumbnail?: string | null;
     registration_deadline?: string;
+    socialization_registration_deadline?: string;
     mentors?: Array<{
         name: string;
     }>;
@@ -154,7 +155,8 @@ export default function CertificationProgramSection({ categories, programs, myPr
                         const hasAccess = hasProgramAccess(program.id);
                         const mentorNames = program.mentors?.length ? program.mentors.map((mentor) => mentor.name).join(', ') : 'Talenta Edu';
                         const displayPrice = program.type === 'scholarship' ? (program.scholarship_price ?? program.price) : program.price;
-                        const deadlineDate = program.registration_deadline ? new Date(program.registration_deadline) : null;
+                        const deadline = program.type === 'scholarship' ? program.socialization_registration_deadline : program.registration_deadline;
+                        const deadlineDate = deadline ? new Date(deadline) : null;
                         
                         const programUrl = hasAccess
                             ? route('profile.certification-program.detail', program.slug)
