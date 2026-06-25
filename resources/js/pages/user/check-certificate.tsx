@@ -1,15 +1,17 @@
+import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import UserLayout from '@/layouts/user-layout';
-import { type SharedData } from '@/types';
+import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { AlertCircle, Award, Calendar, Download, ExternalLink, Mail, Phone, Search } from 'lucide-react';
+import { AlertCircle, Award, Calendar, Check, Copy, Download, ExternalLink, Mail, Phone, Search } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface CertificateParticipant {
     id: string;
@@ -54,6 +56,12 @@ export default function CheckCertificate({ participants, searched, error, filter
     const [email, setEmail] = useState(filters.email || (auth.user?.email as string) || '');
     const [phone, setPhone] = useState(filters.phone_number || (auth.user?.phone_number as string) || '');
     const [loading, setLoading] = useState(false);
+    const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Beranda', href: '/' },
+        { title: 'Cek Sertifikat', href: '/certificates/check' },
+    ];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -66,68 +74,86 @@ export default function CheckCertificate({ participants, searched, error, filter
             {
                 preserveState: true,
                 onFinish: () => setLoading(false),
-            }
+            },
         );
+    };
+
+    const handleCopyCode = (code: string) => {
+        navigator.clipboard.writeText(code);
+        setCopiedCode(code);
+        toast.success('Kode sertifikat berhasil disalin!');
+        setTimeout(() => setCopiedCode(null), 2000);
     };
 
     const getProgramDetails = (participant: CertificateParticipant) => {
         const cert = participant.certificate;
         if (cert.course) {
-            return { title: cert.course.title, type: 'Kelas Online', color: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
+            return {
+                title: cert.course.title,
+                type: 'Kelas Online',
+                color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400',
+            };
         }
         if (cert.bootcamp) {
-            return { title: cert.bootcamp.title, type: 'Bootcamp', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' };
+            return {
+                title: cert.bootcamp.title,
+                type: 'Bootcamp',
+                color: 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-500/20 dark:text-blue-400',
+            };
         }
         if (cert.webinar) {
-            return { title: cert.webinar.title, type: 'Webinar', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' };
+            return {
+                title: cert.webinar.title,
+                type: 'Webinar',
+                color: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:bg-amber-500/20 dark:text-amber-400',
+            };
         }
-        return { title: cert.title, type: 'Sertifikat', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20' };
-    };
-
-    const renderCertificatePreview = (participant: CertificateParticipant) => {
-        return (
-            <div className="relative aspect-[1.414/1] w-full overflow-hidden bg-muted border-b">
-                <iframe
-                    src={`/certificate/${participant.certificate_code}/pdf#toolbar=0`}
-                    className="h-full w-full border-0 select-none pointer-events-none"
-                    title={`Sertifikat ${participant.certificate_code}`}
-                    loading="lazy"
-                />
-            </div>
-        );
+        return {
+            title: cert.title,
+            type: 'Sertifikat',
+            color: 'bg-purple-500/10 text-purple-600 border-purple-500/20 dark:bg-purple-500/20 dark:text-purple-400',
+        };
     };
 
     return (
-        <UserLayout>
+        <UserLayout breadcrumbs={breadcrumbs}>
             <Head title="Cek Sertifikat" />
 
-            {/* Hero Section */}
-            <section className="w-full to-primary w-full bg-gradient-to-tl from-black px-4">
-                <div className="mx-auto max-w-3xl text-center mt-16 mb-8">
-                    <h1 className="mb-4 max-w-3xl bg-gradient-to-r from-[#71D0F7] via-white to-[#E6834A] bg-clip-text text-center text-3xl font-bold text-transparent italic sm:text-4xl">
-                        Cek Sertifikat Anda
-                    </h1>
-                    <p className="text-white text-sm sm:text-base">
-                        Masukkan email dan nomor WhatsApp Anda yang terdaftar untuk mencari dan melihat sertifikat kelulusan program.
+            {/* Premium Hero Banner */}
+            <section className="bg-secondary/35 border-primary/10 relative w-full overflow-hidden border-b py-12 md:py-16">
+                <div className="absolute inset-0 bg-[radial-gradient(#1976D3_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
+                <div className="relative mx-auto max-w-3xl px-4 text-center">
+                    <div className="mb-4 flex justify-center">
+                        <Breadcrumbs breadcrumbs={breadcrumbs} />
+                    </div>
+                    <h1 className="font-literata text-primary mb-4 text-4xl font-extrabold tracking-tight md:text-5xl">Cek Sertifikat Anda</h1>
+                    <p className="text-muted-foreground mx-auto max-w-2xl text-sm leading-relaxed sm:text-base">
+                        Masukkan email dan nomor WhatsApp Anda yang terdaftar untuk mencari, melihat, dan mengunduh sertifikat kelulusan program resmi
+                        Anda.
                     </p>
                 </div>
             </section>
 
-            {/* Main Form Section */}
-            <section className="mx-auto -mt-8 max-w-7xl px-4 pb-20 space-y-8">
-                {/* Centered Form */}
+            {/* Main Form & Results Section */}
+            <section className="bg-background mx-auto max-w-7xl space-y-12 px-4 py-12">
+                {/* Centered Premium Search Form Card */}
                 <div className="mx-auto max-w-2xl">
-                    <Card className="shadow-lg backdrop-blur-md">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg text-center">Form Pencarian</CardTitle>
-                            <CardDescription className="text-center">Masukkan data Anda untuk melihat sertifikat kelulusan.</CardDescription>
+                    <Card className="border-border/80 border bg-white/80 shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-lg dark:bg-zinc-900/80">
+                        <CardHeader className="pb-5">
+                            <CardTitle className="text-primary flex items-center justify-center gap-2 text-center text-lg font-bold">
+                                <Award className="text-primary h-5 w-5" />
+                                Form Pencarian Sertifikat
+                            </CardTitle>
+                            <CardDescription className="text-center text-sm">
+                                Silakan lengkapi data di bawah untuk melihat sertifikat Anda.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-4">
+                            <form onSubmit={handleSubmit} className="space-y-5">
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
-                                        <Label htmlFor="email" className="flex items-center gap-1.5">
-                                            <Mail className="h-4 w-4 text-muted-foreground" /> Email Terdaftar
+                                        <Label htmlFor="email" className="text-foreground flex items-center gap-1.5 text-xs font-medium">
+                                            <Mail className="text-primary h-4 w-4" /> Email Terdaftar
                                         </Label>
                                         <Input
                                             id="email"
@@ -136,12 +162,12 @@ export default function CheckCertificate({ participants, searched, error, filter
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             required
-                                            className="h-10"
+                                            className="border-input focus-visible:ring-primary focus-visible:border-primary h-10 bg-white/50 dark:bg-zinc-800"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="phone" className="flex items-center gap-1.5">
-                                            <Phone className="h-4 w-4 text-muted-foreground" /> Nomor WhatsApp
+                                        <Label htmlFor="phone" className="text-foreground flex items-center gap-1.5 text-xs font-medium">
+                                            <Phone className="text-primary h-4 w-4" /> Nomor WhatsApp
                                         </Label>
                                         <Input
                                             id="phone"
@@ -150,11 +176,15 @@ export default function CheckCertificate({ participants, searched, error, filter
                                             value={phone}
                                             onChange={(e) => setPhone(e.target.value)}
                                             required
-                                            className="h-10"
+                                            className="border-input focus-visible:ring-primary focus-visible:border-primary h-10 bg-white/50 dark:bg-zinc-800"
                                         />
                                     </div>
                                 </div>
-                                <Button type="submit" disabled={loading} className="w-full gap-2 h-10 mt-2">
+                                <Button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="bg-primary hover:bg-primary/90 mt-2 h-10 w-full cursor-pointer gap-2 font-bold text-white shadow-xs transition-all"
+                                >
                                     <Search className="h-4 w-4" />
                                     {loading ? 'Mencari...' : 'Cari Sertifikat'}
                                 </Button>
@@ -163,86 +193,127 @@ export default function CheckCertificate({ participants, searched, error, filter
                     </Card>
                 </div>
 
-                {/* Results Section Below Form */}
+                {/* Results Section */}
                 <div className="w-full">
                     {searched ? (
-                        <div className="space-y-6">
-                            <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                                Hasil Pencarian
-                                <Badge variant="secondary" className="font-normal text-xs">
+                        <div className="space-y-8">
+                            <div className="mx-auto flex max-w-7xl items-center justify-between border-b pb-4">
+                                <h3 className="text-foreground font-literata flex items-center gap-2.5 text-xl font-bold">Hasil Pencarian</h3>
+                                <Badge variant="secondary" className="bg-secondary text-primary px-3 py-1 text-xs font-semibold dark:bg-zinc-800">
                                     {participants.length} Sertifikat ditemukan
                                 </Badge>
-                            </h3>
+                            </div>
 
                             {error && (
-                                <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive max-w-2xl mx-auto">
-                                    <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                                <div className="border-destructive/20 bg-destructive/5 text-destructive mx-auto flex max-w-2xl items-start gap-4 rounded-xl border p-5 text-sm shadow-xs">
+                                    <AlertCircle className="text-destructive mt-0.5 h-5 w-5 flex-shrink-0" />
                                     <div>
-                                        <p className="font-medium">Pencarian Gagal</p>
-                                        <p className="text-muted-foreground mt-0.5">{error}</p>
+                                        <p className="text-base font-bold">Pencarian Gagal</p>
+                                        <p className="text-muted-foreground mt-1 leading-relaxed">{error}</p>
                                     </div>
                                 </div>
                             )}
 
                             {!error && participants.length === 0 && (
-                                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 text-center bg-muted/5 max-w-2xl mx-auto">
-                                    <Award className="mb-3 h-12 w-12 text-muted-foreground opacity-50" />
-                                    <p className="font-medium text-foreground">Sertifikat Belum Tersedia</p>
-                                    <p className="text-muted-foreground mt-1 text-sm max-w-sm">
-                                        Email dan nomor WhatsApp terdaftar, tetapi tidak ada sertifikat yang terbit atas akun tersebut saat ini.
+                                <div className="border-muted-foreground/20 mx-auto flex min-h-[300px] max-w-2xl flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white/40 p-12 text-center shadow-xs">
+                                    <div className="bg-muted mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                                        <Award className="text-muted-foreground/60 h-8 w-8" />
+                                    </div>
+                                    <h4 className="text-foreground font-literata text-lg font-bold">Sertifikat Belum Ditemukan</h4>
+                                    <p className="text-muted-foreground mt-2 max-w-sm text-sm leading-relaxed">
+                                        Email dan nomor WhatsApp terdaftar, tetapi saat ini tidak ada sertifikat resmi yang terbit atas akun tersebut.
                                     </p>
                                 </div>
                             )}
 
                             {!error && participants.length > 0 && (
-                                <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                                     {participants.map((p) => {
                                         const details = getProgramDetails(p);
                                         return (
-                                            <Card key={p.id} className="group flex flex-col justify-between overflow-hidden border transition-all duration-200 hover:shadow-md hover:border-primary/30">
-                                                {renderCertificatePreview(p)}
-                                                <CardHeader className="p-4 pb-2">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-wider ${details.color}`}>
+                                            <Card
+                                                key={p.id}
+                                                className="group border-border/80 hover:border-primary/30 relative flex flex-col justify-between overflow-hidden border bg-white shadow-xs transition-all duration-300 hover:-translate-y-1.5 hover:shadow-md dark:bg-zinc-900"
+                                            >
+                                                {/* Visual indicator bar */}
+                                                <div className="from-primary absolute top-0 right-0 left-0 h-1 bg-gradient-to-r to-blue-400" />
+
+                                                <CardHeader className="pt-6 pb-4">
+                                                    <div className="mb-3 flex items-center justify-between gap-2">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={`rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${details.color}`}
+                                                        >
                                                             {details.type}
                                                         </Badge>
-                                                        <span className="text-xs text-muted-foreground font-mono">
-                                                            {p.certificate_code}
-                                                        </span>
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-muted-foreground bg-muted/60 rounded px-1.5 py-0.5 font-mono text-[10px] dark:bg-zinc-800">
+                                                                {p.certificate_code}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleCopyCode(p.certificate_code)}
+                                                                className="text-muted-foreground hover:text-primary hover:bg-muted cursor-pointer rounded p-1 transition-colors dark:hover:bg-zinc-800"
+                                                                title="Salin Kode Sertifikat"
+                                                            >
+                                                                {copiedCode === p.certificate_code ? (
+                                                                    <Check className="h-3 w-3 text-green-600" />
+                                                                ) : (
+                                                                    <Copy className="h-3 w-3" />
+                                                                )}
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <CardTitle className="text-base line-clamp-2 leading-snug">
+                                                    <CardTitle className="text-foreground group-hover:text-primary line-clamp-2 text-base leading-snug font-bold transition-colors duration-200">
                                                         {details.title}
                                                     </CardTitle>
                                                 </CardHeader>
-                                                <CardContent className="p-4 pt-0 text-xs text-muted-foreground space-y-2">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Calendar className="h-3.5 w-3.5" />
-                                                        <span>Diterbitkan: </span>
-                                                        <span className="font-medium text-foreground">
-                                                            {p.certificate.issued_date 
-                                                                ? format(new Date(p.certificate.issued_date), 'dd MMMM yyyy', { locale: id }) 
-                                                                : '-'}
-                                                        </span>
+
+                                                <CardContent className="flex flex-1 flex-col justify-between pt-0 pb-6">
+                                                    <div className="text-muted-foreground space-y-2 text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar className="text-primary/70 h-4 w-4" />
+                                                            <span>Diterbitkan: </span>
+                                                            <span className="text-foreground font-semibold">
+                                                                {p.certificate.issued_date
+                                                                    ? format(new Date(p.certificate.issued_date), 'dd MMMM yyyy', { locale: id })
+                                                                    : '-'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Award className="text-primary/70 h-4 w-4" />
+                                                            <span>No. Sertifikat: </span>
+                                                            <span className="text-foreground font-mono font-semibold">{p.certificate_number}</span>
+                                                        </div>
                                                     </div>
                                                 </CardContent>
-                                                <div className="border-t bg-muted/20 px-4 py-3 flex items-center justify-between gap-2">
-                                                    <span className="text-[10px] text-muted-foreground">
-                                                        No: {p.certificate_number}
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <Button asChild size="sm" variant="ghost" className="h-8 gap-1.5 text-xs text-primary hover:text-primary hover:bg-primary/5 px-2">
-                                                            <a href={route('certificate.participant.detail', p.certificate_code)} target="_blank" rel="noopener noreferrer">
-                                                                Lihat
-                                                                <ExternalLink className="h-3 w-3" />
-                                                            </a>
-                                                        </Button>
-                                                        <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs px-2 border-primary/20 text-primary hover:bg-primary/5">
-                                                            <a href={route('certificate.participant.download.public', p.certificate_code)}>
-                                                                Unduh
-                                                                <Download className="h-3 w-3" />
-                                                            </a>
-                                                        </Button>
-                                                    </div>
+
+                                                <div className="bg-muted/20 mt-auto flex items-center justify-end gap-3 border-t px-6 py-4 dark:bg-zinc-800/20">
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        className="text-primary hover:text-primary hover:bg-primary/5 h-8 gap-1.5 px-3 text-xs"
+                                                    >
+                                                        <a
+                                                            href={route('certificate.participant.detail', p.certificate_code)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            Lihat
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </a>
+                                                    </Button>
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="border-primary/20 text-primary hover:bg-primary hover:border-primary h-8 gap-1.5 px-3 text-xs hover:text-white"
+                                                    >
+                                                        <a href={route('certificate.participant.download.public', p.certificate_code)}>
+                                                            Unduh
+                                                            <Download className="h-3 w-3" />
+                                                        </a>
+                                                    </Button>
                                                 </div>
                                             </Card>
                                         );
@@ -251,11 +322,14 @@ export default function CheckCertificate({ participants, searched, error, filter
                             )}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center bg-card/50 min-h-[300px] max-w-2xl mx-auto">
-                            <Award className="mb-4 h-16 w-16 text-primary/30 animate-pulse" />
-                            <h3 className="text-lg font-semibold text-foreground">Temukan Sertifikat Anda</h3>
-                            <p className="text-muted-foreground mt-2 text-sm max-w-sm">
-                                Silakan masukkan email dan nomor WhatsApp terdaftar Anda di form pencarian di atas untuk menampilkan semua sertifikat Anda.
+                        <div className="border-primary/20 mx-auto flex min-h-[320px] max-w-2xl flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-white/40 p-12 text-center shadow-xs">
+                            <div className="bg-primary/5 mb-5 flex h-16 w-16 animate-bounce items-center justify-center rounded-full duration-1000">
+                                <Award className="text-primary h-8 w-8" />
+                            </div>
+                            <h3 className="text-foreground font-literata text-xl font-bold">Temukan Sertifikat Anda</h3>
+                            <p className="text-muted-foreground mt-2 max-w-sm text-sm leading-relaxed">
+                                Silakan masukkan email dan nomor WhatsApp terdaftar Anda pada formulir pencarian di atas untuk memverifikasi dan
+                                menampilkan seluruh sertifikat Anda.
                             </p>
                         </div>
                     )}
