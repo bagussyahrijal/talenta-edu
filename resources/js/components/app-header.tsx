@@ -20,7 +20,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Album, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, User } from 'lucide-react';
+import { Album, Award, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { SearchCommand } from './search-command';
 
@@ -215,6 +215,23 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                         </Link>
                                     </NavigationMenuLink>
                                     {page.url.startsWith('/certification-programs') && (
+                                        <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
+                                    )}
+                                </NavigationMenuItem>
+
+                                <NavigationMenuItem className="relative flex h-full items-center">
+                                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                                        <Link
+                                            href="/check-certificate"
+                                            className={cn(
+                                                'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
+                                                page.url.startsWith('/check-certificate') && activeItemStyles,
+                                            )}
+                                        >
+                                            Cek Sertifikat
+                                        </Link>
+                                    </NavigationMenuLink>
+                                    {page.url.startsWith('/check-certificate') && (
                                         <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
                                     )}
                                 </NavigationMenuItem>
