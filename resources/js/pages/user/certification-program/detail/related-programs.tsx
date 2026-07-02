@@ -18,7 +18,15 @@ interface RelatedProgram {
     socialization_registration_deadline?: string;
 }
 
-export default function RelatedPrograms({ relatedPrograms, myProgramIds = [] }: { relatedPrograms: RelatedProgram[], myProgramIds?: string[] }) {
+export default function RelatedPrograms({
+    relatedPrograms,
+    approvedScholarshipProgramIds = [],
+    myProgramIds = [],
+}: {
+    relatedPrograms: RelatedProgram[];
+    approvedScholarshipProgramIds?: string[];
+    myProgramIds?: string[];
+}) {
     if (!relatedPrograms || relatedPrograms.length === 0) return null;
 
     const formatRupiah = (amount: number) =>
@@ -60,18 +68,22 @@ export default function RelatedPrograms({ relatedPrograms, myProgramIds = [] }: 
                                 </div>
 
                                 <div className="w-full border-t p-4 text-left">
-                                    {hasAccess ? (
-                                        <p className="text-primary text-sm font-medium">Anda sudah terdaftar di program ini</p>
-                                    ) : program.price === 0 ? (
-                                        <p className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
-                                    ) : (
-                                        <div className="mb-2">
-                                            {program.strikethrough_price && program.strikethrough_price > 0 && (
-                                                <p className="text-sm text-red-500 line-through">{formatRupiah(program.strikethrough_price)}</p>
-                                            )}
-                                            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{formatRupiah(program.price)}</p>
-                                        </div>
-                                    )}
+                                    {(() => {
+                                        const isApprovedScholarship = program.type === 'scholarship' && approvedScholarshipProgramIds?.includes(program.id);
+                                        const isScholarshipNotApproved = program.type === 'scholarship' && !isApprovedScholarship;
+                                        const displayPrice = isScholarshipNotApproved ? 0 : program.price;
+
+                                        return displayPrice === 0 ? (
+                                            <p className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                        ) : (
+                                            <div className="mb-2">
+                                                {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
+                                                    <p className="text-sm text-red-500 line-through">{formatRupiah(program.strikethrough_price)}</p>
+                                                )}
+                                                <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{formatRupiah(displayPrice)}</p>
+                                            </div>
+                                        );
+                                    })()}
                                     {deadlineDate && !hasAccess && (
                                         <div className="flex items-center gap-2 text-sm mt-2">
                                             <Calendar size="16" className="text-red-500" />

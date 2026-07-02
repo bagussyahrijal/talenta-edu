@@ -133,7 +133,9 @@ export default function Register({
     const formatRupiah = (amount: number) =>
         new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
 
-    const displayPrice = isScholarship && program.scholarship_price ? program.scholarship_price : program.price;
+    const isApprovedScholarship = scholarshipApplication?.status === 'approved' || guestScholarshipStatus === 'approved';
+    const isScholarshipNotApproved = program.type === 'scholarship' && !isApprovedScholarship;
+    const displayPrice = isScholarshipNotApproved ? 0 : (isScholarship && program.scholarship_price ? program.scholarship_price : program.price);
     const promoDiscountAmount = discountData?.valid ? discountData.discount_amount : 0;
     const activeFinalPrice = displayPrice - promoDiscountAmount;
     const adminFee = activeFinalPrice <= 0 ? 0 : 5000;
@@ -968,8 +970,7 @@ export default function Register({
                                     <Separator />
                                     
                                     <div className="space-y-3">
-                                        {program.strikethrough_price && program.strikethrough_price > 0 && (
-                                            <>
+                                        {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (    <>
                                                 <div className="flex items-center justify-between text-sm">
                                                     <span className="text-gray-600 dark:text-gray-400">Harga Asli</span>
                                                     <span className="font-medium text-gray-500 line-through dark:text-gray-400">
