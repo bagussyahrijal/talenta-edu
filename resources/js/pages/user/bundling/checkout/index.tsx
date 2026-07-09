@@ -34,6 +34,7 @@ interface Bundle {
     short_description?: string | null;
     description?: string | null;
     thumbnail?: string | null;
+    batch?: string | null;
     price: number;
     strikethrough_price: number;
     registration_deadline?: string | null;
@@ -688,9 +689,16 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                         />
                                     </div>
                                     <div className="flex-1">
-                                        <span className="mb-2 inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                                            Paket Bundling
-                                        </span>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                                Paket Bundling
+                                            </span>
+                                            {bundle.batch && (
+                                                <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                                    {bundle.batch.toLowerCase().includes('batch') ? bundle.batch : `Batch ${bundle.batch}`}
+                                                </span>
+                                            )}
+                                        </div>
                                         <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{bundle.title}</h3>
                                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                             <Package size={16} />

@@ -19,6 +19,7 @@ interface Bundle {
     thumbnail?: string | null;
     registration_deadline?: string | null;
     registration_url: string;
+    batch?: string | null;
     bundle_items_count: number;
 }
 
@@ -308,6 +309,17 @@ export default function RegisterSection({
                         <Separator className="mb-4 sm:mb-6" />
 
                         <div className="space-y-2 sm:space-y-3">
+                            {bundle.batch && (
+                                <div className="flex items-start gap-2 sm:gap-3">
+                                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
+                                    <div>
+                                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Batch:</p>
+                                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                            {bundle.batch.toLowerCase().includes('batch') ? bundle.batch : `Batch ${bundle.batch}`}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex items-start gap-2 sm:gap-3">
                                 <Package className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
                                 <div>
