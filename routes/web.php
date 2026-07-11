@@ -57,6 +57,8 @@ Route::post('/auto-login', function (Request $request) {
         $request->validate([
             'email' => 'required|email',
             'phone_number' => 'required|string',
+            'instance' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
         ]);
 
         $user = User::where('email', $request->email)
@@ -64,10 +66,34 @@ Route::post('/auto-login', function (Request $request) {
             ->first();
 
         if (!$user) {
+            $userByEmail = User::where('email', $request->email)->first();
+            if ($userByEmail && (empty($userByEmail->phone_number) || $userByEmail->phone_number === '')) {
+                $user = $userByEmail;
+            }
+        }
+
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email atau nomor telepon tidak sesuai'
             ], 401);
+        }
+
+        $updated = false;
+        if ($request->filled('phone_number') && empty($user->phone_number)) {
+            $user->phone_number = $request->phone_number;
+            $updated = true;
+        }
+        if ($request->filled('instance') && empty($user->instance)) {
+            $user->instance = $request->instance;
+            $updated = true;
+        }
+        if ($request->filled('city') && empty($user->city)) {
+            $user->city = $request->city;
+            $updated = true;
+        }
+        if ($updated) {
+            $user->save();
         }
 
         Auth::login($user, true);
@@ -106,6 +132,9 @@ Route::get('/bundle/{bundle:slug}', [UserBundleController::class, 'detail'])->na
 Route::get('/certification-programs', [UserCertificationProgramController::class, 'index'])->name('certification-programs.index');
 Route::get('/certification-programs/{program:slug}', [UserCertificationProgramController::class, 'detail'])->name('certification-programs.detail');
 Route::get('/certificate/{code}', [CertificateParticipantController::class, 'show'])->name('certificate.participant.detail');
+Route::get('/certificate/{code}/pdf', [CertificateParticipantController::class, 'viewPdf'])->name('certificate.participant.pdf');
+Route::get('/certificate/{code}/download', [CertificateParticipantController::class, 'downloadPdf'])->name('certificate.participant.download.public');
+Route::get('/check-certificate', [CertificateParticipantController::class, 'checkForm'])->name('certificates.check');
 Route::get('/article', [UserArticleController::class, 'index'])->name('article.index');
 Route::get('/article/{slug}', [UserArticleController::class, 'show'])->name('article.show');
 Route::get('/galeri', [UserGalleryController::class, 'index'])->name('gallery.index');
@@ -229,6 +258,8 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
         Route::get('/participant/{participant}/download', [CertificateController::class, 'downloadParticipant'])->name('certificates.participant.download');
         Route::get('/certificates/{certificate}/download-grades-template', [CertificateController::class, 'downloadGradesTemplate'])->name('certificates.download-grades-template');
         Route::post('/certificates/{certificate}/import-grades', [CertificateController::class, 'importGrades'])->name('certificates.import-grades');
+        Route::get('/certificates/{certificate}/download-participants-template', [CertificateController::class, 'downloadParticipantsTemplate'])->name('certificates.download-participants-template');
+        Route::post('/certificates/{certificate}/import-manual-participants', [CertificateController::class, 'importManualParticipants'])->name('certificates.import-manual-participants');
         Route::resource('certificate-designs', CertificateDesignController::class);
         Route::resource('certificate-signs', CertificateSignController::class);
 

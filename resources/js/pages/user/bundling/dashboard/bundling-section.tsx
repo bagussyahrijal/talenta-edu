@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from '@inertiajs/react';
@@ -24,6 +25,7 @@ interface Bundle {
     price: number;
     strikethrough_price: number;
     registration_deadline: string | null;
+    batch?: string | null;
     status: 'draft' | 'published' | 'archived';
     bundle_items: BundleItem[];
     bundle_items_count: number;
@@ -184,6 +186,13 @@ export default function BundlingSection({ bundles, categories = [] }: BundlingSe
                                     </div>
                                     {/* Content Section */}
                                     <div className="flex flex-col flex-1 justify-start p-4 min-h-0">
+                                        {bundle.batch && (
+                                            <div className="mb-2">
+                                                <Badge variant="outline" className="border-primary text-primary font-semibold text-[10px]">
+                                                    {bundle.batch.toLowerCase().includes('batch') ? bundle.batch : `Batch ${bundle.batch}`}
+                                                </Badge>
+                                            </div>
+                                        )}
                                         {/* Title */}
                                         <h2 className="group-hover:text-white mb-1 line-clamp-2 text-xl font-semibold text-gray-900 dark:text-white font-literata">
                                             {bundle.title}

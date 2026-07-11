@@ -117,6 +117,7 @@ type RegisterForm = {
     email: string;
     phone_number: string;
     instance: string;
+    city: string;
     password: string;
     password_confirmation: string;
 };
@@ -136,7 +137,7 @@ export default function RegisterWebinar({
 }) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
-    const isProfileComplete = isLoggedIn && auth.user?.phone_number;
+    const isProfileComplete = isLoggedIn && auth.user?.phone_number && auth.user?.instance && auth.user?.city;
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -171,6 +172,7 @@ export default function RegisterWebinar({
         email: '',
         phone_number: '',
         instance: '',
+        city: '',
         password: '',
         password_confirmation: '',
     });
@@ -194,6 +196,7 @@ export default function RegisterWebinar({
                     setData('name', response.data.name || '');
                     setData('phone_number', response.data.phone_number || '');
                     setData('instance', response.data.instance || '');
+                    setData('city', response.data.city || '');
                 } else {
                     setEmailExists(false);
                 }
@@ -299,7 +302,7 @@ export default function RegisterWebinar({
         e.preventDefault();
 
         if (!isProfileComplete) {
-            alert('Profil Anda belum lengkap! Harap lengkapi nomor telepon terlebih dahulu.');
+            alert('Profil Anda belum lengkap! Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu.');
             window.location.href = route('profile.edit');
             return;
         }
@@ -332,7 +335,7 @@ export default function RegisterWebinar({
         e.preventDefault();
 
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number || (!emailExists && !data.instance)) {
+            if (!data.email || !data.name || !data.phone_number || !data.instance || !data.city) {
                 toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
@@ -345,6 +348,8 @@ export default function RegisterWebinar({
                     const response = await axios.post('/auto-login', {
                         email: data.email,
                         phone_number: data.phone_number,
+                        instance: data.instance,
+                        city: data.city,
                     });
 
                     if (!response.data.success) {
@@ -375,6 +380,8 @@ export default function RegisterWebinar({
                         name: data.name,
                         email: data.email,
                         phone_number: data.phone_number,
+                        instance: data.instance,
+                        city: data.city,
                         password: data.phone_number,
                         password_confirmation: data.phone_number,
                     });
@@ -743,7 +750,7 @@ export default function RegisterWebinar({
                             <div className="text-center">
                                 <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pendaftaran
+                                    Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu untuk melanjutkan pendaftaran
                                 </p>
                             </div>
                             <Button asChild className="w-full" size="lg">
@@ -934,11 +941,26 @@ export default function RegisterWebinar({
                                                 autoComplete="organization"
                                                 value={data.instance}
                                                 onChange={(e) => setData('instance', e.target.value)}
-                                                disabled={processing || emailExists}
+                                                disabled={processing}
                                                 placeholder="Instansi atau perusahaan Anda"
                                                 required
                                             />
                                             <InputError message={errors.instance} />
+                                        </div>
+                                        <div className="grid gap-2 pb-2">
+                                            <Label htmlFor="city">Kota Domisili</Label>
+                                            <Input
+                                                id="city"
+                                                type="text"
+                                                tabIndex={5}
+                                                autoComplete="address-level2"
+                                                value={data.city}
+                                                onChange={(e) => setData('city', e.target.value)}
+                                                disabled={processing}
+                                                placeholder="Kota domisili Anda"
+                                                required
+                                            />
+                                            <InputError message={errors.city} />
                                         </div>
                                     </div>
                                 </form>
