@@ -408,7 +408,7 @@ class InvoiceController extends Controller
             $midtransParams = [
                 'transaction_details' => [
                     'order_id' => $invoice_code,
-                    'gross_amount' => (int)$totalAmount,
+                    'gross_amount' => (int) $totalAmount,
                 ],
                 'customer_details' => [
                     'first_name' => Auth::user()->name,
@@ -418,7 +418,7 @@ class InvoiceController extends Controller
                 'item_details' => [
                     [
                         'id' => $item->id,
-                        'price' => (int)$nettAmount,
+                        'price' => (int) $nettAmount,
                         'quantity' => 1,
                         'name' => $item->title,
                     ],
@@ -434,7 +434,7 @@ class InvoiceController extends Controller
             if ($validatedFee > 0) {
                 $midtransParams['item_details'][] = [
                     'id' => 'fee',
-                    'price' => (int)$validatedFee,
+                    'price' => (int) $validatedFee,
                     'quantity' => 1,
                     'name' => 'Biaya Admin',
                 ];
@@ -671,7 +671,7 @@ class InvoiceController extends Controller
             $midtransParams = [
                 'transaction_details' => [
                     'order_id' => $invoice_code,
-                    'gross_amount' => (int)$totalAmount,
+                    'gross_amount' => (int) $totalAmount,
                 ],
                 'customer_details' => [
                     'first_name' => Auth::user()->name,
@@ -681,7 +681,7 @@ class InvoiceController extends Controller
                 'item_details' => [
                     [
                         'id' => $bundle->id,
-                        'price' => (int)$nettAmount,
+                        'price' => (int) $nettAmount,
                         'quantity' => 1,
                         'name' => 'Paket Bundling: ' . $bundle->title,
                     ],
@@ -695,7 +695,7 @@ class InvoiceController extends Controller
             if ($validatedFee > 0) {
                 $midtransParams['item_details'][] = [
                     'id' => 'fee',
-                    'price' => (int)$validatedFee,
+                    'price' => (int) $validatedFee,
                     'quantity' => 1,
                     'name' => 'Biaya Admin',
                 ];
@@ -812,7 +812,7 @@ class InvoiceController extends Controller
                 'table' => 'invoices',
                 'field' => 'invoice_code',
                 'length' => 11,
-                'reset_on_prefix_change'  => true,
+                'reset_on_prefix_change' => true,
                 'prefix' => 'TLT-' . date('y')
             ]);
 
@@ -1029,7 +1029,7 @@ class InvoiceController extends Controller
             $percentValue = is_array($feeCustomer) ? ($feeCustomer['percent'] ?? 0) : ($feeCustomer->percent ?? 0);
             $percentFee = round($nettAmount * ($percentValue / 100));
 
-            return (int)($flatFee + $percentFee);
+            return (int) ($flatFee + $percentFee);
         } catch (\Exception $e) {
             Log::error('Error calculating transaction fee', [
                 'channel' => $channelCode,
@@ -1362,7 +1362,7 @@ class InvoiceController extends Controller
             $bundle = $typeInfo['item'];
             $hasGroupUrl = false;
             $groupLinks = "";
-            
+
             foreach ($bundle->bundleItems as $item) {
                 $program = $item->bundleable;
                 if ($program && !empty($program->group_url)) {
@@ -1684,7 +1684,10 @@ class InvoiceController extends Controller
             'bootcamp_id',
             'webinar_id',
             'course_id',
-            'bundle_id'
+            'bundle_id',
+            'certification_program_id',
+            'title',
+            'user_name'
         ]);
         $filename = 'Laporan_Transaksi';
 
