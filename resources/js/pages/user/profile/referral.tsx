@@ -110,7 +110,7 @@ export default function Referral({
                                 </div>
                                 <div className="flex items-center gap-2 pt-2 border-t border-dashed">
                                     <span className="text-xs text-muted-foreground uppercase font-semibold">Kode Referral Anda:</span>
-                                    <Badge variant="secondary" className="text-sm font-mono tracking-wider px-2 py-0.5 border">
+                                    <Badge variant="secondary" className="text-sm text-blue-900 font-mono tracking-wider px-2 py-0.5 border">
                                         {referralCode}
                                     </Badge>
                                 </div>
