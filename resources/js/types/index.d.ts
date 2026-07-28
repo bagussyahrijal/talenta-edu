@@ -21,6 +21,7 @@ export interface NavItem {
     href: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    items?: NavItem[];
 }
 
 export interface ProductItem {
@@ -51,6 +52,9 @@ export interface User {
     id: number;
     name: string;
     email: string;
+    phone_number?: string | null;
+    instance?: string | null;
+    city?: string | null;
     avatar?: string;
     email_verified_at: string | null;
     commission: number;

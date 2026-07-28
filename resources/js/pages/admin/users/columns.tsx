@@ -21,6 +21,7 @@ export type User = {
     email: string;
     phone_number: string;
     instance: string;
+    city?: string | null;
     email_verified_at: string | null;
     created_at: string;
     courses_count: number;

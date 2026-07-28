@@ -45,6 +45,7 @@ use App\Http\Controllers\User\Profile\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebinarController;
 use App\Http\Controllers\User\QuizController as UserQuizController;
+use App\Http\Controllers\BiinsightImportController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -57,6 +58,8 @@ Route::post('/auto-login', function (Request $request) {
         $request->validate([
             'email' => 'required|email',
             'phone_number' => 'required|string',
+            'instance' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
         ]);
 
         $user = User::where('email', $request->email)
@@ -64,10 +67,34 @@ Route::post('/auto-login', function (Request $request) {
             ->first();
 
         if (!$user) {
+            $userByEmail = User::where('email', $request->email)->first();
+            if ($userByEmail && (empty($userByEmail->phone_number) || $userByEmail->phone_number === '')) {
+                $user = $userByEmail;
+            }
+        }
+
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email atau nomor telepon tidak sesuai'
             ], 401);
+        }
+
+        $updated = false;
+        if ($request->filled('phone_number') && empty($user->phone_number)) {
+            $user->phone_number = $request->phone_number;
+            $updated = true;
+        }
+        if ($request->filled('instance') && empty($user->instance)) {
+            $user->instance = $request->instance;
+            $updated = true;
+        }
+        if ($request->filled('city') && empty($user->city)) {
+            $user->city = $request->city;
+            $updated = true;
+        }
+        if ($updated) {
+            $user->save();
         }
 
         Auth::login($user, true);
@@ -220,6 +247,7 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
         Route::put('/questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
         Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
         Route::post('/questions/import', [QuestionController::class, 'import'])->name('questions.import');
+        Route::get('/courses/{course}/quizzes/{quiz}/export', [QuestionController::class, 'export'])->name('questions.export');
 
         Route::resource('articles', ArticleController::class);
         Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate'])->name('articles.duplicate');
@@ -227,6 +255,8 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
 
     Route::middleware(['role:admin'])->group(function () {
         Route::resource('users', UserController::class);
+
+        Route::get('/biinsight-import/programs', [BiinsightImportController::class, 'getPrograms'])->name('admin.biinsight-import.programs');
         
         Route::resource('broadcasts', BroadcastController::class);
         Route::post('broadcasts/{broadcast}/filtered-users', [BroadcastController::class, 'filteredUsers'])->name('broadcasts.filtered-users');
@@ -319,6 +349,9 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
 
         Route::get('webinars', [WebinarController::class, 'index'])->name('webinars.index');
         Route::get('webinars/{webinar}', [WebinarController::class, 'show'])->name('webinars.show');
+
+        Route::get('certification-programs', [CertificationProgramController::class, 'index'])->name('certification-programs.index');
+        Route::get('certification-programs/{program}', [CertificationProgramController::class, 'show'])->name('certification-programs.show');
 
         Route::get('bundles', [BundleController::class, 'index'])->name('bundles.index');
         Route::get('bundles/{bundle}', [BundleController::class, 'show'])->name('bundles.show');

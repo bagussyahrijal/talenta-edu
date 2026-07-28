@@ -9,6 +9,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useInitials } from '@/hooks/use-initials';
@@ -19,7 +20,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
 import { Editor } from '@tinymce/tinymce-react';
 import { BookMarked, CalendarFold, Check, ChevronsUpDown, GraduationCap } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -48,9 +49,26 @@ interface Mentor {
     avatar?: string;
 }
 
+interface SocializationSchedule {
+    id: string;
+    title?: string;
+    schedule_date: string;
+    day: string;
+    start_time: string;
+    end_time: string;
+}
+
+interface RegularProgram {
+    id: string;
+    title: string;
+    batch: string | null;
+    schedules: SocializationSchedule[];
+}
+
 interface CreateScholarshipProps {
     categories: Category[];
     mentors: Mentor[];
+    regular_programs?: RegularProgram[];
 }
 
 const formSchema = z
@@ -89,16 +107,33 @@ const formSchema = z
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function CreateScholarshipCertificationProgram({ categories, mentors }: CreateScholarshipProps) {
+export default function CreateScholarshipCertificationProgram({ categories, mentors, regular_programs = [] }: CreateScholarshipProps) {
     const [preview, setPreview] = useState<string | null>(null);
     const [thumbnailError, setThumbnailError] = useState(false);
     const [schedules, setSchedules] = useState<BootcampSchedule[]>([]);
     const [socializationSchedules, setSocializationSchedules] = useState<BootcampSchedule[]>([]);
     const [showStrikethroughPrice, setShowStrikethroughPrice] = useState(false);
+    const [biinspiraPrograms, setBiinspiraPrograms] = useState<any[]>([]);
+    const [isBiinspiraPopoverOpen, setIsBiinspiraPopoverOpen] = useState(false);
+    const [selectedBiinspiraProgram, setSelectedBiinspiraProgram] = useState<any | null>(null);
+
+    useEffect(() => {
+        fetch(route('admin.biinsight-import.programs') + '?type=certification_program')
+            .then((res) => res.json())
+            .then((res) => {
+                if (res.success) {
+                    // Filter scholarship only
+                    const scholarshipPrograms = (res.data || []).filter((p: any) => p.certif_type === 'scholarship');
+                    setBiinspiraPrograms(scholarshipPrograms);
+                }
+            })
+            .catch((err) => console.error(err));
+    }, []);
     const [openRegDeadlineCalendar, setOpenRegDeadlineCalendar] = useState(false);
     const [openScholarshipDeadlineCalendar, setOpenScholarshipDeadlineCalendar] = useState(false);
     const [isItemPopoverOpen, setIsItemPopoverOpen] = useState(false);
     const [isMentorPopoverOpen, setIsMentorPopoverOpen] = useState(false);
+    const [selectedRegularProgramId, setSelectedRegularProgramId] = useState<string>('');
     const getInitials = useInitials();
 
     const form = useForm<FormValues>({
@@ -157,6 +192,12 @@ export default function CreateScholarshipCertificationProgram({ categories, ment
         },
     });
 
+    const scholarshipBatch = parseInt(form.watch('batch') ?? '', 10);
+    const filteredRegularPrograms = regular_programs.filter((p) => {
+        const regularBatch = parseInt(p.batch ?? '', 10);
+        return !isNaN(scholarshipBatch) && !isNaN(regularBatch) && regularBatch > scholarshipBatch;
+    });
+
     function onSubmit(values: FormValues) {
         const submitData = { ...values, type: 'scholarship', schedules, socialization_schedules: socializationSchedules };
         router.post(route('certification-programs.store'), submitData, { forceFormData: true });
@@ -181,6 +222,111 @@ export default function CreateScholarshipCertificationProgram({ categories, ment
                             <div className="flex items-center gap-2">
                                 <BookMarked size={16} />
                                 <h3 className="font-medium">Informasi Program</h3>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                <Label>Ambil Data dari Biinsight (Opsional)</Label>
+                                <Popover open={isBiinspiraPopoverOpen} onOpenChange={setIsBiinspiraPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                                'justify-between',
+                                                !selectedBiinspiraProgram && 'text-muted-foreground'
+                                            )}
+                                        >
+                                            {selectedBiinspiraProgram
+                                                ? `${selectedBiinspiraProgram.title} ${selectedBiinspiraProgram.batch ? `(${selectedBiinspiraProgram.batch})` : ''}`
+                                                : 'Pilih program Biinsight...'}
+                                            <ChevronsUpDown className="opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Cari program..." />
+                                            <CommandList>
+                                                <CommandEmpty>Program tidak ditemukan.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {biinspiraPrograms.map((program) => (
+                                                        <CommandItem
+                                                            key={program.id}
+                                                            value={program.title.toLowerCase()}
+                                                            onSelect={() => {
+                                                                try {
+                                                                    setSelectedBiinspiraProgram(program);
+                                                                    form.setValue('title', program.title || '');
+                                                                    if (program.description) form.setValue('description', program.description);
+                                                                    if (program.short_description) form.setValue('short_description', program.short_description);
+                                                                    if (program.benefits) form.setValue('benefits', program.benefits);
+                                                                    if (program.terms_conditions) form.setValue('terms_conditions', program.terms_conditions);
+                                                                    if (program.price !== undefined) form.setValue('price', program.price);
+                                                                    if (program.strikethrough_price !== undefined) form.setValue('strikethrough_price', program.strikethrough_price);
+                                                                    if (program.scholarship_price !== undefined) form.setValue('scholarship_price', program.scholarship_price);
+                                                                    if (program.batch) form.setValue('batch', program.batch);
+                                                                    
+                                                                    const isValidDate = (d: any) => d && !isNaN(Date.parse(d));
+                                                                    
+                                                                    if (isValidDate(program.registration_deadline)) {
+                                                                        form.setValue('registration_deadline', new Date(program.registration_deadline).toISOString());
+                                                                    }
+                                                                    if (isValidDate(program.socialization_registration_deadline)) {
+                                                                        form.setValue('socialization_registration_deadline', new Date(program.socialization_registration_deadline).toISOString());
+                                                                    }
+                                                                    if (program.group_url) {
+                                                                        form.setValue('group_url', program.group_url);
+                                                                    }
+
+                                                                    if (program.category && typeof program.category === 'string') {
+                                                                        const matchedCategory = categories.find(
+                                                                            (c) => c.name.toLowerCase() === program.category.toLowerCase()
+                                                                        );
+                                                                        if (matchedCategory) {
+                                                                            form.setValue('category_id', matchedCategory.id);
+                                                                        }
+                                                                    }
+
+                                                                    // Populate schedules
+                                                                    if (program.schedules && Array.isArray(program.schedules)) {
+                                                                        const mappedSchedules = program.schedules
+                                                                            .filter((s: any) => s && s.schedule_type === 'main')
+                                                                            .map((s: any) => ({
+                                                                                schedule_date: s.schedule_date || '',
+                                                                                day: s.day || '',
+                                                                                start_time: s.start_time && typeof s.start_time === 'string' ? s.start_time.substring(0, 5) : '00:00',
+                                                                                end_time: s.end_time && typeof s.end_time === 'string' ? s.end_time.substring(0, 5) : '00:00',
+                                                                                title: s.title || ''
+                                                                            }));
+                                                                        setSchedules(mappedSchedules);
+
+                                                                        const mappedSocialization = program.schedules
+                                                                            .filter((s: any) => s && s.schedule_type === 'socialization')
+                                                                            .map((s: any) => ({
+                                                                                schedule_date: s.schedule_date || '',
+                                                                                day: s.day || '',
+                                                                                start_time: s.start_time && typeof s.start_time === 'string' ? s.start_time.substring(0, 5) : '00:00',
+                                                                                end_time: s.end_time && typeof s.end_time === 'string' ? s.end_time.substring(0, 5) : '00:00',
+                                                                                title: s.title || ''
+                                                                            }));
+                                                                        setSocializationSchedules(mappedSocialization);
+                                                                    }
+
+                                                                    setIsBiinspiraPopoverOpen(false);
+                                                                    toast.success(`Berhasil mengambil data "${program.title}" dari Biinsight!`);
+                                                                } catch (err: any) {
+                                                                    console.error(err);
+                                                                    toast.error(`Gagal memproses data: ${err.message}`);
+                                                                }
+                                                            }}
+                                                        >
+                                                            {program.title} {program.batch ? `(${program.batch})` : ''}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             <FormField
@@ -552,19 +698,84 @@ export default function CreateScholarshipCertificationProgram({ categories, ment
                                         </div>
                                     )}
 
-                                    <FormField
-                                        control={form.control}
-                                        name="batch"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Batch</FormLabel>
-                                                <FormControl>
-                                                    <Input placeholder="e.g., 22" {...field} value={field.value || ''} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <FormField
+                                            control={form.control}
+                                            name="batch"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Batch</FormLabel>
+                                                    <FormControl>
+                                                        <Input
+                                                            placeholder="e.g., 22"
+                                                            {...field}
+                                                            value={field.value || ''}
+                                                            onChange={(e) => {
+                                                                field.onChange(e);
+                                                                // Reset pilihan program regular jika batch berubah
+                                                                setSelectedRegularProgramId('');
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium">
+                                                Ambil Jadwal Pelaksanaan dari Program Regular
+                                            </Label>
+                                            <Select
+                                                value={selectedRegularProgramId}
+                                                onValueChange={(val) => {
+                                                    setSelectedRegularProgramId(val);
+                                                    const chosen = regular_programs.find((p) => p.id === val);
+                                                    if (chosen) {
+                                                        const mapped: BootcampSchedule[] = chosen.schedules.map((s) => ({
+                                                            id: undefined,
+                                                            title: s.title ?? '',
+                                                            schedule_date: s.schedule_date,
+                                                            day: s.day,
+                                                            start_time: s.start_time,
+                                                            end_time: s.end_time,
+                                                        }));
+                                                        setSchedules(mapped);
+                                                    }
+                                                }}
+                                                disabled={isNaN(scholarshipBatch) || filteredRegularPrograms.length === 0}
+                                            >
+                                                <SelectTrigger className="w-full">
+                                                    <SelectValue
+                                                        placeholder={
+                                                            isNaN(scholarshipBatch)
+                                                                ? 'Isi batch dulu'
+                                                                : filteredRegularPrograms.length === 0
+                                                                  ? 'Tidak ada program'
+                                                                  : 'Pilih program regular'
+                                                        }
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {filteredRegularPrograms.map((p) => (
+                                                        <SelectItem key={p.id} value={p.id}>
+                                                            {p.title} {p.batch ? `(Batch ${p.batch})` : ''}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {selectedRegularProgramId && (
+                                                <p className="text-muted-foreground text-xs">
+                                                    ✓ Jadwal pelaksanaan telah diisi otomatis. Anda masih bisa mengeditnya.
+                                                </p>
+                                            )}
+                                            {!isNaN(scholarshipBatch) && filteredRegularPrograms.length === 0 && (
+                                                <p className="text-muted-foreground text-xs">
+                                                    Tidak ada program regular dengan batch &gt; {scholarshipBatch}.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
 
                                     <FormField
                                         control={form.control}

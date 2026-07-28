@@ -67,9 +67,10 @@ interface DetailProps {
     relatedPrograms: RelatedProgram[];
     myProgramIds: string[];
     scholarshipApplication?: { status: string } | null;
+    approvedScholarshipProgramIds?: string[];
 }
 
-export default function Detail({ program, relatedPrograms, myProgramIds, scholarshipApplication }: DetailProps) {
+export default function Detail({ program, relatedPrograms, myProgramIds, scholarshipApplication, approvedScholarshipProgramIds = [] }: DetailProps) {
     const isEnrolled = myProgramIds.includes(program.id);
 
     return (
@@ -80,7 +81,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
             <AboutSection program={program} />
             <ScheduleInfoSection program={program} />
             <MentorSection program={program} />
-            <RelatedPrograms relatedPrograms={relatedPrograms} myProgramIds={myProgramIds} />
+            <RelatedPrograms relatedPrograms={relatedPrograms} myProgramIds={myProgramIds} approvedScholarshipProgramIds={approvedScholarshipProgramIds} />
         </UserLayout>
     );
 }

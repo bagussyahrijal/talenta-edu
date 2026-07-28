@@ -57,6 +57,7 @@ export default function RegisterSection({ program, isEnrolled, scholarshipApplic
 
     // Check if scholarship is approved (only matters for scholarship programs)
     const isScholarshipApproved = program.type === 'scholarship' ? scholarshipApplication?.status === 'approved' : true;
+    const isScholarshipNotApproved = program.type === 'scholarship' && !isScholarshipApproved;
     const canRegisterRegular = isRegularRegistrationOpen && !isEnrolled && isScholarshipApproved;
 
     // Scholarship program deadline
@@ -64,7 +65,7 @@ export default function RegisterSection({ program, isEnrolled, scholarshipApplic
     const isScholarshipRegistrationOpen = scholarshipDeadline ? new Date() < scholarshipDeadline : true;
     const canRegisterScholarship = isScholarshipRegistrationOpen && !isEnrolled;
 
-    const displayPrice = program.type === 'scholarship' ? (program.scholarship_price ?? program.price) : program.price;
+    const displayPrice = isScholarshipNotApproved ? 0 : (program.type === 'scholarship' ? (program.scholarship_price ?? program.price) : program.price);
 
     const formatRupiah = (amount: number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -129,7 +130,7 @@ export default function RegisterSection({ program, isEnrolled, scholarshipApplic
                 {/* Right Column - Price Card */}
                 <div className="flex flex-col">
                     <div className="lg:sticky lg:top-4 rounded-xl sm:rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-                        {program.strikethrough_price && program.strikethrough_price > 0 && (
+                        {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
                             <span className="block text-xs sm:text-sm text-gray-500 font-literata line-through mb-1">
                                 {formatRupiah(program.strikethrough_price)}
                             </span>
@@ -142,7 +143,7 @@ export default function RegisterSection({ program, isEnrolled, scholarshipApplic
                             <h3 className="mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl font-bold font-literata text-gray-900 dark:text-gray-100">GRATIS</h3>
                         )}
 
-                        {program.type === 'scholarship' && program.scholarship_price !== undefined && program.scholarship_price > 0 && (
+                        {!isScholarshipNotApproved && program.type === 'scholarship' && program.scholarship_price !== undefined && program.scholarship_price > 0 && (
                             <p className="mb-4 -mt-4 text-sm text-purple-600 dark:text-purple-400">Harga Beasiswa</p>
                         )}
 
@@ -166,13 +167,13 @@ export default function RegisterSection({ program, isEnrolled, scholarshipApplic
                                             </Link>
                                         </Button>
                                     )}
-                                    {program.type === 'scholarship' && (
+                                    {program.type === 'scholarship' && !isScholarshipApproved && (
                                         <Button
                                             asChild
                                             disabled={!canRegisterScholarship}
                                             className={`w-full rounded-lg text-sm sm:text-base py-5 sm:py-6 ${!canRegisterScholarship ? 'cursor-not-allowed opacity-50' : ''}`}
                                         >
-                                            <Link href={canRegisterScholarship ? route('certification-programs.scholarship-apply', program.slug) : '#'}>
+                                            <Link href={canRegisterScholarship ? route('certification-programs.register', { program: program.slug, scholarship: 1 }) : '#'}>
                                                 <GraduationCap className="mr-2 h-5 w-5" />
                                                 {canRegisterScholarship ? 'Ajukan Beasiswa' : 'Pendaftaran Beasiswa Ditutup'}
                                             </Link>
