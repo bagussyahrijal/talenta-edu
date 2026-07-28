@@ -32,5 +32,11 @@ class AppServiceProvider extends ServiceProvider
         // if (config('app.url')) {
         //     URL::forceRootUrl(config('app.url'));
         // }
+
+        // TAMBAHKAN: Daftarkan event listener reward referral
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\TransactionPaid::class,
+            \App\Listeners\RewardReferralListener::class
+        );
     }
 }

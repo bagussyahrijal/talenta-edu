@@ -166,6 +166,9 @@ class MidtransCallbackController extends Controller
 
         // Kirim WhatsApp setelah pembayaran berhasil
         $this->sendWhatsAppNotification($invoice);
+
+        // BARU: Dispatch event untuk reward referral
+        event(new \App\Events\TransactionPaid($invoice));
     }
 
     /**

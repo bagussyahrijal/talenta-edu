@@ -21,6 +21,15 @@ class Invoice extends Model
         return $this->belongsTo(User::class, 'referred_by_user_id');
     }
 
+    /**
+     * User yang mereferensikan pembelian ini (alias untuk referred_by_user_id).
+     * Di talenta kolom bernama 'referred_by_user_id'.
+     */
+    public function referralUser()
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
     public function courseItems()
     {
         return $this->hasMany(EnrollmentCourse::class);

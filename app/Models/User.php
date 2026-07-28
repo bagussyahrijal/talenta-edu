@@ -24,7 +24,6 @@ class User extends Authenticatable
     protected $fillable = [
         'google_id',
         'github_id',
-        // 'referred_by_user_id',
         'name',
         'email',
         'phone_number',
@@ -36,7 +35,24 @@ class User extends Authenticatable
         'commission',
         'avatar',
         'email_verified_at',
+        'referral_code',
+        'point_balance',
     ];
+
+    /**
+     * Auto-generate referral code TALE-XXXXXX saat user baru dibuat.
+     */
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            if (empty($user->referral_code)) {
+                do {
+                    $code = 'TALE-' . strtoupper(\Illuminate\Support\Str::random(6));
+                } while (static::where('referral_code', $code)->exists());
+                $user->referral_code = $code;
+            }
+        });
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -76,11 +92,18 @@ class User extends Authenticatable
         $this->notify(new CustomVerifyEmailNotification());
     }
 
-    // public function referrer()
-    // {
-    //     return $this->belongsTo(User::class, 'referred_by_user_id');
-    // }
+    // Relasi Referral
+    public function referredInvoices()
+    {
+        return $this->hasMany(Invoice::class, 'referred_by_user_id');
+    }
 
+    public function pointTransactions()
+    {
+        return $this->hasMany(PointTransaction::class);
+    }
+
+    // Relasi Existing
     public function courses()
     {
         return $this->hasMany(Course::class);
