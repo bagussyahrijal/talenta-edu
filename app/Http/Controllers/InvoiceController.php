@@ -232,13 +232,14 @@ class InvoiceController extends Controller
             $discountCodeId = $request->input('discount_code_id');
             $discountCodeAmount = $request->input('discount_code_amount', 0);
 
-            $referralCode = session('referral_code');
+            $referralCode = $request->input('referral_code') ?: session('referral_code');
             $referredByUserId = null;
 
             if ($referralCode && $referralCode !== 'TAL2025') {
-                $referrer = User::where('affiliate_code', $referralCode)->first();
-                if ($referrer && $referrer->id !== $userId) {
-                    $referredByUserId = $referrer->id;
+                $referralService = app(\App\Services\ReferralService::class);
+                $validationResult = $referralService->validateReferralCode($referralCode, null, Auth::user());
+                if ($validationResult['valid']) {
+                    $referredByUserId = $validationResult['referrer']->id;
                 }
             }
 
@@ -351,6 +352,24 @@ class InvoiceController extends Controller
 
             $expectedNettAmount = $itemPrice - $discountCodeAmount;
 
+            $pointsRedeemed = (int) $request->input('points_redeemed', 0);
+            if ($pointsRedeemed > 0) {
+                if ($discountCodeId) {
+                    throw new \Exception('Voucher dan Poin tidak dapat digunakan bersamaan.');
+                }
+                
+                $user = Auth::user();
+                if ($pointsRedeemed > $user->point_balance) {
+                    throw new \Exception('Saldo poin Anda tidak mencukupi.');
+                }
+                
+                if ($pointsRedeemed > $expectedNettAmount) {
+                    throw new \Exception('Poin yang digunakan melebihi harga produk.');
+                }
+                
+                $expectedNettAmount = $expectedNettAmount - $pointsRedeemed;
+            }
+
             $validatedFee = $this->calculateTransactionFee($paymentChannel, $expectedNettAmount);
             $expectedTotal = $expectedNettAmount + $validatedFee;
 
@@ -380,10 +399,15 @@ class InvoiceController extends Controller
                 'amount' => $totalAmount,
                 'nett_amount' => $nettAmount,
                 'transaction_fee' => $validatedFee,
+                'points_redeemed' => $pointsRedeemed,
                 'expires_at' => $expiresAt,
                 'payment_method' => 'midtrans',
                 'payment_channel' => $paymentChannel,
             ]);
+
+            if ($pointsRedeemed > 0) {
+                app(\App\Services\PointService::class)->redeemPoints(Auth::user(), $pointsRedeemed, $invoice);
+            }
 
             if ($discountCode) {
                 DiscountUsage::create([
@@ -520,13 +544,14 @@ class InvoiceController extends Controller
             $discountCodeId = $request->input('discount_code_id');
             $discountCodeAmount = $request->input('discount_code_amount', 0);
 
-            $referralCode = session('referral_code');
+            $referralCode = $request->input('referral_code') ?: session('referral_code');
             $referredByUserId = null;
 
             if ($referralCode && $referralCode !== 'TAL2025') {
-                $referrer = User::where('affiliate_code', $referralCode)->first();
-                if ($referrer && $referrer->id !== $userId) {
-                    $referredByUserId = $referrer->id;
+                $referralService = app(\App\Services\ReferralService::class);
+                $validationResult = $referralService->validateReferralCode($referralCode, null, Auth::user());
+                if ($validationResult['valid']) {
+                    $referredByUserId = $validationResult['referrer']->id;
                 }
             }
 
@@ -583,6 +608,24 @@ class InvoiceController extends Controller
 
             $expectedNettAmount = $bundle->price - $discountCodeAmount;
 
+            $pointsRedeemed = (int) $request->input('points_redeemed', 0);
+            if ($pointsRedeemed > 0) {
+                if ($discountCodeId) {
+                    throw new \Exception('Voucher dan Poin tidak dapat digunakan bersamaan.');
+                }
+                
+                $user = Auth::user();
+                if ($pointsRedeemed > $user->point_balance) {
+                    throw new \Exception('Saldo poin Anda tidak mencukupi.');
+                }
+                
+                if ($pointsRedeemed > $expectedNettAmount) {
+                    throw new \Exception('Poin yang digunakan melebihi harga produk.');
+                }
+                
+                $expectedNettAmount = $expectedNettAmount - $pointsRedeemed;
+            }
+
             $validatedFee = $this->calculateTransactionFee($paymentChannel, $expectedNettAmount);
             $expectedTotal = $expectedNettAmount + $validatedFee;
 
@@ -612,10 +655,15 @@ class InvoiceController extends Controller
                 'amount' => $totalAmount,
                 'nett_amount' => $nettAmount,
                 'transaction_fee' => $validatedFee,
+                'points_redeemed' => $pointsRedeemed,
                 'expires_at' => $expiresAt,
                 'payment_method' => 'midtrans',
                 'payment_channel' => $paymentChannel,
             ]);
+
+            if ($pointsRedeemed > 0) {
+                app(\App\Services\PointService::class)->redeemPoints(Auth::user(), $pointsRedeemed, $invoice);
+            }
 
             if ($discountCode) {
                 DiscountUsage::create([
