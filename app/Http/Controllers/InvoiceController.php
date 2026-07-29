@@ -815,7 +815,9 @@ class InvoiceController extends Controller
             $referredByUserId = null;
 
             if ($referralCode && $referralCode !== 'TAL2025') {
-                $referrer = User::where('affiliate_code', $referralCode)->first();
+                $referrer = User::where('affiliate_code', $referralCode)
+                    ->orWhere('referral_code', $referralCode)
+                    ->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
                 }

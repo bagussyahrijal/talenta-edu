@@ -75,7 +75,9 @@ class SocialiteController extends Controller
                 }
             } else {
                 $referralCode = session('referral_code', 'TAL2025');
-                $referrer = User::where('affiliate_code', $referralCode)->first();
+                $referrer = User::where('affiliate_code', $referralCode)
+                    ->orWhere('referral_code', $referralCode)
+                    ->first();
 
                 if (!$referrer) {
                     $referrer = User::where('affiliate_code', 'TAL2025')->first();
