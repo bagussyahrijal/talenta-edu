@@ -26,9 +26,9 @@ class MidtransService
 
             $snapToken = Snap::getSnapToken($params);
             return [
-                'success' => true,
+                'success' => true, 
                 'snap_token' => $snapToken,
-                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v2/vtweb/' . $snapToken
+                'redirect_url' => 'https://app.midtrans.com/snap/v2/vtweb/' . $snapToken
             ];
         } catch (\Exception $e) {
             return [
