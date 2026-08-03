@@ -524,7 +524,7 @@ export default function Register({
                 nett_amount: activeFinalPrice,
                 transaction_fee: adminFee,
                 total_amount: activeTotalPrice,
-                isScholarship: isScholarship ? 1 : 0,
+                is_scholarship: isScholarship ? 1 : 0,
                 points_redeemed: pointsDeduction,
             };
 

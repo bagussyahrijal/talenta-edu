@@ -267,7 +267,7 @@ class InvoiceController extends Controller
                 $enrollmentTable = EnrollmentCertificationProgram::class;
                 $enrollmentField = 'certification_program_id';
 
-                $isScholarship = $request->boolean('is_scholarship', false);
+                $isScholarship = $request->boolean('is_scholarship', false) || $request->boolean('isScholarship', false);
                 if ($item->type === 'scholarship') {
                     $isScholarship = true;
                 }
