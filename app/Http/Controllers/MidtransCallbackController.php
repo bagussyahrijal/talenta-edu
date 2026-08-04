@@ -184,6 +184,7 @@ class MidtransCallbackController extends Controller
                 'webinarItems.webinar',
                 'bundleEnrollments.bundle',
                 'bundleEnrollments.bundle.bundleItems.bundleable',
+                'certificationProgramItems.certificationProgram',
                 'discountUsage.discountCode',
             ]);
 
@@ -237,6 +238,7 @@ class MidtransCallbackController extends Controller
                 'bootcampItems.bootcamp',
                 'webinarItems.webinar',
                 'bundleEnrollments.bundle',
+                'certificationProgramItems.certificationProgram',
             ]);
 
             $user = $invoice->user;
@@ -256,6 +258,8 @@ class MidtransCallbackController extends Controller
                 $itemType = 'Webinar';
             } elseif ($invoice->bundleEnrollments->count() > 0) {
                 $itemType = 'Bundle';
+            } elseif ($invoice->certificationProgramItems->count() > 0) {
+                $itemType = 'Program Sertifikasi';
             }
 
             $statusText = $midtransStatus ? " (status: {$midtransStatus})" : '';
@@ -290,7 +294,15 @@ class MidtransCallbackController extends Controller
         $loginUrl = route('login');
         $profileUrl = route('profile.index');
 
-        $invoice->load('discountUsage.discountCode');
+        $invoice->loadMissing([
+            'user',
+            'courseItems.course',
+            'bootcampItems.bootcamp',
+            'webinarItems.webinar',
+            'bundleEnrollments.bundle',
+            'certificationProgramItems.certificationProgram',
+            'discountUsage.discountCode',
+        ]);
 
         $itemType = null;
         $typeInfo = [
@@ -345,6 +357,17 @@ class MidtransCallbackController extends Controller
                 'title' => $webinar->title ?? '-',
                 'item' => $webinar,
             ];
+        } elseif ($invoice->certificationProgramItems->count() > 0) {
+            $itemType = 'certification_program';
+            $certProgram = $invoice->certificationProgramItems->first()->certificationProgram;
+
+            $typeInfo = [
+                'icon' => '🎓',
+                'name' => 'Program Sertifikasi',
+                'menu' => 'Dashboard',
+                'title' => $certProgram->title ?? '-',
+                'item' => $certProgram,
+            ];
         }
 
         $paidAt = $invoice->paid_at
@@ -358,6 +381,9 @@ class MidtransCallbackController extends Controller
         $message .= "*Detail Pembelian:*\n";
         $message .= "🧾 Invoice: *{$invoice->invoice_code}*\n";
         $message .= "{$typeInfo['icon']} {$typeInfo['name']}: *{$typeInfo['title']}*\n";
+        if (!empty($user->phone_number)) {
+            $message .= "📱 No. WA: *{$user->phone_number}*\n";
+        }
 
         if ($itemType === 'bundle' && $typeInfo['item']) {
             $bundle = $typeInfo['item'];
@@ -432,6 +458,16 @@ class MidtransCallbackController extends Controller
                 $message .= "• Bergabung dengan group untuk mendapatkan info penting dan diskusi\n";
                 $message .= "• Aktif mengikuti seluruh kegiatan bootcamp\n\n";
             }
+        } elseif ($itemType === 'certification_program' && $typeInfo['item']) {
+            $program = $typeInfo['item'];
+
+            if (!empty($program->group_url)) {
+                $message .= "*Join Group Sertifikasi:*\n";
+                $message .= "👥 {$program->group_url}\n\n";
+                $message .= "⚠️ *Penting:*\n";
+                $message .= "• Bergabung dengan group untuk mendapatkan info penting\n";
+                $message .= "• Ikuti jadwal program yang tersedia\n\n";
+            }
         }
 
         $message .= "Jika ada pertanyaan, jangan ragu untuk menghubungi kami.\n\n";
@@ -465,6 +501,7 @@ class MidtransCallbackController extends Controller
             'courseItems',
             'bootcampItems',
             'webinarItems',
+            'certificationProgramItems',
             'bundleEnrollments.bundle.bundleItems.bundleable'
         ]);
 
@@ -497,6 +534,14 @@ class MidtransCallbackController extends Controller
                 ]);
 
                 $this->addToCertificateParticipants('webinar', $item->webinar_id, $userId);
+            }
+        }
+
+        if ($invoice->certificationProgramItems->count() > 0) {
+            foreach ($invoice->certificationProgramItems as $item) {
+                $item->update([
+                    'completed_at' => Carbon::now('Asia/Jakarta')
+                ]);
             }
         }
 
@@ -638,6 +683,9 @@ class MidtransCallbackController extends Controller
             } elseif ($invoice->bundleEnrollments->count() > 0) {
                 $productType = 'Bundle';
                 $productTitle = $invoice->bundleEnrollments->first()->bundle->title ?? '';
+            } elseif ($invoice->certificationProgramItems->count() > 0) {
+                $productType = 'Program Sertifikasi';
+                $productTitle = $invoice->certificationProgramItems->first()->certificationProgram->title ?? '';
             }
 
             $user = $invoice->user;

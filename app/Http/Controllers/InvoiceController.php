@@ -104,7 +104,17 @@ class InvoiceController extends Controller
 
         // Apply product type filter
         if ($productType && !empty($productType)) {
-            $invoicesQuery->whereHas($productType . 'Items');
+            $relationMap = [
+                'course' => 'courseItems',
+                'bootcamp' => 'bootcampItems',
+                'webinar' => 'webinarItems',
+                'private' => 'privateItems',
+                'bundle' => 'bundleEnrollments',
+                'certification_program' => 'certificationProgramItems',
+                'certification' => 'certificationProgramItems',
+            ];
+            $relation = $relationMap[$productType] ?? (\Illuminate\Support\Str::camel($productType) . 'Items');
+            $invoicesQuery->whereHas($relation);
         }
 
         // Get filtered invoices
@@ -1220,10 +1230,19 @@ class InvoiceController extends Controller
     private function sendWhatsAppNotification(Invoice $invoice)
     {
         try {
+            $invoice->loadMissing([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'bundleEnrollments.bundle',
+                'certificationProgramItems.certificationProgram',
+            ]);
+
             $user = $invoice->user;
 
-            if (!$user->phone_number) {
-                Log::warning('User does not have phone number', ['user_id' => $user->id, 'invoice_code' => $invoice->invoice_code]);
+            if (!$user || !$user->phone_number) {
+                Log::warning('User does not have phone number', ['user_id' => $user->id ?? null, 'invoice_code' => $invoice->invoice_code]);
                 return;
             }
 
@@ -1264,9 +1283,18 @@ class InvoiceController extends Controller
     private function sendWhatsAppPaymentFailed(Invoice $invoice)
     {
         try {
+            $invoice->loadMissing([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'bundleEnrollments.bundle',
+                'certificationProgramItems.certificationProgram',
+            ]);
+
             $user = $invoice->user;
 
-            if (!$user->phone_number) {
+            if (!$user || !$user->phone_number) {
                 return;
             }
 
@@ -1280,7 +1308,7 @@ class InvoiceController extends Controller
             } elseif ($invoice->webinarItems->count() > 0) {
                 $itemType = 'Webinar';
             } elseif ($invoice->certificationProgramItems->count() > 0) {
-                $itemType = 'Sertifikasi Program';
+                $itemType = 'Program Sertifikasi';
             }
 
             $message = "*[Talenta - Pembayaran {$itemType} Gagal]*\n\n";
@@ -1319,11 +1347,25 @@ class InvoiceController extends Controller
         $loginUrl = route('login');
         $profileUrl = route('profile.index');
 
-        $invoice->load('discountUsage.discountCode');
+        $invoice->loadMissing([
+            'user',
+            'courseItems.course',
+            'bootcampItems.bootcamp',
+            'webinarItems.webinar',
+            'bundleEnrollments.bundle',
+            'certificationProgramItems.certificationProgram',
+            'discountUsage.discountCode',
+        ]);
 
         $itemType = null;
         $itemData = null;
-        $typeInfo = null;
+        $typeInfo = [
+            'icon' => '📘',
+            'name' => 'Program',
+            'menu' => 'Dashboard',
+            'title' => '-',
+            'item' => null,
+        ];
 
         if ($invoice->bundleEnrollments->count() > 0) {
             $itemType = 'bundle';
@@ -1334,7 +1376,7 @@ class InvoiceController extends Controller
                 'icon' => '📦',
                 'name' => 'Paket Bundling',
                 'menu' => 'Dashboard',
-                'title' => $bundle->title,
+                'title' => $bundle->title ?? '-',
                 'item' => $bundle
             ];
         } elseif ($invoice->courseItems->count() > 0) {
@@ -1344,7 +1386,7 @@ class InvoiceController extends Controller
                 'icon' => '📚',
                 'name' => 'Kelas Online',
                 'menu' => 'Kelas Saya',
-                'title' => $itemData->course->title,
+                'title' => $itemData->course->title ?? '-',
                 'item' => $itemData->course
             ];
         } elseif ($invoice->bootcampItems->count() > 0) {
@@ -1354,7 +1396,7 @@ class InvoiceController extends Controller
                 'icon' => '🎯',
                 'name' => 'Bootcamp',
                 'menu' => 'Bootcamp Saya',
-                'title' => $itemData->bootcamp->title,
+                'title' => $itemData->bootcamp->title ?? '-',
                 'item' => $itemData->bootcamp
             ];
         } elseif ($invoice->webinarItems->count() > 0) {
@@ -1364,8 +1406,18 @@ class InvoiceController extends Controller
                 'icon' => '📺',
                 'name' => 'Webinar',
                 'menu' => 'Webinar Saya',
-                'title' => $itemData->webinar->title,
+                'title' => $itemData->webinar->title ?? '-',
                 'item' => $itemData->webinar
+            ];
+        } elseif ($invoice->certificationProgramItems->count() > 0) {
+            $itemType = 'certification_program';
+            $itemData = $invoice->certificationProgramItems->first();
+            $typeInfo = [
+                'icon' => '🎓',
+                'name' => 'Program Sertifikasi',
+                'menu' => 'Dashboard',
+                'title' => $itemData->certificationProgram->title ?? '-',
+                'item' => $itemData->certificationProgram
             ];
         }
 
@@ -1384,6 +1436,9 @@ class InvoiceController extends Controller
         $message .= "*Detail " . ($isFreePurchase ? 'Pendaftaran' : 'Pembelian') . ":*\n";
         $message .= "🧾 " . ($isFreePurchase ? 'Kode' : 'Invoice') . ": *{$invoice->invoice_code}*\n";
         $message .= "{$typeInfo['icon']} {$typeInfo['name']}: *{$typeInfo['title']}*\n";
+        if (!empty($user->phone_number)) {
+            $message .= "📱 No. WA: *{$user->phone_number}*\n";
+        }
 
         if ($itemType === 'bundle') {
             $bundle = $typeInfo['item'];
