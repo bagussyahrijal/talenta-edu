@@ -400,6 +400,7 @@ class InvoiceController extends Controller
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
+            $isFree = ($totalAmount <= 0);
 
             $invoice = Invoice::create([
                 'user_id' => $userId,
@@ -410,9 +411,12 @@ class InvoiceController extends Controller
                 'nett_amount' => $nettAmount,
                 'transaction_fee' => $validatedFee,
                 'points_redeemed' => $pointsRedeemed,
-                'expires_at' => $expiresAt,
-                'payment_method' => 'midtrans',
-                'payment_channel' => $paymentChannel,
+                'expires_at' => $isFree ? null : $expiresAt,
+                'payment_method' => $isFree ? 'FREE' : 'midtrans',
+                'payment_channel' => $isFree ? 'FREE_ENROLLMENT' : $paymentChannel,
+                'status' => $isFree ? 'paid' : 'pending',
+                'paid_at' => $isFree ? Carbon::now('Asia/Jakarta') : null,
+                'payment_reference' => $invoice_code,
             ]);
 
             if ($pointsRedeemed > 0) {
@@ -430,14 +434,37 @@ class InvoiceController extends Controller
                 $discountCode->incrementUsage();
             }
 
-            // $tripayResponse = $this->tripayService->requestTransaction(
-            //     $invoice_code,
-            //     $paymentChannel,
-            //     $item->title,
-            //     (int)$nettAmount,
-            //     Auth::user()->name,
-            //     Auth::user()->email
-            // );
+            $enrollmentData = [
+                'invoice_id' => $invoice->id,
+                $enrollmentField => $item->id,
+                'price' => $nettAmount,
+                'completed_at' => null,
+                'progress' => 0,
+            ];
+
+            if ($type === 'certification_program') {
+                $enrollmentData['is_scholarship'] = $isScholarship;
+            }
+
+            $enrollmentTable::create($enrollmentData);
+
+            if (in_array($type, ['course', 'bootcamp', 'webinar'], true)) {
+                $this->addToCertificateParticipants($type, $item->id, $userId);
+            }
+
+            if ($isFree) {
+                DB::commit();
+                $this->sendWhatsAppNotification($invoice);
+
+                return response()->json([
+                    'success' => true,
+                    'payment_url' => config('app.url') . '/invoice/' . $invoice->id,
+                    'snap_token' => null,
+                    'invoice_id' => $invoice->id,
+                    'invoice_code' => $invoice->invoice_code,
+                    'payment_method' => 'FREE',
+                ], 200);
+            }
 
             $midtransParams = [
                 'transaction_details' => [
@@ -480,40 +507,9 @@ class InvoiceController extends Controller
                 throw new \Exception($midtransResponse['message'] ?? 'Gagal membuat transaksi Midtrans');
             }
 
-            // if (!isset($tripayResponse->success) || !$tripayResponse->success) {
-            //     throw new \Exception($tripayResponse->message ?? 'Gagal membuat transaksi Tripay');
-            // }
-
-            // if (!isset($tripayResponse->data)) {
-            //     throw new \Exception('Invalid response format from Tripay');
-            // }
-
-            // $transaction = $tripayResponse->data;
-
             $invoice->update([
-                // 'payment_reference' => $transaction->reference,
-                // 'va_number' => $transaction->pay_code ?? null,
-                // 'qr_code_url' => $transaction->qr_url ?? null,
                 'payment_reference' => $invoice_code,
             ]);
-
-            $enrollmentData = [
-                'invoice_id' => $invoice->id,
-                $enrollmentField => $item->id,
-                'price' => $nettAmount,
-                'completed_at' => null,
-                'progress' => 0,
-            ];
-
-            if ($type === 'certification_program') {
-                $enrollmentData['is_scholarship'] = $isScholarship;
-            }
-
-            $enrollmentTable::create($enrollmentData);
-
-            if (in_array($type, ['course', 'bootcamp', 'webinar'], true)) {
-                $this->addToCertificateParticipants($type, $item->id, $userId);
-            }
 
             DB::commit();
 
@@ -656,6 +652,7 @@ class InvoiceController extends Controller
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
+            $isFree = ($totalAmount <= 0);
 
             $invoice = Invoice::create([
                 'user_id' => $userId,
@@ -666,9 +663,12 @@ class InvoiceController extends Controller
                 'nett_amount' => $nettAmount,
                 'transaction_fee' => $validatedFee,
                 'points_redeemed' => $pointsRedeemed,
-                'expires_at' => $expiresAt,
-                'payment_method' => 'midtrans',
-                'payment_channel' => $paymentChannel,
+                'expires_at' => $isFree ? null : $expiresAt,
+                'payment_method' => $isFree ? 'FREE' : 'midtrans',
+                'payment_channel' => $isFree ? 'FREE_ENROLLMENT' : $paymentChannel,
+                'status' => $isFree ? 'paid' : 'pending',
+                'paid_at' => $isFree ? Carbon::now('Asia/Jakarta') : null,
+                'payment_reference' => $invoice_code,
             ]);
 
             if ($pointsRedeemed > 0) {
@@ -707,24 +707,19 @@ class InvoiceController extends Controller
                 $this->addToCertificateParticipants($type, $item->bundleable_id, $userId);
             }
 
-            // $tripayResponse = $this->tripayService->requestTransaction(
-            //     $invoice_code,
-            //     $paymentChannel,
-            //     'Paket Bundling: ' . $bundle->title,
-            //     (int)$nettAmount,
-            //     Auth::user()->name,
-            //     Auth::user()->email
-            // );
+            if ($isFree) {
+                DB::commit();
+                $this->sendWhatsAppNotification($invoice);
 
-            // if (!isset($tripayResponse->success) || !$tripayResponse->success) {
-            //     throw new \Exception($tripayResponse->message ?? 'Gagal membuat transaksi Tripay');
-            // }
-
-            // if (!isset($tripayResponse->data)) {
-            //     throw new \Exception('Invalid response format from Tripay');
-            // }
-
-            // $transaction = $tripayResponse->data;
+                return response()->json([
+                    'success' => true,
+                    'payment_url' => config('app.url') . '/invoice/' . $invoice->id,
+                    'snap_token' => null,
+                    'invoice_id' => $invoice->id,
+                    'invoice_code' => $invoice->invoice_code,
+                    'payment_method' => 'FREE',
+                ], 200);
+            }
 
             $midtransParams = [
                 'transaction_details' => [
@@ -766,9 +761,6 @@ class InvoiceController extends Controller
             }
 
             $invoice->update([
-                // 'payment_reference' => $transaction->reference,
-                // 'va_number' => $transaction->pay_code ?? null,
-                // 'qr_code_url' => $transaction->qr_url ?? null,
                 'payment_reference' => $invoice_code,
             ]);
 
