@@ -19,6 +19,7 @@ return new class extends Migration
             $table->bigInteger('amount');
             $table->bigInteger('nett_amount');
             $table->bigInteger('transaction_fee')->default(0);
+             $table->unsignedInteger('points_redeemed')->default(0);
             $table->enum('status', ['pending', 'paid', 'failed'])->default('pending');
             $table->string('invoice_code');
             $table->string('invoice_url')->nullable();
