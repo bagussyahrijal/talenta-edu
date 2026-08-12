@@ -17,7 +17,6 @@ class ReferralService
         }
 
         $referrer = User::where('referral_code', $code)
-            ->orWhere('affiliate_code', $code)
             ->first();
 
         if (!$referrer) {

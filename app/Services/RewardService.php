@@ -27,7 +27,7 @@ class RewardService
         Log::info('processReferralReward started', [
             'invoice_code'        => $invoice->invoice_code,
             'status'              => $invoice->status,
-            'referred_by_user_id' => $invoice->referred_by_user_id,
+            'referral_user_id' => $invoice->referral_user_id,
         ]);
 
         DB::transaction(function () use ($invoice) {
@@ -36,8 +36,8 @@ class RewardService
                 return;
             }
 
-            if (!$invoice->referred_by_user_id) {
-                Log::warning('processReferralReward skipped: no referred_by_user_id', ['invoice_code' => $invoice->invoice_code]);
+            if (!$invoice->referral_user_id) {
+                Log::warning('processReferralReward skipped: no referral_user_id', ['invoice_code' => $invoice->invoice_code]);
                 return;
             }
 
@@ -50,12 +50,12 @@ class RewardService
             }
 
             $buyer    = User::find($invoice->user_id);
-            $referrer = User::find($invoice->referred_by_user_id);
+            $referrer = User::find($invoice->referral_user_id);
 
             if (!$buyer || !$referrer) {
                 Log::error('processReferralReward: buyer or referrer not found', [
                     'buyer_id'    => $invoice->user_id,
-                    'referrer_id' => $invoice->referred_by_user_id,
+                    'referrer_id' => $invoice->referral_user_id,
                 ]);
                 return;
             }

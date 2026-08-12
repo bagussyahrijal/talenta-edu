@@ -20,10 +20,11 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        $referralCode = $request->query('ref');
+        $affiliateCode = $request->query('ref');
 
-        if ($referralCode) {
-            session(['referral_code' => $referralCode]);
+        if ($affiliateCode) {
+            session(['affiliate_code' => $affiliateCode]);
+            cookie()->queue('affiliate_code', $affiliateCode, 60 * 24 * 30);
         }
 
         $tools = Tool::all();

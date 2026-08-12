@@ -198,16 +198,17 @@ class WebinarController extends Controller
     }
 
     /**
-     * Handle referral code dari URL parameter
+     * Handle affiliate code dari URL parameter
      */
     private function handleReferralCode(Request $request): void
     {
-        $referralCode = $request->query('ref');
+        $affiliateCode = $request->query('ref');
 
-        if ($referralCode) {
+        if ($affiliateCode) {
             session([
-                'referral_code' => $referralCode,
+                'affiliate_code' => $affiliateCode,
             ]);
+            cookie()->queue('affiliate_code', $affiliateCode, 60 * 24 * 30);
         }
     }
 
@@ -216,9 +217,10 @@ class WebinarController extends Controller
      */
     private function getReferralInfo(): array
     {
+        $code = session('referral_code');
         return [
-            'code' => session('referral_code'),
-            'hasActive' => session('referral_code') && session('referral_code') !== 'TAL2025',
+            'code' => $code,
+            'hasActive' => !empty($code) && $code !== 'TAL2025',
         ];
     }
 }

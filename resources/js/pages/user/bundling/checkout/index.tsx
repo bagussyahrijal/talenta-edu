@@ -189,13 +189,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         const refFromUrl = urlParams.get('ref');
 
         if (refFromUrl) {
-            sessionStorage.setItem('referral_code', refFromUrl);
-            setCodeType('referral');
-            setPromoCode(refFromUrl);
-        } else if (referralInfo.code) {
-            sessionStorage.setItem('referral_code', referralInfo.code);
-            setCodeType('referral');
-            setPromoCode(referralInfo.code);
+            sessionStorage.setItem('affiliate_code', refFromUrl);
         }
     }, [referralInfo]);
 
@@ -338,9 +332,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         const refFromUrl = urlParams.get('ref');
 
         if (refFromUrl) {
-            sessionStorage.setItem('referral_code', refFromUrl);
-        } else if (referralInfo.code) {
-            sessionStorage.setItem('referral_code', referralInfo.code);
+            sessionStorage.setItem('affiliate_code', refFromUrl);
         }
     }, [referralInfo]);
 
@@ -404,6 +396,11 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
 
         if (currentCodeType === 'referral' && isReferralValid) {
             invoiceData.referral_code = currentPromoCode;
+        }
+
+        const storedAffiliate = sessionStorage.getItem('affiliate_code');
+        if (storedAffiliate) {
+            (invoiceData as any).affiliate_code = storedAffiliate;
         }
 
         try {
@@ -519,7 +516,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                         city: data.city,
                         password: data.phone_number,
                         password_confirmation: data.phone_number,
-                        affiliate_code: (codeType === 'referral' && referralData?.valid) ? promoCode : (referralInfo.code || sessionStorage.getItem('referral_code') || ''),
+                        affiliate_code: sessionStorage.getItem('affiliate_code') || '',
                     });
 
                     if (!(response.data.success || response.status === 200 || response.status === 201)) {

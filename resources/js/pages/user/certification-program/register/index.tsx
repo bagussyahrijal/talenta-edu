@@ -245,9 +245,7 @@ export default function Register({
         const refFromUrl = urlParams.get('ref');
 
         if (refFromUrl) {
-            sessionStorage.setItem('referral_code', refFromUrl);
-            setCodeType('referral');
-            setPromoCode(refFromUrl);
+            sessionStorage.setItem('affiliate_code', refFromUrl);
         }
     }, []);
 
@@ -437,7 +435,7 @@ export default function Register({
                     city: guestFormData.city,
                     password: guestFormData.phone_number,
                     password_confirmation: guestFormData.phone_number,
-                    affiliate_code: (codeType === 'referral' && referralData?.valid) ? promoCode : (sessionStorage.getItem('referral_code') || ''),
+                    affiliate_code: sessionStorage.getItem('affiliate_code') || '',
                 });
 
                 toast.success('Registrasi berhasil. Melanjutkan pendaftaran...');
@@ -539,6 +537,11 @@ export default function Register({
 
             if (currentCodeType === 'referral' && isReferralValid) {
                 invoiceData.referral_code = currentPromoCode;
+            }
+
+            const storedAffiliate = sessionStorage.getItem('affiliate_code');
+            if (storedAffiliate) {
+                (invoiceData as any).affiliate_code = storedAffiliate;
             }
 
             try {

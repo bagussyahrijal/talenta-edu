@@ -242,14 +242,17 @@ class InvoiceController extends Controller
             $discountCodeId = $request->input('discount_code_id');
             $discountCodeAmount = $request->input('discount_code_amount', 0);
 
-            $referralCode = $request->input('referral_code') ?: session('referral_code');
+            $affiliateCode = $request->input('affiliate_code')
+                ?? $request->input('ref')
+                ?? session('affiliate_code')
+                ?? $request->cookie('affiliate_code')
+                ?? $request->cookie('ref');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TAL2025') {
-                $referralService = app(\App\Services\ReferralService::class);
-                $validationResult = $referralService->validateReferralCode($referralCode, null, Auth::user());
-                if ($validationResult['valid']) {
-                    $referredByUserId = $validationResult['referrer']->id;
+            if ($affiliateCode && strtoupper($affiliateCode) !== 'TAL2025') {
+                $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
+                if ($affiliateUser && $affiliateUser->id !== $userId) {
+                    $referredByUserId = $affiliateUser->id;
                 }
             }
 
@@ -257,6 +260,18 @@ class InvoiceController extends Controller
                 $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
+                }
+            }
+
+            $referralCodeInput = $request->input('referral_code');
+            $referralUserId = null;
+
+            if ($referralCodeInput) {
+                $referralService = app(\App\Services\ReferralService::class);
+                $userObj = User::find($userId);
+                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj);
+                if ($validation['valid'] && isset($validation['referrer'])) {
+                    $referralUserId = $validation['referrer']->id;
                 }
             }
 
@@ -405,6 +420,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'user_id' => $userId,
                 'referred_by_user_id' => $referredByUserId,
+                'referral_user_id' => $referralUserId,
                 'invoice_code' => $invoice_code,
                 'discount_amount' => $discountAmount,
                 'amount' => $totalAmount,
@@ -550,14 +566,17 @@ class InvoiceController extends Controller
             $discountCodeId = $request->input('discount_code_id');
             $discountCodeAmount = $request->input('discount_code_amount', 0);
 
-            $referralCode = $request->input('referral_code') ?: session('referral_code');
+            $affiliateCode = $request->input('affiliate_code')
+                ?? $request->input('ref')
+                ?? session('affiliate_code')
+                ?? $request->cookie('affiliate_code')
+                ?? $request->cookie('ref');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TAL2025') {
-                $referralService = app(\App\Services\ReferralService::class);
-                $validationResult = $referralService->validateReferralCode($referralCode, null, Auth::user());
-                if ($validationResult['valid']) {
-                    $referredByUserId = $validationResult['referrer']->id;
+            if ($affiliateCode && strtoupper($affiliateCode) !== 'TAL2025') {
+                $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
+                if ($affiliateUser && $affiliateUser->id !== $userId) {
+                    $referredByUserId = $affiliateUser->id;
                 }
             }
 
@@ -565,6 +584,18 @@ class InvoiceController extends Controller
                 $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
                 if ($defaultAffiliate) {
                     $referredByUserId = $defaultAffiliate->id;
+                }
+            }
+
+            $referralCodeInput = $request->input('referral_code');
+            $referralUserId = null;
+
+            if ($referralCodeInput) {
+                $referralService = app(\App\Services\ReferralService::class);
+                $userObj = User::find($userId);
+                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj);
+                if ($validation['valid'] && isset($validation['referrer'])) {
+                    $referralUserId = $validation['referrer']->id;
                 }
             }
 
@@ -657,6 +688,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'user_id' => $userId,
                 'referred_by_user_id' => $referredByUserId,
+                'referral_user_id' => $referralUserId,
                 'invoice_code' => $invoice_code,
                 'discount_amount' => $discountAmount,
                 'amount' => $totalAmount,
@@ -813,15 +845,36 @@ class InvoiceController extends Controller
             $type = $request->input('type', 'course');
             $itemId = $request->input('id');
 
-            $referralCode = session('referral_code');
+            $affiliateCode = $request->input('affiliate_code')
+                ?? $request->input('ref')
+                ?? session('affiliate_code')
+                ?? $request->cookie('affiliate_code')
+                ?? $request->cookie('ref');
             $referredByUserId = null;
 
-            if ($referralCode && $referralCode !== 'TAL2025') {
-                $referrer = User::where('affiliate_code', $referralCode)
-                    ->orWhere('referral_code', $referralCode)
-                    ->first();
-                if ($referrer && $referrer->id !== $userId) {
-                    $referredByUserId = $referrer->id;
+            if ($affiliateCode && strtoupper($affiliateCode) !== 'TAL2025') {
+                $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
+                if ($affiliateUser && $affiliateUser->id !== $userId) {
+                    $referredByUserId = $affiliateUser->id;
+                }
+            }
+
+            if (!$referredByUserId) {
+                $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
+                if ($defaultAffiliate) {
+                    $referredByUserId = $defaultAffiliate->id;
+                }
+            }
+
+            $referralCodeInput = $request->input('referral_code');
+            $referralUserId = null;
+
+            if ($referralCodeInput) {
+                $referralService = app(\App\Services\ReferralService::class);
+                $userObj = User::find($userId);
+                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj);
+                if ($validation['valid'] && isset($validation['referrer'])) {
+                    $referralUserId = $validation['referrer']->id;
                 }
             }
 
@@ -871,6 +924,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'user_id' => $userId,
                 'referred_by_user_id' => $referredByUserId,
+                'referral_user_id' => $referralUserId,
                 'invoice_code' => $invoice_code,
                 'discount_amount' => 0,
                 'amount' => 0,

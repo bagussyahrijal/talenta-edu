@@ -144,8 +144,7 @@ class ProfileController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Di talenta menggunakan 'referred_by_user_id'
-        $totalReferralsCount = \App\Models\Invoice::where('referred_by_user_id', $userId)
+        $totalReferralsCount = \App\Models\Invoice::where('referral_user_id', $userId)
             ->where('status', 'paid')
             ->count();
 

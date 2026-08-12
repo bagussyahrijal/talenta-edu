@@ -22,12 +22,11 @@ class Invoice extends Model
     }
 
     /**
-     * User yang mereferensikan pembelian ini (alias untuk referred_by_user_id).
-     * Di talenta kolom bernama 'referred_by_user_id'.
+     * User yang mereferensikan pembelian ini melalui kode referral (poin reward).
      */
     public function referralUser()
     {
-        return $this->belongsTo(User::class, 'referred_by_user_id');
+        return $this->belongsTo(User::class, 'referral_user_id');
     }
 
     public function courseItems()

@@ -76,9 +76,7 @@ export default function Bootcamp({
         const refFromUrl = urlParams.get('ref');
 
         if (refFromUrl) {
-            sessionStorage.setItem('referral_code', refFromUrl);
-        } else if (referralInfo.code) {
-            sessionStorage.setItem('referral_code', referralInfo.code);
+            sessionStorage.setItem('affiliate_code', refFromUrl);
         }
     }, [referralInfo]);
 
