@@ -55,6 +55,12 @@ interface StaffShowProps {
 }
 
 export default function StaffShow({ staff, permission_modules }: StaffShowProps) {
+    const modules = permission_modules
+        .map((group) => ({
+            ...group,
+            modules: group.modules.filter((m) => m.key !== 'earnings'),
+        }))
+        .filter((group) => group.modules.length > 0);
     const handleDelete = () => {
         router.delete(route('staff.destroy', staff.id));
     };
@@ -219,7 +225,7 @@ export default function StaffShow({ staff, permission_modules }: StaffShowProps)
                                 </div>
 
                                 <div className="space-y-4">
-                                    {permission_modules.map((group) => {
+                                    {modules.map((group) => {
                                         const groupModuleKeys = group.modules.flatMap((m) => [`${m.key}.view`, `${m.key}.manage`]);
                                         const groupActiveCount = groupModuleKeys.filter((p) => hasPermission(p)).length;
 
