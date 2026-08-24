@@ -67,19 +67,23 @@ interface Bundle {
     batch?: string | null;
     price: number;
     registration_deadline?: string | null;
+    description: string;
+    benefits?: string[];
+    price: number;
+    discount_price?: number;
+    thumbnail?: string;
+    status: 'draft' | 'published' | 'archived';
+    telegram_group_url?: string;
+    whatsapp_group_url?: string;
     registration_url: string;
     bundle_url: string;
-    status: 'draft' | 'published' | 'archived';
+    registration_deadline?: string;
+    start_date?: string;
+    end_date?: string;
+    is_lifetime: boolean;
     bundle_items: BundleItem[];
-    enrollments: EnrollmentBundle[];
+    enrollments: Enrollment[];
     created_at: string;
-    updated_at: string;
-}
-
-interface GroupedItems {
-    courses: BundleItem[];
-    bootcamps: BundleItem[];
-    webinars: BundleItem[];
 }
 
 interface ShowProps {
@@ -96,7 +100,9 @@ interface ShowProps {
 
 export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, discountAmount, discountPercentage, flash }: ShowProps) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage } = usePermission();
     const isAffiliate = auth.role.includes('affiliate');
+    const canManageBundle = canManage('bundles') && !isAffiliate;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -181,7 +187,6 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
 
     const totalEnrollments = bundle.enrollments.length;
     const paidEnrollments = bundle.enrollments.filter((e) => e.invoice.status === 'paid').length;
-    const totalRevenue = bundle.enrollments.filter((e) => e.invoice.status === 'paid').reduce((sum, e) => sum + e.invoice.amount, 0);
     const transactions: BundleTransactionInvoice[] = bundle.enrollments.map((enrollment) => ({
         id: enrollment.invoice.id,
         user: {
@@ -207,9 +212,8 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
             <div className="px-4 py-4 md:px-6">
                 <h1 className="mb-4 text-2xl font-semibold">Detail {bundle.title}</h1>
 
-                {/* ...existing code... */}
-                <div className={`${!isAffiliate ? 'lg:grid-cols-3' : ''} grid grid-cols-1 gap-4 lg:gap-6`}>
-                    <Tabs defaultValue="detail" className="lg:col-span-2">
+                <div className={`${canManageBundle ? 'lg:grid-cols-3' : ''} grid grid-cols-1 gap-4 lg:gap-6`}>
+                    <Tabs defaultValue="detail" className={canManageBundle ? 'lg:col-span-2' : 'w-full'}>
                         <TabsList>
                             <TabsTrigger value="detail">Detail Bundling</TabsTrigger>
                             {!isAffiliate && (
@@ -663,7 +667,7 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
                     </Tabs>
 
                     {/* Sidebar Actions */}
-                    {!isAffiliate && (
+                    {canManageBundle && (
                         <div>
                             <h2 className="my-2 text-lg font-medium">Aksi & Pengaturan</h2>
                             <div className="space-y-4 rounded-lg border p-4">

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Search, Plus, Coins, X } from 'lucide-react';
 import { columns, PointTransaction } from './transaction-columns';
 import { DataTable } from './data-table';
+import { usePermission } from '@/hooks/use-permission';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -47,6 +48,8 @@ interface TransactionsProps {
 }
 
 export default function PointTransactions({ transactions, users: initialUsers, filters }: TransactionsProps) {
+    const { canManage } = usePermission();
+    const canManageReferral = canManage('referral');
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [searchLoading, setSearchLoading] = useState(false);
@@ -175,9 +178,9 @@ export default function PointTransactions({ transactions, users: initialUsers, f
                     </p>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-3">
+                <div className={`grid gap-6 ${canManageReferral ? 'lg:grid-cols-3' : ''}`}>
                     {/* Left: Point Transactions Table */}
-                    <div className="lg:col-span-2 space-y-4">
+                    <div className={`${canManageReferral ? 'lg:col-span-2' : 'w-full'} space-y-4`}>
                         <Card>
                             <CardHeader>
                                 <CardTitle>Riwayat Ledger Poin</CardTitle>
@@ -218,18 +221,19 @@ export default function PointTransactions({ transactions, users: initialUsers, f
                     </div>
 
                     {/* Right: Manual Adjustment Form */}
-                    <div className="space-y-4">
-                        <form onSubmit={handleAdjust}>
-                            <Card className="border-border">
-                                <CardHeader>
-                                    <CardTitle className="text-foreground flex items-center gap-2">
-                                        <Plus className="h-5 w-5" />
-                                        Penyesuaian Saldo Poin
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Kurangi atau tambahkan saldo poin secara langsung ke akun pengguna.
-                                    </CardDescription>
-                                </CardHeader>
+                    {canManageReferral && (
+                        <div className="space-y-4">
+                            <form onSubmit={handleAdjust}>
+                                <Card className="border-border">
+                                    <CardHeader>
+                                        <CardTitle className="text-foreground flex items-center gap-2">
+                                            <Plus className="h-5 w-5" />
+                                            Penyesuaian Saldo Poin
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Kurangi atau tambahkan saldo poin secara langsung ke akun pengguna.
+                                        </CardDescription>
+                                    </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2" ref={suggestionRef}>
                                         <Label htmlFor="user_id">Nama / Email Pengguna</Label>
@@ -351,6 +355,7 @@ export default function PointTransactions({ transactions, users: initialUsers, f
                             </Card>
                         </form>
                     </div>
+                    )}
                 </div>
             </div>
         </AdminLayout>

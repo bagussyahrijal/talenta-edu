@@ -63,9 +63,13 @@ interface CertificateProps {
     };
 }
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function ShowCertificate({ certificate, flash }: CertificateProps) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage } = usePermission();
     const isAffiliate = auth.role.includes('affiliate');
+    const canManageCertificate = canManage('certificates') && !isAffiliate;
     const [isLoading, setIsLoading] = useState(true);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -131,7 +135,7 @@ export default function ShowCertificate({ certificate, flash }: CertificateProps
 
                             <Separator />
 
-                            {!isAffiliate && (
+                            {canManageCertificate && (
                                 <>
 
                             <div className="space-y-2">

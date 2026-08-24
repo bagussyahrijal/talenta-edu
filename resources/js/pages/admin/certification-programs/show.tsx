@@ -81,10 +81,14 @@ interface ShowCertificationProgramProps {
     flash?: { success?: string; error?: string };
 }
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function ShowCertificationProgram({ program, applications, transactions, flash }: ShowCertificationProgramProps) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage } = usePermission();
     const role = auth.role[0];
     const isAffiliate = role === 'affiliate';
+    const canManageProgram = canManage('certification-programs') && !isAffiliate;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Program Sertifikasi', href: route('certification-programs.index') },
@@ -127,9 +131,9 @@ export default function ShowCertificationProgram({ program, applications, transa
                     <Badge className={`border-0 ${statusInfo.color}`}>{statusInfo.label}</Badge>
                 </div>
 
-                <div className={`${!isAffiliate ? 'lg:grid-cols-3' : ''} grid grid-cols-1 gap-4 lg:gap-6`}>
+                <div className={`${canManageProgram ? 'lg:grid-cols-3' : ''} grid grid-cols-1 gap-4 lg:gap-6`}>
                     {/* Main Content */}
-                    <div className="lg:col-span-2">
+                    <div className={canManageProgram ? 'lg:col-span-2' : 'w-full'}>
                         <Tabs defaultValue="detail">
                             <TabsList>
                                 <TabsTrigger value="detail">Detail</TabsTrigger>
@@ -187,7 +191,7 @@ export default function ShowCertificationProgram({ program, applications, transa
                     </div>
 
                     {/* Sidebar Actions */}
-                    {!isAffiliate && (
+                    {canManageProgram && (
                         <div>
                             <h2 className="my-2 text-lg font-medium">Edit & Kustom</h2>
                             <div className="space-y-4 rounded-lg border p-4">

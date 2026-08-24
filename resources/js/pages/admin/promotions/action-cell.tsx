@@ -27,6 +27,7 @@ interface Promotion {
 }
 
 import { PaginatedData } from '@/types/pagination';
+import { usePermission } from '@/hooks/use-permission';
 
 interface ActionCellProps {
     promotion: Promotion;
@@ -34,9 +35,15 @@ interface ActionCellProps {
 }
 
 export default function ActionCell({ promotion, promotions = [] }: ActionCellProps) {
+    const { canManage } = usePermission();
+    const canManagePromotion = canManage('promotions');
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
+
+    if (!canManagePromotion) {
+        return <span className="text-xs text-muted-foreground">-</span>;
+    }
 
     const promoList = Array.isArray(promotions) ? promotions : (promotions?.data || []);
     const hasActivePromotion = promoList.some((p) => p.is_active && p.id !== promotion.id);

@@ -23,6 +23,7 @@ import MentorDetail from './show-details';
 import AffiliateEarnings from './show-earnings';
 import ShowWebinars from './show-webinars';
 import MentorWithdrawals from './show-withdrawals';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Course {
     id: number;
@@ -120,7 +121,9 @@ interface MentorProps {
     };
 }
 
-export default function ShowMentor({ mentor, earnings, withdrawals, courses, articles, webinars, bootcamps, stats, flash }: MentorProps) {
+export default function ShowMentor({ mentor, courses, bootcamps, webinars, articles, earnings, withdrawals, stats, flash }: MentorProps) {
+    const { canManage } = usePermission();
+    const canManageMentor = canManage('mentors');
     const [open, setOpen] = useState(false);
     const [withdrawOpen, setWithdrawOpen] = useState(false);
     const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -204,8 +207,8 @@ export default function ShowMentor({ mentor, earnings, withdrawals, courses, art
             <Head title={`Detail Mentor - ${mentor.name}`} />
             <div className="px-4 py-4 md:px-6">
                 <h1 className="mb-4 text-2xl font-semibold">{`Detail ${mentor.name}`}</h1>
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
-                    <Tabs defaultValue="detail" className="lg:col-span-2">
+                <div className={`${canManageMentor ? 'lg:grid-cols-3' : ''} grid grid-cols-1 gap-4 lg:gap-6`}>
+                    <Tabs defaultValue="detail" className={canManageMentor ? 'lg:col-span-2' : 'w-full'}>
                         <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
                             <TabsTrigger value="detail">Detail</TabsTrigger>
                             <TabsTrigger value="courses">
@@ -270,8 +273,9 @@ export default function ShowMentor({ mentor, earnings, withdrawals, courses, art
                         </TabsContent>
                     </Tabs>
 
-                    <div>
-                        <h2 className="my-2 text-lg font-medium">Edit & Kustom</h2>
+                    {canManageMentor && (
+                        <div>
+                            <h2 className="my-2 text-lg font-medium">Edit & Kustom</h2>
                         <div className="space-y-4 rounded-lg border p-4">
                             {/* ✅ Withdraw Dialog */}
                             {stats.available_commission > 0 && (
@@ -371,6 +375,7 @@ export default function ShowMentor({ mentor, earnings, withdrawals, courses, art
                             </div>
                         </div>
                     </div>
+                    )}
                 </div>
                 <div className="mt-4 rounded-lg border p-4">
                     <h3 className="text-muted-foreground text-center text-sm">
