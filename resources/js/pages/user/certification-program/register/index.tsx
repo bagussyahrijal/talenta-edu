@@ -441,9 +441,7 @@ export default function Register({
                 toast.success('Registrasi berhasil. Melanjutkan pendaftaran...');
             }
 
-            savePendingCheckout();
-            window.location.reload();
-            return false;
+            return true;
         } catch (error: unknown) {
             setIsLoading(false);
             if (axios.isAxiosError(error)) {
@@ -453,7 +451,7 @@ export default function Register({
             }
             return false;
         }
-    }, [emailExists, guestFormData.email, guestFormData.instance, guestFormData.city, guestFormData.name, guestFormData.phone_number, isLoggedIn, savePendingCheckout]);
+    }, [emailExists, guestFormData.email, guestFormData.instance, guestFormData.city, guestFormData.name, guestFormData.phone_number, isLoggedIn]);
 
     // Show scholarship prompt only when the user hasn't applied yet or their application was rejected.
     // For guests, consider `guestScholarshipStatus` returned by `/api/check-email`.
@@ -501,7 +499,6 @@ export default function Register({
             overrideReferralValid?: boolean,
             overridePointsChecked?: boolean,
             overridePointsToUse?: number,
-            retryCount = 0
         ): Promise<void> => {
             const activeDiscountData = overrideDiscountData !== undefined ? overrideDiscountData : discountData;
             const originalDiscountAmount =
@@ -545,50 +542,24 @@ export default function Register({
             }
 
             try {
-                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+                const res = await axios.post(route('invoice.store'), invoiceData);
 
-                const res = await fetch(route('invoice.store'), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken || '',
-                        Accept: 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(invoiceData),
-                });
-
-                if (res.status === 419 && retryCount < 2) {
-                    await refreshCSRFToken();
-                    return submitPayment(
-                        overrideDiscountData,
-                        overrideCodeType,
-                        overridePromoCode,
-                        overrideReferralValid,
-                        overridePointsChecked,
-                        overridePointsToUse,
-                        retryCount + 1
-                    );
-                }
-
-                const data = await res.json();
-
-                if (res.ok && data.success) {
-                    if (data.payment_url) {
+                if (res.data && res.data.success) {
+                    if (res.data.payment_url) {
                         sessionStorage.removeItem('pendingCertificationCheckout');
-                        window.location.href = data.payment_url;
+                        window.location.href = res.data.payment_url;
                     } else {
                         throw new Error('Payment URL not received');
                     }
                 } else {
-                    throw new Error(data.message || 'Gagal membuat invoice.');
+                    throw new Error(res.data?.message || 'Gagal membuat invoice.');
                 }
             } catch (error) {
                 console.error('Payment error:', error);
                 throw error;
             }
         },
-        [displayPrice, discountData, codeType, promoCode, referralData, pointsChecked, pointsToUse, program.id, program.price, program.strikethrough_price, isScholarship, refreshCSRFToken],
+        [displayPrice, discountData, codeType, promoCode, referralData, pointsChecked, pointsToUse, program.id, program.price, program.strikethrough_price, isScholarship],
     );
 
     const handleCheckout = useCallback(async () => {
@@ -608,17 +579,14 @@ export default function Register({
             return;
         }
 
-        if (!isProfileComplete) {
-            window.location.href = route('profile.edit');
-            return;
-        }
-
         if (requiresDocumentUpload && !hasApprovedDocument) {
             if (isDocumentPending || isDocumentRejected) {
+                setIsLoading(false);
                 return;
             }
 
             setIsDocumentDialogOpen(true);
+            setIsLoading(false);
             return;
         }
 
@@ -636,7 +604,6 @@ export default function Register({
         hasApprovedDocument,
         isDocumentPending,
         isDocumentRejected,
-        isProfileComplete,
         requiresDocumentUpload,
         submitPayment,
         termsAccepted,

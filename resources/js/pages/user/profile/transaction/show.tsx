@@ -57,6 +57,16 @@ interface CertificationProgramItem {
     };
 }
 
+interface BundleItem {
+    id: string;
+    bundle: {
+        id: string;
+        title: string;
+        slug: string;
+        thumbnail?: string;
+    };
+}
+
 interface Invoice {
     id: string;
     invoice_code: string;
@@ -73,6 +83,8 @@ interface Invoice {
     bootcamp_items?: BootcampItem[];
     webinar_items?: WebinarItem[];
     certificationProgramItems?: CertificationProgramItem[];
+    bundle_enrollments?: BundleItem[];
+    bundleEnrollments?: BundleItem[];
 }
 
 interface Props {
@@ -93,6 +105,7 @@ export default function TransactionShow({ invoice }: Props) {
             const course = invoice.course_items[0].course;
             return {
                 type: 'course',
+                routeParam: 'course',
                 name: course.title,
                 slug: course.slug,
                 thumbnail: course.thumbnail,
@@ -103,6 +116,7 @@ export default function TransactionShow({ invoice }: Props) {
             const bootcamp = invoice.bootcamp_items[0].bootcamp;
             return {
                 type: 'bootcamp',
+                routeParam: 'bootcamp',
                 name: bootcamp.title,
                 slug: bootcamp.slug,
                 thumbnail: bootcamp.thumbnail,
@@ -113,6 +127,7 @@ export default function TransactionShow({ invoice }: Props) {
             const webinar = invoice.webinar_items[0].webinar;
             return {
                 type: 'webinar',
+                routeParam: 'webinar',
                 name: webinar.title,
                 slug: webinar.slug,
                 thumbnail: webinar.thumbnail,
@@ -130,6 +145,19 @@ export default function TransactionShow({ invoice }: Props) {
                 profileRoute: 'profile.certification-program.detail',
                 publicRoute: 'certification-programs.detail',
                 badge: 'Sertifikasi Program',
+            };
+        } else if ((invoice.bundle_enrollments && invoice.bundle_enrollments.length > 0) || (invoice.bundleEnrollments && invoice.bundleEnrollments.length > 0)) {
+            const bundleEnrollment = (invoice.bundle_enrollments || invoice.bundleEnrollments)![0];
+            const bundle = bundleEnrollment.bundle;
+            return {
+                type: 'bundle',
+                routeParam: 'bundle',
+                name: bundle.title,
+                slug: bundle.slug,
+                thumbnail: bundle.thumbnail || '',
+                profileRoute: '',
+                publicRoute: 'bundle.detail',
+                badge: 'Paket Bundling',
             };
         }
         return null;
@@ -232,23 +260,27 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="flex-1">
                                             <h4 className="font-semibold text-gray-900 dark:text-white">{productInfo.name}</h4>
                                             <p className="text-sm text-gray-600 capitalize dark:text-gray-400">
-                                                {productInfo.type === 'course'
-                                                    ? 'Kelas Online'
-                                                    : productInfo.type === 'bootcamp'
-                                                      ? 'Bootcamp'
-                                                      : 'Webinar'}
+                                                {productInfo.badge
+                                                    ? productInfo.badge
+                                                    : productInfo.type === 'course'
+                                                      ? 'Kelas Online'
+                                                      : productInfo.type === 'bootcamp'
+                                                        ? 'Bootcamp'
+                                                        : productInfo.type === 'webinar'
+                                                          ? 'Webinar'
+                                                          : 'Paket Bundling'}
                                             </p>
                                             <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                                                {invoice.status === 'paid' ? (
+                                                {invoice.status === 'paid' && productInfo.profileRoute ? (
                                                     <Button asChild size="sm" variant="outline">
-                                                        <Link href={route(productInfo.profileRoute, { [productInfo.type]: productInfo.slug })}>
+                                                        <Link href={route(productInfo.profileRoute, { [productInfo.routeParam || productInfo.type]: productInfo.slug })}>
                                                             <ExternalLink className="mr-2 h-4 w-4" />
                                                             Buka di Profile
                                                         </Link>
                                                     </Button>
                                                 ) : (
                                                     <Button asChild size="sm" variant="ghost">
-                                                        <Link href={route(productInfo.publicRoute, { [productInfo.type]: productInfo.slug })}>
+                                                        <Link href={route(productInfo.publicRoute, { [productInfo.routeParam || productInfo.type]: productInfo.slug })}>
                                                             <ExternalLink className="mr-2 h-4 w-4" />
                                                             Lihat Detail Produk
                                                         </Link>

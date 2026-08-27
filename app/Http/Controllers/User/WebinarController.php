@@ -151,6 +151,7 @@ class WebinarController extends Controller
                     'status' => $invoice->status,
                     'amount' => $invoice->amount,
                     'payment_method' => $invoice->payment_method,
+                    'invoice_url' => $invoice->invoice_url,
                     // 'payment_channel' => $invoice->payment_channel,
                     'va_number' => $invoice->va_number,
                     'qr_code_url' => $invoice->qr_code_url,

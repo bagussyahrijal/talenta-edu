@@ -69,6 +69,7 @@ interface PendingInvoice {
     status: string;
     amount: number;
     payment_method: string;
+    invoice_url?: string | null;
     // payment_channel: string;
     va_number?: string;
     qr_code_url?: string;
@@ -142,6 +143,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [cancellingInvoice, setCancellingInvoice] = useState(false);
     const [codeType, setCodeType] = useState<'voucher' | 'referral'>('voucher');
     const [userPoints, setUserPoints] = useState(0);
     const [pointsChecked, setPointsChecked] = useState(false);
@@ -363,7 +365,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         overrideReferralValid?: boolean,
         overridePointsChecked?: boolean,
         overridePointsToUse?: number,
-        retryCount = 0
     ): Promise<void> => {
         const activeDiscountData = overrideDiscountData !== undefined ? overrideDiscountData : discountData;
         const originalDiscountAmount = bundle.strikethrough_price > 0 ? bundle.strikethrough_price - bundle.price : 0;
@@ -404,57 +405,17 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         }
 
         try {
-            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+            const res = await axios.post(route('invoice.store.bundle'), invoiceData);
 
-            const res = await fetch(route('invoice.store.bundle'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken || '',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify(invoiceData),
-            });
-
-            if (res.status === 419 && retryCount < 2) {
-                await refreshCSRFToken();
-                return submitPayment(
-                    overrideDiscountData,
-                    overrideCodeType,
-                    overridePromoCode,
-                    overrideReferralValid,
-                    overridePointsChecked,
-                    overridePointsToUse,
-                    retryCount + 1
-                );
-            }
-
-            if (res.status === 401 && retryCount < 2) {
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-                return submitPayment(
-                    overrideDiscountData,
-                    overrideCodeType,
-                    overridePromoCode,
-                    overrideReferralValid,
-                    overridePointsChecked,
-                    overridePointsToUse,
-                    retryCount + 1
-                );
-            }
-
-            const responseData = await res.json();
-
-            if (res.ok && responseData.success) {
-                if (responseData.payment_url) {
+            if (res.data && res.data.success) {
+                if (res.data.payment_url) {
                     sessionStorage.removeItem('pendingCheckout');
-                    window.location.href = responseData.payment_url;
+                    window.location.href = res.data.payment_url;
                 } else {
                     throw new Error('Payment URL not received');
                 }
             } else {
-                throw new Error(responseData.message || 'Gagal membuat invoice.');
+                throw new Error(res.data?.message || 'Gagal membuat invoice.');
             }
         } catch (error) {
             console.error('Payment error:', error);
@@ -471,11 +432,16 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                 return;
             }
 
+            if (!termsAccepted) {
+                toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                return;
+            }
+
             setLoading(true);
 
             try {
                 if (emailExists) {
-                    const response = await axios.post('/auto-login', {
+                    const response = await axios.post(route('auto-login'), {
                         email: data.email,
                         phone_number: data.phone_number,
                         instance: data.instance,
@@ -486,29 +452,9 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                         throw new Error(response.data.message || 'Login gagal. Pastikan nomor telepon sesuai dengan yang terdaftar.');
                     }
 
-                    toast.success('Login berhasil! Menyiapkan pembayaran...');
-
-                    sessionStorage.setItem(
-                        'pendingCheckout',
-                        JSON.stringify({
-                            bundleId: bundle.id,
-                            productType: 'bundle',
-                            termsAccepted,
-                            timestamp: Date.now(),
-                            discountData: discountData,
-                            source: 'login',
-                            codeType,
-                            referralValid: codeType === 'referral' && !!referralData?.valid,
-                            pointsChecked,
-                            pointsToUse,
-                        }),
-                    );
-
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    window.location.reload();
-                    return;
+                    toast.success('Login berhasil! Memproses pembayaran...');
                 } else {
-                    const response = await axios.post('/register', {
+                    const response = await axios.post(route('register'), {
                         name: data.name,
                         email: data.email,
                         phone_number: data.phone_number,
@@ -519,32 +465,14 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                         affiliate_code: sessionStorage.getItem('affiliate_code') || '',
                     });
 
-                    if (!(response.data.success || response.status === 200 || response.status === 201)) {
+                    if (!(response.data?.success || response.status === 200 || response.status === 201)) {
                         throw new Error('Registrasi gagal');
                     }
 
-                    toast.success('Registrasi berhasil! Menyiapkan pembayaran...');
-
-                    sessionStorage.setItem(
-                        'pendingCheckout',
-                        JSON.stringify({
-                            bundleId: bundle.id,
-                            productType: 'bundle',
-                            termsAccepted,
-                            timestamp: Date.now(),
-                            discountData: discountData,
-                            source: 'register',
-                            codeType,
-                            referralValid: codeType === 'referral' && !!referralData?.valid,
-                            pointsChecked,
-                            pointsToUse,
-                        }),
-                    );
-
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    window.location.reload();
-                    return;
+                    toast.success('Registrasi berhasil! Memproses pembayaran...');
                 }
+
+                await submitPayment();
             } catch (error: any) {
                 console.error('Login/Register error:', error);
                 setLoading(false);
@@ -556,7 +484,9 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                 }
                 return;
             }
+            return;
         }
+
         if (!isProfileComplete) {
             toast.error('Profil Anda belum lengkap! Harap lengkapi nomor telepon terlebih dahulu.');
             window.location.href = route('profile.edit', { redirect: window.location.href });
@@ -617,82 +547,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         });
     };
 
-    useEffect(() => {
-        const pendingCheckout = sessionStorage.getItem('pendingCheckout');
 
-        if (pendingCheckout && isLoggedIn) {
-            try {
-                const checkoutData = JSON.parse(pendingCheckout);
-
-                // Validasi timestamp (maksimal 5 menit)
-                const timestamp = checkoutData.timestamp || 0;
-                const now = Date.now();
-                const fiveMinutes = 5 * 60 * 1000;
-
-                if (now - timestamp > fiveMinutes) {
-                    sessionStorage.removeItem('pendingCheckout');
-                    toast.error('Sesi checkout telah kadaluarsa');
-                    return;
-                }
-
-                // Validasi bundle ID + product type
-                if (checkoutData.bundleId !== bundle.id || checkoutData.productType !== 'bundle') {
-                    sessionStorage.removeItem('pendingCheckout');
-                    return;
-                }
-
-                if (checkoutData.source !== 'register') {
-                    sessionStorage.removeItem('pendingCheckout');
-                    return;
-                }
-
-                // Restore state
-                setTermsAccepted(checkoutData.termsAccepted || false);
-
-                if (checkoutData.promoCode) {
-                    setPromoCode(checkoutData.promoCode);
-                }
-                if (checkoutData.discountData) {
-                    setDiscountData(checkoutData.discountData);
-                }
-                if (checkoutData.codeType) {
-                    setCodeType(checkoutData.codeType);
-                }
-                if (checkoutData.referralValid) {
-                    setReferralData({ valid: true });
-                }
-                if (checkoutData.pointsChecked) {
-                    setPointsChecked(true);
-                }
-                if (checkoutData.pointsToUse) {
-                    setPointsToUse(checkoutData.pointsToUse);
-                }
-                toast.success('Melanjutkan pembayaran...');
-
-                // Auto-submit setelah delay
-                setTimeout(async () => {
-                    setLoading(true);
-                    submitPayment(
-                        checkoutData.discountData || null,
-                        checkoutData.codeType,
-                        checkoutData.promoCode,
-                        checkoutData.referralValid,
-                        checkoutData.pointsChecked,
-                        checkoutData.pointsToUse
-                    ).catch((error: any) => {
-                        console.error('Failed to process payment:', error);
-                        toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
-                        sessionStorage.removeItem('pendingCheckout');
-                        setLoading(false);
-                    });
-                }, 2000);
-            } catch (error) {
-                console.error('Error processing pending checkout:', error);
-                sessionStorage.removeItem('pendingCheckout');
-                toast.error('Gagal memproses checkout');
-            }
-        }
-    }, [isLoggedIn, bundle.id]);
 
     if (isLoggedIn && !isProfileComplete) {
         return (
@@ -1233,9 +1088,44 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                         );
                                     })()}
 
-                                    <Button onClick={() => window.location.reload()} variant="outline" className="w-full" size="lg">
-                                        Cek Status Pembayaran
-                                    </Button>
+                                    {/* Action Buttons for Pending Invoice */}
+                                    <div className="space-y-2 pt-2">
+                                        {pendingInvoice.invoice_url && formatExpiryTime(pendingInvoice.expires_at).status !== 'expired' && (
+                                            <Button asChild className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold shadow-md" size="lg">
+                                                <a href={pendingInvoice.invoice_url}>
+                                                    Lanjutkan Pembayaran
+                                                </a>
+                                            </Button>
+                                        )}
+
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1" size="lg">
+                                                Cek Status
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                                size="lg"
+                                                disabled={cancellingInvoice}
+                                                onClick={async () => {
+                                                    if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
+                                                        setCancellingInvoice(true);
+                                                        try {
+                                                            await axios.post(route('invoice.cancel', pendingInvoice.id));
+                                                            toast.success('Pesanan berhasil dibatalkan.');
+                                                            window.location.reload();
+                                                        } catch (err: any) {
+                                                            toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
+                                                            setCancellingInvoice(false);
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

@@ -76,6 +76,7 @@ interface PendingInvoice {
     status: string;
     amount: number;
     payment_method: string;
+    invoice_url?: string | null;
     // payment_channel: string;
     va_number?: string;
     qr_code_url?: string;
@@ -143,6 +144,7 @@ export default function CheckoutCourse({
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [cancellingInvoice, setCancellingInvoice] = useState(false);
     const [codeType, setCodeType] = useState<'voucher' | 'referral'>('voucher');
     const [userPoints, setUserPoints] = useState(0);
     const [pointsChecked, setPointsChecked] = useState(false);
@@ -345,7 +347,7 @@ export default function CheckoutCourse({
             return handleFreeCheckout(e);
         }
 
-        const submitPayment = async (retryCount = 0): Promise<void> => {
+        const submitPayment = async (): Promise<void> => {
             const originalDiscountAmount = course.strikethrough_price > 0 ? course.strikethrough_price - course.price : 0;
             const promoDiscountAmount = discountData?.valid ? discountData.discount_amount : 0;
             const pointsDeduction = pointsChecked ? pointsToUse : 0;
@@ -357,7 +359,6 @@ export default function CheckoutCourse({
                 nett_amount: finalCoursePrice,
                 total_amount: totalPrice,
                 points_redeemed: pointsDeduction,
-                // payment_channel: selectedChannel?.code,
             };
 
             if (discountData?.valid && codeType === 'voucher') {
@@ -375,36 +376,16 @@ export default function CheckoutCourse({
             }
 
             try {
-                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+                const res = await axios.post(route('invoice.store'), invoiceData);
 
-                const res = await fetch(route('invoice.store'), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken || '',
-                        Accept: 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(invoiceData),
-                });
-
-                // Handle 419 error with retry
-                if (res.status === 419 && retryCount < 2) {
-                    console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
-                    await refreshCSRFToken();
-                    return submitPayment(retryCount + 1);
-                }
-
-                const data = await res.json();
-
-                if (res.ok && data.success) {
-                    if (data.payment_url) {
-                        window.location.href = data.payment_url;
+                if (res.data && res.data.success) {
+                    if (res.data.payment_url) {
+                        window.location.href = res.data.payment_url;
                     } else {
                         throw new Error('Payment URL not received');
                     }
                 } else {
-                    throw new Error(data.message || 'Gagal membuat invoice.');
+                    throw new Error(res.data?.message || 'Gagal membuat invoice.');
                 }
             } catch (error) {
                 console.error('Payment error:', error);
@@ -843,9 +824,44 @@ export default function CheckoutCourse({
                                         );
                                     })()}
 
-                                    <Button onClick={() => window.location.reload()} variant="outline" className="w-full" size="lg">
-                                        Cek Status Pembayaran
-                                    </Button>
+                                    {/* Action Buttons for Pending Invoice */}
+                                    <div className="space-y-2 pt-2">
+                                        {pendingInvoice.invoice_url && formatExpiryTime(pendingInvoice.expires_at).status !== 'expired' && (
+                                            <Button asChild className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold shadow-md" size="lg">
+                                                <a href={pendingInvoice.invoice_url}>
+                                                    Lanjutkan Pembayaran
+                                                </a>
+                                            </Button>
+                                        )}
+
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1" size="lg">
+                                                Cek Status
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                                size="lg"
+                                                disabled={cancellingInvoice}
+                                                onClick={async () => {
+                                                    if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
+                                                        setCancellingInvoice(true);
+                                                        try {
+                                                            await axios.post(route('invoice.cancel', pendingInvoice.id));
+                                                            toast.success('Pesanan berhasil dibatalkan.');
+                                                            window.location.reload();
+                                                        } catch (err: any) {
+                                                            toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
+                                                            setCancellingInvoice(false);
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (

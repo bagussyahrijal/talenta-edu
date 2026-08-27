@@ -534,6 +534,7 @@ class InvoiceController extends Controller
 
             $invoice->update([
                 'payment_reference' => $invoice_code,
+                'invoice_url' => $midtransResponse['redirect_url'],
             ]);
 
             DB::commit();
@@ -803,6 +804,7 @@ class InvoiceController extends Controller
 
             $invoice->update([
                 'payment_reference' => $invoice_code,
+                'invoice_url' => $midtransResponse['redirect_url'],
             ]);
 
             DB::commit();
