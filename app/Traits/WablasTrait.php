@@ -40,7 +40,8 @@ trait WablasTrait
             curl_setopt($curl, CURLOPT_URL, "{$domain}/api/v2/send-message");
             curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 10);
 
             $result = curl_exec($curl);
             $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
@@ -121,6 +122,8 @@ trait WablasTrait
             curl_setopt($curl, CURLOPT_URL, "{$domain}/api/v2/send-message");
             curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 10);
 
             $result = curl_exec($curl);
             $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
