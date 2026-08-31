@@ -144,8 +144,8 @@ export default function CreateWebinar({
             group_url: '',
             batch: 1,
             tools: [],
-            requirement_1: 'Follow Instagram @kompeten.idn',
-            requirement_2: 'Follow TikTok @kompeten.idn',
+            requirement_1: 'Follow Instagram @brevetpajak_talenta',
+            requirement_2: 'Follow TikTok @brevetpajak_talenta',
             requirement_3: 'Tag 3 teman di postingan Instagram kami',
         },
     });
@@ -215,9 +215,9 @@ export default function CreateWebinar({
                                                                         const numericBatch = parseInt(batchStr.replace(/\D/g, '')) || 1;
                                                                         form.setValue('batch', numericBatch);
                                                                     }
-                                                                    
+
                                                                     const isValidDate = (d: any) => d && !isNaN(Date.parse(d));
-                                                                    
+
                                                                     if (isValidDate(program.start_time)) {
                                                                         form.setValue('start_time', new Date(program.start_time).toISOString());
                                                                     }
@@ -287,7 +287,7 @@ export default function CreateWebinar({
 
                                                                     if (missingMentor) {
                                                                         toast.warning(
-                                                                            `Mentor "${missingMentor}" belum terdaftar di database Kompeten. Silakan buat data mentor terlebih dahulu di Kompeten agar dapat dipilih.`,
+                                                                            `Mentor "${missingMentor}" belum terdaftar di database Talenta. Silakan buat data mentor terlebih dahulu di Talenta agar dapat dipilih.`,
                                                                             { duration: 7000 }
                                                                         );
                                                                     }
@@ -610,10 +610,10 @@ export default function CreateWebinar({
                                                         >
                                                             {field.value
                                                                 ? new Date(field.value).toLocaleDateString('id-ID', {
-                                                                      day: 'numeric',
-                                                                      month: 'short',
-                                                                      year: 'numeric',
-                                                                  })
+                                                                    day: 'numeric',
+                                                                    month: 'short',
+                                                                    year: 'numeric',
+                                                                })
                                                                 : 'Pilih tanggal'}
                                                             <ChevronDownIcon />
                                                         </Button>
@@ -676,10 +676,10 @@ export default function CreateWebinar({
                                                         >
                                                             {field.value
                                                                 ? new Date(field.value).toLocaleDateString('id-ID', {
-                                                                      day: 'numeric',
-                                                                      month: 'short',
-                                                                      year: 'numeric',
-                                                                  })
+                                                                    day: 'numeric',
+                                                                    month: 'short',
+                                                                    year: 'numeric',
+                                                                })
                                                                 : 'Pilih tanggal'}
                                                             <ChevronDownIcon />
                                                         </Button>
@@ -743,10 +743,10 @@ export default function CreateWebinar({
                                                         >
                                                             {field.value
                                                                 ? new Date(field.value).toLocaleDateString('id-ID', {
-                                                                      day: 'numeric',
-                                                                      month: 'short',
-                                                                      year: 'numeric',
-                                                                  })
+                                                                    day: 'numeric',
+                                                                    month: 'short',
+                                                                    year: 'numeric',
+                                                                })
                                                                 : 'Pilih tanggal'}
                                                             <ChevronDownIcon />
                                                         </Button>
@@ -872,10 +872,10 @@ export default function CreateWebinar({
                                                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                                                 <div className="space-y-1 text-xs leading-relaxed">
                                                     <p className="font-medium text-amber-900 dark:text-amber-200">
-                                                        Mentor "{missingMentorName}" belum terdaftar di Kompeten
+                                                        Mentor "{missingMentorName}" belum terdaftar di Talenta
                                                     </p>
                                                     <p className="text-amber-700 dark:text-amber-400">
-                                                        Data mentor dari Biinsight tidak ditemukan di database Kompeten. Silakan buat akun/data mentor tersebut terlebih dahulu di menu <strong>Kelola Staff / Mentor</strong> atau pilih mentor lain yang tersedia di atas.
+                                                        Data mentor dari Biinsight tidak ditemukan di database Talenta. Silakan buat akun/data mentor tersebut terlebih dahulu di menu <strong>Kelola Staff / Mentor</strong> atau pilih mentor lain yang tersedia di atas.
                                                     </p>
                                                 </div>
                                             </div>
@@ -937,7 +937,7 @@ export default function CreateWebinar({
                                             {...field}
                                             value={field.value ?? ''}
                                             className="w-full rounded border p-2"
-                                            placeholder="Contoh: Follow Instagram @kompeten.idn"
+                                            placeholder="Contoh: Follow Instagram @brevetpajak_talenta"
                                             autoComplete="off"
                                         />
                                         <FormDescription>Teks persyaratan pertama yang akan ditampilkan untuk webinar gratis</FormDescription>
@@ -955,7 +955,7 @@ export default function CreateWebinar({
                                             {...field}
                                             value={field.value ?? ''}
                                             className="w-full rounded border p-2"
-                                            placeholder="Contoh: Follow TikTok @kompeten.idn"
+                                            placeholder="Contoh: Follow TikTok @brevetpajak_talenta"
                                             autoComplete="off"
                                         />
                                         <FormDescription>Teks persyaratan kedua yang akan ditampilkan untuk webinar gratis</FormDescription>

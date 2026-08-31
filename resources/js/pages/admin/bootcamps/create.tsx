@@ -187,8 +187,8 @@ export default function CreateBootcamp({
             has_submission_link: false,
             batch: 1,
             tools: [],
-            requirement_1: 'Follow Instagram @kompeten.idn',
-            requirement_2: 'Follow TikTok @kompeten.idn',
+            requirement_1: 'Follow Instagram @brevetpajak_talenta',
+            requirement_2: 'Follow TikTok @brevetpajak_talenta',
             requirement_3: 'Tag 3 teman di postingan Instagram kami',
         },
     });
@@ -299,9 +299,9 @@ export default function CreateBootcamp({
                                                                         const numericBatch = parseInt(batchStr.replace(/\D/g, '')) || 1;
                                                                         form.setValue('batch', numericBatch);
                                                                     }
-                                                                    
+
                                                                     const isValidDate = (d: any) => d && !isNaN(Date.parse(d));
-                                                                    
+
                                                                     if (isValidDate(program.start_date)) {
                                                                         form.setValue('start_date', new Date(program.start_date).toISOString());
                                                                     }
@@ -328,10 +328,10 @@ export default function CreateBootcamp({
                                                                     const rawSchedules = Array.isArray(program.schedules)
                                                                         ? program.schedules
                                                                         : Array.isArray(program.event_schedules)
-                                                                        ? program.event_schedules
-                                                                        : Array.isArray(program.program_schedules)
-                                                                        ? program.program_schedules
-                                                                        : [];
+                                                                            ? program.event_schedules
+                                                                            : Array.isArray(program.program_schedules)
+                                                                                ? program.program_schedules
+                                                                                : [];
 
                                                                     let mappedSchedules: BootcampSchedule[] = rawSchedules
                                                                         .filter((s: any) => s && (!s.schedule_type || s.schedule_type === 'main' || s.schedule_type === 'pelaksanaan' || s.schedule_type === 'session'))
@@ -422,7 +422,7 @@ export default function CreateBootcamp({
 
                                                                     if (missingMentors.length > 0) {
                                                                         toast.warning(
-                                                                            `Mentor "${missingMentors.join(', ')}" belum terdaftar di database Kompeten. Silakan buat data mentor terlebih dahulu di Kompeten agar dapat dipilih.`,
+                                                                            `Mentor "${missingMentors.join(', ')}" belum terdaftar di database Talenta. Silakan buat data mentor terlebih dahulu di Talenta agar dapat dipilih.`,
                                                                             { duration: 7000 }
                                                                         );
                                                                     }
@@ -808,10 +808,10 @@ export default function CreateBootcamp({
                                                                 >
                                                                     {selected
                                                                         ? selected.toLocaleDateString('id-ID', {
-                                                                              day: 'numeric',
-                                                                              month: 'short',
-                                                                              year: 'numeric',
-                                                                          })
+                                                                            day: 'numeric',
+                                                                            month: 'short',
+                                                                            year: 'numeric',
+                                                                        })
                                                                         : 'Pilih tanggal'}
                                                                     <ChevronDownIcon />
                                                                 </Button>
@@ -825,11 +825,11 @@ export default function CreateBootcamp({
                                                                     disabled={(date) =>
                                                                         !!endDateObj &&
                                                                         date >
-                                                                            new Date(
-                                                                                endDateObj.getFullYear(),
-                                                                                endDateObj.getMonth(),
-                                                                                endDateObj.getDate(),
-                                                                            )
+                                                                        new Date(
+                                                                            endDateObj.getFullYear(),
+                                                                            endDateObj.getMonth(),
+                                                                            endDateObj.getDate(),
+                                                                        )
                                                                     }
                                                                     captionLayout="dropdown"
                                                                     onSelect={(date) => {
@@ -879,10 +879,10 @@ export default function CreateBootcamp({
                                                                 >
                                                                     {selected
                                                                         ? selected.toLocaleDateString('id-ID', {
-                                                                              day: 'numeric',
-                                                                              month: 'short',
-                                                                              year: 'numeric',
-                                                                          })
+                                                                            day: 'numeric',
+                                                                            month: 'short',
+                                                                            year: 'numeric',
+                                                                        })
                                                                         : 'Pilih tanggal'}
                                                                     <ChevronDownIcon />
                                                                 </Button>
@@ -896,11 +896,11 @@ export default function CreateBootcamp({
                                                                     disabled={(date) =>
                                                                         !!startDateObj &&
                                                                         date <
-                                                                            new Date(
-                                                                                startDateObj.getFullYear(),
-                                                                                startDateObj.getMonth(),
-                                                                                startDateObj.getDate(),
-                                                                            )
+                                                                        new Date(
+                                                                            startDateObj.getFullYear(),
+                                                                            startDateObj.getMonth(),
+                                                                            startDateObj.getDate(),
+                                                                        )
                                                                     }
                                                                     onSelect={(date) => {
                                                                         if (!date) return;
@@ -949,10 +949,10 @@ export default function CreateBootcamp({
                                                         >
                                                             {field.value
                                                                 ? new Date(field.value).toLocaleDateString('id-ID', {
-                                                                      day: 'numeric',
-                                                                      month: 'short',
-                                                                      year: 'numeric',
-                                                                  })
+                                                                    day: 'numeric',
+                                                                    month: 'short',
+                                                                    year: 'numeric',
+                                                                })
                                                                 : 'Pilih tanggal'}
                                                             <ChevronDownIcon />
                                                         </Button>
@@ -1096,10 +1096,10 @@ export default function CreateBootcamp({
                                                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                                                 <div className="space-y-1 text-xs leading-relaxed">
                                                     <p className="font-medium text-amber-900 dark:text-amber-200">
-                                                        Mentor "{missingMentorNames.join(', ')}" belum terdaftar di Kompeten
+                                                        Mentor "{missingMentorNames.join(', ')}" belum terdaftar di Talenta
                                                     </p>
                                                     <p className="text-amber-700 dark:text-amber-400">
-                                                        Data mentor dari Biinsight tidak ditemukan di database Kompeten. Silakan buat akun/data mentor tersebut terlebih dahulu di menu <strong>Kelola Staff / Mentor</strong> atau pilih mentor lain yang tersedia di atas.
+                                                        Data mentor dari Biinsight tidak ditemukan di database Talenta. Silakan buat akun/data mentor tersebut terlebih dahulu di menu <strong>Kelola Staff / Mentor</strong> atau pilih mentor lain yang tersedia di atas.
                                                     </p>
                                                 </div>
                                             </div>
@@ -1203,7 +1203,7 @@ export default function CreateBootcamp({
                                             {...field}
                                             value={field.value ?? ''}
                                             className="w-full rounded border p-2"
-                                            placeholder="Contoh: Follow Instagram @kompeten.idn"
+                                            placeholder="Contoh: Follow Instagram @brevetpajak_talenta"
                                             autoComplete="off"
                                         />
                                         <FormDescription>Teks persyaratan pertama yang akan ditampilkan untuk bootcamp gratis</FormDescription>
@@ -1221,7 +1221,7 @@ export default function CreateBootcamp({
                                             {...field}
                                             value={field.value ?? ''}
                                             className="w-full rounded border p-2"
-                                            placeholder="Contoh: Follow TikTok @kompeten.idn"
+                                            placeholder="Contoh: Follow TikTok @brevetpajak_talenta"
                                             autoComplete="off"
                                         />
                                         <FormDescription>Teks persyaratan kedua yang akan ditampilkan untuk bootcamp gratis</FormDescription>
