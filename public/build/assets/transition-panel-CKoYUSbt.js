@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:public/build/assets/transition-panel-B1zxP1kY.js
-import{j as i}from"./app-CJwEYvT3.js";import{c as o}from"./utils-D8EqqwB6.js";import{A as s}from"./index-C83XtzgQ.js";import{m as c}from"./proxy-C9adW58h.js";function u({children:r,className:n,transition:a,variants:m,activeIndex:e,...t}){return i.jsx("div",{className:o("relative",n),children:i.jsx(s,{initial:!1,mode:"popLayout",custom:t.custom,children:i.jsx(c.div,{variants:m,transition:a,initial:"enter",animate:"center",exit:"exit",...t,children:r[e]},e)})})}export{u as T};
-========
-import{j as i}from"./app-B1So88mY.js";import{c as o}from"./utils-uY4uOqHf.js";import{A as s}from"./index-giSwVZea.js";import{m as c}from"./proxy-Dury0nPZ.js";function u({children:r,className:n,transition:a,variants:m,activeIndex:e,...t}){return i.jsx("div",{className:o("relative",n),children:i.jsx(s,{initial:!1,mode:"popLayout",custom:t.custom,children:i.jsx(c.div,{variants:m,transition:a,initial:"enter",animate:"center",exit:"exit",...t,children:r[e]},e)})})}export{u as T};
->>>>>>>> 872e322e2795542cfb599e9314163927ed390cb4:public/build/assets/transition-panel-CKoYUSbt.js
