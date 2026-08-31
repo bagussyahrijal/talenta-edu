@@ -90,6 +90,27 @@ function BundleActions({ bundle }: { bundle: Bundle }) {
     );
 }
 
+function BundlePriceCell({ bundle }: { bundle: Bundle }) {
+    const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
+
+    const price = bundle.price;
+    if (price === 0) {
+        return <div className="text-base font-semibold">Gratis</div>;
+    }
+    if (isStaff) {
+        return <div className="text-base font-semibold text-muted-foreground">Rp ***</div>;
+    }
+    const strikethroughPrice = bundle.strikethrough_price;
+    return (
+        <div>
+            {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
+            <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
+        </div>
+    );
+}
+
 export const columns: ColumnDef<Bundle>[] = [
     {
         accessorKey: 'no',
@@ -101,23 +122,12 @@ export const columns: ColumnDef<Bundle>[] = [
     },
     {
         accessorKey: 'title',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Judul Paket Bundling" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Judul" />,
         cell: ({ row }) => {
-            const itemCount = row.original.bundle_items?.length || 0;
             return (
-                <div className="flex flex-col">
-                    <Link href={route('bundles.show', row.original.id)} className="text-primary font-medium hover:underline">
-                        {row.original.title}
-                    </Link>
-                    <div className="flex items-center gap-1">
-                        {row.original.batch && (
-                            <Badge variant="outline" className="text-xs">
-                                {row.original.batch}
-                            </Badge>
-                        )}
-                        <span className="text-muted-foreground text-xs">{itemCount} item</span>
-                    </div>
-                </div>
+                <Link href={route('bundles.show', row.original.id)} className="text-primary font-medium hover:underline">
+                    {row.original.title}
+                </Link>
             );
         },
     },
@@ -125,21 +135,22 @@ export const columns: ColumnDef<Bundle>[] = [
         accessorKey: 'thumbnail',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Thumbnail" />,
         cell: ({ row }) => {
+            const title = row.original.title;
             const thumbnail = row.original.thumbnail;
             const thumbnailUrl = thumbnail ? `/storage/${thumbnail}` : '/assets/images/placeholder.png';
-            return <img src={thumbnailUrl} alt={row.original.title} className="h-16 rounded object-cover" />;
+            return <img src={thumbnailUrl} alt={title} className="h-16 rounded object-cover" />;
         },
     },
     {
-        accessorKey: 'bundle_items',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Isi Paket" />,
+        id: 'content',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Isi Bundle" />,
         cell: ({ row }) => {
-            const items = row.original.bundle_items || [];
+            const items = row.original.bundle_items ?? [];
             const grouped = items.reduce(
                 (acc, item) => {
                     if (item.bundleable_type.includes('Course')) acc.courses++;
-                    else if (item.bundleable_type.includes('Bootcamp')) acc.bootcamps++;
-                    else if (item.bundleable_type.includes('Webinar')) acc.webinars++;
+                    if (item.bundleable_type.includes('Bootcamp')) acc.bootcamps++;
+                    if (item.bundleable_type.includes('Webinar')) acc.webinars++;
                     return acc;
                 },
                 { courses: 0, bootcamps: 0, webinars: 0 },
@@ -169,16 +180,7 @@ export const columns: ColumnDef<Bundle>[] = [
     {
         accessorKey: 'price',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Harga" />,
-        cell: ({ row }) => {
-            const strikethroughPrice = row.original.strikethrough_price;
-            const price = row.original.price;
-            return (
-                <div>
-                    {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
-                    <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
-                </div>
-            );
-        },
+        cell: ({ row }) => <BundlePriceCell bundle={row.original} />,
     },
     {
         accessorKey: 'enrollments_count',

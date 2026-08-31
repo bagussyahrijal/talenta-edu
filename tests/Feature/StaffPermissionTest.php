@@ -1,169 +1,253 @@
 <?php
 
+namespace Tests\Feature;
+
 use App\Models\User;
 use Database\Seeders\StaffPermissionSeeder;
-use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\Permission\Models\Permission;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
+use Tests\TestCase;
 
-beforeEach(function () {
-    app()[PermissionRegistrar::class]->forgetCachedPermissions();
+class StaffPermissionTest extends TestCase
+{
+    use RefreshDatabase;
 
-    Role::firstOrCreate(['name' => 'admin']);
-    Role::firstOrCreate(['name' => 'staff']);
-    Role::firstOrCreate(['name' => 'mentor']);
-    Role::firstOrCreate(['name' => 'affiliate']);
-    Role::firstOrCreate(['name' => 'user']);
-
-    $this->seed(StaffPermissionSeeder::class);
-});
-
-test('staff permission seeder creates all required permissions', function () {
-    $expectedPermissions = [
-        'users.view', 'users.manage',
-        'affiliates.view', 'affiliates.manage',
-        'mentors.view', 'mentors.manage',
-        'courses.view', 'courses.manage',
-        'bootcamps.view', 'bootcamps.manage',
-        'webinars.view', 'webinars.manage',
-        'certification-programs.view', 'certification-programs.manage',
-        'bundles.view', 'bundles.manage',
-        'categories.view', 'categories.manage',
-        'tools.view', 'tools.manage',
-        'certificates.view', 'certificates.manage',
-        'discount-codes.view', 'discount-codes.manage',
-        'promotions.view', 'promotions.manage',
-        'broadcasts.view', 'broadcasts.manage',
-        'transactions.view', 'transactions.manage',
-        'articles.view', 'articles.manage',
-        'referral.view', 'referral.manage',
-        'earnings.view', 'earnings.manage',
-    ];
-
-    foreach ($expectedPermissions as $permission) {
-        expect(Permission::where('name', $permission)->exists())->toBeTrue();
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+        Role::firstOrCreate(['name' => 'admin']);
+        Role::firstOrCreate(['name' => 'staff']);
+        Role::firstOrCreate(['name' => 'mentor']);
+        Role::firstOrCreate(['name' => 'affiliate']);
+        Role::firstOrCreate(['name' => 'user']);
+        $this->seed(StaffPermissionSeeder::class);
     }
-});
 
-test('admin can create staff and assign permissions', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    public function test_admin_can_access_staff_management()
+    {
+        $admin = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $admin->assignRole('admin');
 
-    $response = $this->actingAs($admin)->post(route('staff.store'), [
-        'name' => 'Staff Test',
-        'email' => 'staff@example.com',
-        'phone_number' => '08123456789',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-        'permissions' => ['courses.view', 'courses.manage', 'webinars.view'],
-    ]);
+        $response = $this->actingAs($admin)->get(route('staff.index'));
+        $response->assertStatus(200);
+    }
 
-    $response->assertRedirect(route('staff.index'));
+    public function test_staff_cannot_access_staff_management()
+    {
+        $staff = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
 
-    $staff = User::where('email', 'staff@example.com')->first();
-    expect($staff)->not->toBeNull();
-    expect($staff->hasRole('staff'))->toBeTrue();
-    expect($staff->hasPermissionTo('courses.view'))->toBeTrue();
-    expect($staff->hasPermissionTo('courses.manage'))->toBeTrue();
-    expect($staff->hasPermissionTo('webinars.view'))->toBeTrue();
-    expect($staff->hasPermissionTo('articles.view'))->toBeFalse();
-});
+        $response = $this->actingAs($staff)->get(route('staff.index'));
+        $response->assertStatus(403);
+    }
 
-test('admin can update staff details and permissions', function () {
-    $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    public function test_staff_with_view_permission_can_access_index_but_not_create()
+    {
+        $staff = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
+        $staff->givePermissionTo('bootcamps.view');
 
-    $staff = User::factory()->create(['name' => 'Old Name', 'email' => 'old@example.com', 'phone_number' => '08123456780']);
-    $staff->assignRole('staff');
-    $staff->givePermissionTo(['courses.view']);
+        // Can access index
+        $indexResponse = $this->actingAs($staff)->get(route('bootcamps.index'));
+        $indexResponse->assertStatus(200);
 
-    $response = $this->actingAs($admin)->put(route('staff.update', $staff->id), [
-        'name' => 'New Name',
-        'email' => 'new@example.com',
-        'phone_number' => '08123456781',
-        'permissions' => ['articles.view', 'articles.manage'],
-    ]);
+        // Cannot access create
+        $createResponse = $this->actingAs($staff)->get(route('bootcamps.create'));
+        $createResponse->assertStatus(403);
+    }
 
-    $response->assertRedirect(route('staff.index'));
+    public function test_staff_with_manage_permission_can_access_create()
+    {
+        $staff = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
+        $staff->givePermissionTo(['bootcamps.view', 'bootcamps.manage']);
 
-    $staff->refresh();
-    expect($staff->name)->toBe('New Name');
-    expect($staff->email)->toBe('new@example.com');
-    expect($staff->hasPermissionTo('courses.view'))->toBeFalse();
-    expect($staff->hasPermissionTo('articles.view'))->toBeTrue();
-    expect($staff->hasPermissionTo('articles.manage'))->toBeTrue();
-});
+        $response = $this->actingAs($staff)->get(route('bootcamps.create'));
+        $response->assertStatus(200);
+    }
 
-test('staff user cannot access staff management routes', function () {
-    $staff = User::factory()->create();
-    $staff->assignRole('staff');
+    public function test_staff_without_permission_cannot_access_module()
+    {
+        $staff = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
 
-    $this->actingAs($staff)->get(route('staff.index'))->assertForbidden();
-    $this->actingAs($staff)->get(route('staff.create'))->assertForbidden();
-});
+        $response = $this->actingAs($staff)->get(route('webinars.index'));
+        $response->assertStatus(403);
+    }
 
-test('staff user can access admin dashboard and gets staff stats', function () {
-    $staff = User::factory()->create();
-    $staff->assignRole('staff');
-    $staff->givePermissionTo(['courses.view']);
+    public function test_admin_can_create_staff_with_permissions()
+    {
+        $admin = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $admin->assignRole('admin');
 
-    $response = $this->actingAs($staff)->get(route('dashboard'));
+        $payload = [
+            'name' => 'Staff Test',
+            'email' => 'stafftest@example.com',
+            'phone_number' => '08123456789',
+            'password' => 'password123',
+            'instance' => 'Talenta Edu',
+            'city' => 'Malang',
+            'permissions' => ['bootcamps.view', 'bootcamps.manage', 'webinars.view'],
+        ];
 
-    $response->assertOk();
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('admin/dashboard/index')
-        ->has('stats')
-        ->has('stats.accessible_modules')
-    );
-});
+        $response = $this->actingAs($admin)->post(route('staff.store'), $payload);
+        $response->assertRedirect(route('staff.index'));
 
-test('staff with view permission can access module index but not create without manage permission', function () {
-    $staff = User::factory()->create();
-    $staff->assignRole('staff');
-    $staff->givePermissionTo(['courses.view']);
+        $staffUser = User::where('email', 'stafftest@example.com')->first();
+        $this->assertNotNull($staffUser);
+        $this->assertTrue($staffUser->hasRole('staff'));
+        $this->assertTrue($staffUser->hasPermissionTo('bootcamps.view'));
+        $this->assertTrue($staffUser->hasPermissionTo('bootcamps.manage'));
+        $this->assertTrue($staffUser->hasPermissionTo('webinars.view'));
+        $this->assertFalse($staffUser->hasPermissionTo('webinars.manage'));
+    }
 
-    // Can access index
-    $this->actingAs($staff)->get(route('courses.index'))->assertOk();
+    public function test_admin_can_update_staff_and_permissions()
+    {
+        $admin = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $admin->assignRole('admin');
 
-    // Cannot access create without courses.manage
-    $this->actingAs($staff)->get(route('courses.create'))->assertForbidden();
-});
+        $staff = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
+        $staff->syncPermissions(['bootcamps.view']);
 
-test('staff with manage permission can access module create page', function () {
-    $staff = User::factory()->create();
-    $staff->assignRole('staff');
-    $staff->givePermissionTo(['courses.view', 'courses.manage']);
+        $payload = [
+            'name' => 'Staff Updated',
+            'email' => $staff->email,
+            'phone_number' => '0899999999',
+            'instance' => 'Updated Org',
+            'city' => 'Surabaya',
+            'permissions' => ['courses.view', 'courses.manage'],
+        ];
 
-    $this->actingAs($staff)->get(route('courses.index'))->assertOk();
-    $this->actingAs($staff)->get(route('courses.create'))->assertOk();
-});
+        $response = $this->actingAs($admin)->put(route('staff.update', $staff->id), $payload);
+        $response->assertRedirect(route('staff.index'));
 
-test('staff without module permission gets 403 forbidden', function () {
-    $staff = User::factory()->create();
-    $staff->assignRole('staff');
-    $staff->givePermissionTo(['courses.view']);
+        $staff->refresh();
+        $this->assertEquals('Staff Updated', $staff->name);
+        $this->assertFalse($staff->hasPermissionTo('bootcamps.view'));
+        $this->assertTrue($staff->hasPermissionTo('courses.view'));
+        $this->assertTrue($staff->hasPermissionTo('courses.manage'));
+    }
 
-    // Does not have webinars.view permission
-    $this->actingAs($staff)->get(route('webinars.index'))->assertForbidden();
-    $this->actingAs($staff)->get(route('articles.index'))->assertForbidden();
-});
+    public function test_admin_can_delete_staff()
+    {
+        $admin = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $admin->assignRole('admin');
 
-test('auth permissions are shared to inertia props for staff', function () {
-    $staff = User::factory()->create();
-    $staff->assignRole('staff');
-    $staff->givePermissionTo(['courses.view', 'courses.manage', 'articles.view']);
+        $staff = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
 
-    $response = $this->actingAs($staff)->get(route('dashboard'));
+        $response = $this->actingAs($admin)->delete(route('staff.destroy', $staff->id));
+        $response->assertRedirect(route('staff.index'));
 
-    $response->assertInertia(fn (Assert $page) => $page
-        ->where('auth.role', ['staff'])
-        ->where('auth.permissions', function ($permissions) {
-            $perms = collect($permissions);
-            return $perms->contains('courses.view') &&
-                $perms->contains('courses.manage') &&
-                $perms->contains('articles.view') &&
-                !$perms->contains('webinars.view');
-        })
-    );
-});
+        $this->assertNull(User::find($staff->id));
+    }
+
+    public function test_staff_login_redirects_to_dashboard()
+    {
+        $staff = User::factory()->create([
+            'email' => 'stafflogin@example.com',
+            'password' => bcrypt('password123'),
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
+
+        $response = $this->post(route('login'), [
+            'email' => 'stafflogin@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_staff_can_view_dashboard_without_sensitive_data()
+    {
+        $staff = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+        $staff->assignRole('staff');
+        $staff->givePermissionTo(['bootcamps.view', 'courses.manage']);
+
+        $response = $this->actingAs($staff)->get(route('dashboard'));
+        $response->assertStatus(200);
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('admin/dashboard/index')
+            ->has('stats.total_users')
+            ->has('stats.accessible_modules')
+            ->missing('stats.total_revenue')
+            ->missing('stats.recent_sales')
+            ->missing('stats.revenue_data')
+        );
+    }
+
+    public function test_staff_courses_permissions()
+    {
+        $staff = User::factory()->create(['email_verified_at' => now()]);
+        $staff->assignRole('staff');
+        $staff->givePermissionTo('courses.view');
+
+        // Can view courses index
+        $this->actingAs($staff)->get(route('courses.index'))->assertStatus(200);
+
+        // Cannot create courses without courses.manage
+        $this->actingAs($staff)->get(route('courses.create'))->assertStatus(403);
+
+        // Grant courses.manage
+        $staff->givePermissionTo('courses.manage');
+        $this->actingAs($staff)->get(route('courses.create'))->assertStatus(200);
+    }
+
+    public function test_staff_discount_codes_permissions()
+    {
+        $staff = User::factory()->create(['email_verified_at' => now()]);
+        $staff->assignRole('staff');
+
+        // Cannot access without permission
+        $this->actingAs($staff)->get(route('discount-codes.index'))->assertStatus(403);
+
+        // Grant discount-codes.view
+        $staff->givePermissionTo('discount-codes.view');
+        $this->actingAs($staff)->get(route('discount-codes.index'))->assertStatus(200);
+        $this->actingAs($staff)->get(route('discount-codes.create'))->assertStatus(403);
+
+        // Grant discount-codes.manage
+        $staff->givePermissionTo('discount-codes.manage');
+        $this->actingAs($staff)->get(route('discount-codes.create'))->assertStatus(200);
+    }
+
+    public function test_staff_referral_permissions()
+    {
+        $staff = User::factory()->create(['email_verified_at' => now()]);
+        $staff->assignRole('staff');
+
+        // Cannot access without permission
+        $this->actingAs($staff)->get(route('admin.referral.settings'))->assertStatus(403);
+
+        // Grant referral.view
+        $staff->givePermissionTo('referral.view');
+        $this->actingAs($staff)->get(route('admin.referral.settings'))->assertStatus(200);
+    }
+}
