@@ -14,8 +14,10 @@ class AffiliateEarningController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $isStaff = $user && $user->hasRole('staff') && !$user->hasRole('admin');
+
         $query = AffiliateEarning::with([
-            'affiliateUser',
+            'affiliate',
             'invoice.user',
             'invoice.courseItems.course',
             'invoice.bootcampItems.bootcamp',
@@ -24,7 +26,7 @@ class AffiliateEarningController extends Controller
             'invoice.certificationProgramItems.certificationProgram',
         ]);
 
-        if (!$user->hasRole('admin')) {
+        if (!$user->hasRole('admin') && !$isStaff) {
             $query->where('affiliate_user_id', $user->id);
         }
 
@@ -34,7 +36,7 @@ class AffiliateEarningController extends Controller
                 $q->whereHas('invoice', function ($iq) use ($search) {
                     $iq->where('invoice_code', 'like', "%{$search}%")
                         ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"));
-                })->orWhereHas('affiliateUser', function ($aq) use ($search) {
+                })->orWhereHas('affiliate', function ($aq) use ($search) {
                     $aq->where('name', 'like', "%{$search}%")
                         ->orWhere('affiliate_code', 'like', "%{$search}%");
                 });
@@ -49,6 +51,16 @@ class AffiliateEarningController extends Controller
 
         $perPage = min(100, max(5, (int) $request->input('per_page', 10)));
         $earnings = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+
+        if ($isStaff) {
+            $earnings->through(function ($earning) {
+                $earning->amount = 0;
+                if ($earning->invoice) {
+                    $earning->invoice->nett_amount = 0;
+                }
+                return $earning;
+            });
+        }
 
         return Inertia::render('admin/earnings/index', [
             'earnings' => $earnings,
@@ -77,6 +89,7 @@ class AffiliateEarningController extends Controller
     {
         $user    = Auth::user();
         $isAdmin = $user->hasRole('admin');
+        $isStaff = $user->hasRole('staff') && !$isAdmin;
 
         $filters = [
             'start_date' => $request->input('start_date'),
@@ -88,7 +101,7 @@ class AffiliateEarningController extends Controller
         $filename   = "pendapatan_{$startLabel}-{$endLabel}.xlsx";
 
         return Excel::download(
-            new EarningsExport($filters, $user->id, $isAdmin),
+            new EarningsExport($filters, $user->id, $isAdmin, $isStaff),
             $filename
         );
     }
