@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { BundleTransactionInvoice } from './columns-transactions';
 import BundleTransaction from './show-transactions';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Product {
     id: string;
@@ -67,23 +68,21 @@ interface Bundle {
     batch?: string | null;
     price: number;
     registration_deadline?: string | null;
-    description: string;
-    benefits?: string[];
-    price: number;
-    discount_price?: number;
-    thumbnail?: string;
-    status: 'draft' | 'published' | 'archived';
-    telegram_group_url?: string;
-    whatsapp_group_url?: string;
     registration_url: string;
     bundle_url: string;
-    registration_deadline?: string;
-    start_date?: string;
-    end_date?: string;
-    is_lifetime: boolean;
+    status: 'draft' | 'published' | 'archived';
+    installment_enabled?: boolean;
+    installment_terms?: Array<{ id: string; term_number: number; amount: number; due_date: string }>;
     bundle_items: BundleItem[];
-    enrollments: Enrollment[];
+    enrollments: EnrollmentBundle[];
     created_at: string;
+    updated_at: string;
+}
+
+interface GroupedItems {
+    courses: BundleItem[];
+    bootcamps: BundleItem[];
+    webinars: BundleItem[];
 }
 
 interface ShowProps {
@@ -188,6 +187,7 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
 
     const totalEnrollments = bundle.enrollments.length;
     const paidEnrollments = bundle.enrollments.filter((e) => e.invoice.status === 'paid').length;
+    const totalRevenue = bundle.enrollments?.filter((e) => e.invoice?.status === 'paid').reduce((sum, e) => sum + (e.invoice?.amount || 0), 0) || 0;
     const transactions: BundleTransactionInvoice[] = bundle.enrollments.map((enrollment) => ({
         id: enrollment.invoice.id,
         user: {
