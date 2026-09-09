@@ -17,10 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { BundleTransactionInvoice } from './columns-transactions';
 import BundleTransaction from './show-transactions';
-<<<<<<< HEAD
 import InstallmentConfig from '@/components/admin/installment-config';
-=======
->>>>>>> df90eaa6bf1ecfac623fbc5a3263933327d9879b
 import { usePermission } from '@/hooks/use-permission';
 
 interface Product {
@@ -77,7 +74,6 @@ interface Bundle {
     thumbnail?: string | null;
     batch?: string | null;
     price: number;
-<<<<<<< HEAD
     discount_price?: number;
     strikethrough_price?: number;
     registration_deadline?: string | null;
@@ -96,24 +92,12 @@ interface Bundle {
     enrollments: Enrollment[];
     created_at: string;
     updated_at?: string;
-=======
-    registration_deadline?: string | null;
-    registration_url: string;
-    bundle_url: string;
-    status: 'draft' | 'published' | 'archived';
-    installment_enabled?: boolean;
-    installment_terms?: Array<{ id: string; term_number: number; amount: number; due_date: string }>;
-    bundle_items: BundleItem[];
-    enrollments: EnrollmentBundle[];
-    created_at: string;
-    updated_at: string;
 }
 
 interface GroupedItems {
     courses: BundleItem[];
     bootcamps: BundleItem[];
     webinars: BundleItem[];
->>>>>>> df90eaa6bf1ecfac623fbc5a3263933327d9879b
 }
 
 interface ShowProps {
@@ -216,16 +200,11 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
         archived: { label: 'Archived', color: 'bg-red-100 text-red-700' },
     };
 
-    const totalEnrollments = bundle.enrollments.length;
-<<<<<<< HEAD
-    const paidEnrollments = bundle.enrollments.filter((e) => e.invoice?.status === 'paid').length;
+    const totalEnrollments = bundle.enrollments?.length || 0;
+    const paidEnrollments = bundle.enrollments?.filter((e) => e.invoice?.status === 'paid' || (e.invoice?.status as string) === 'completed').length || 0;
     const totalRevenue = bundle.enrollments
-        .filter((e) => e.invoice && (e.invoice.status === 'paid' || (e.invoice.status as string) === 'completed'))
-        .reduce((sum, e) => sum + (e.invoice?.amount || 0), 0);
-=======
-    const paidEnrollments = bundle.enrollments.filter((e) => e.invoice.status === 'paid').length;
-    const totalRevenue = bundle.enrollments?.filter((e) => e.invoice?.status === 'paid').reduce((sum, e) => sum + (e.invoice?.amount || 0), 0) || 0;
->>>>>>> df90eaa6bf1ecfac623fbc5a3263933327d9879b
+        ?.filter((e) => e.invoice && (e.invoice.status === 'paid' || (e.invoice.status as string) === 'completed'))
+        .reduce((sum, e) => sum + (e.invoice?.amount || 0), 0) || 0;
     const transactions: BundleTransactionInvoice[] = bundle.enrollments.map((enrollment) => ({
         id: enrollment.invoice.id,
         user: {
