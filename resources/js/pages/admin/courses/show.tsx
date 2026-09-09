@@ -16,6 +16,8 @@ import CourseDetail from './show-details';
 import ShowModules from './show-modules';
 import CourseRatingComponent from './show-ratings';
 import CourseTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Course {
     id: string;
@@ -28,6 +30,9 @@ interface Course {
     key_points?: string | null;
     strikethrough_price: number;
     price: number;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     thumbnail?: string | null;
     course_url: string;
     registration_url: string;
@@ -61,13 +66,7 @@ interface Certificate {
 
 interface CourseProps {
     course: Course;
-    transactions: {
-        id: string;
-        user: {
-            name: string;
-        };
-        created_at: string;
-    }[];
+    transactions: Invoice[];
     ratings: CourseRating[];
     certificate?: Certificate | null;
     flash?: {
@@ -170,8 +169,17 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                 </TabsTrigger>
                             )}
                         </TabsList>
-                        <TabsContent value="detail">
+                        <TabsContent value="detail" className="space-y-4">
                             <CourseDetail course={course} averageRating={averageRating} />
+                            {canManageCourse && (
+                                <InstallmentConfig
+                                    productType="course"
+                                    productId={course.id}
+                                    productPrice={course.price}
+                                    installmentEnabled={course.installment_enabled ?? false}
+                                    initialTerms={course.installment_terms || course.installmentTerms || []}
+                                />
+                            )}
                             <ShowModules modules={course.modules} courseId={course.id} />
                         </TabsContent>
                         <TabsContent value="transaksi">

@@ -206,11 +206,13 @@ export default function CertificationProgramSection({ categories, programs, myPr
                                                 <span className="text-xl font-bold text-green-600 dark:text-green-400">Gratis</span>
                                             ) : (
                                                 <>
-                                                    {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
+                                                    {!isScholarshipNotApproved &&
+                                                    typeof program.strikethrough_price === 'number' &&
+                                                    program.strikethrough_price > 0 ? (
                                                         <p className="text-sm text-red-500 line-through">
                                                             {formatRupiah(program.strikethrough_price)}
                                                         </p>
-                                                    )}
+                                                    ) : null}
                                                     <p className="font-literata text-2xl font-semibold text-gray-900 group-hover:text-white dark:text-white">
                                                         {formatRupiah(displayPrice)}
                                                     </p>

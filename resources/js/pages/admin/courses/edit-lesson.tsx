@@ -20,9 +20,9 @@ interface Lesson {
     attachment?: File | null;
     quizzes?: {
         id?: string | number;
-        instructions: string;
-        time_limit: number;
-        passing_score: number;
+        instructions?: string;
+        time_limit?: number;
+        passing_score?: number;
     }[];
     is_preview?: boolean;
 }

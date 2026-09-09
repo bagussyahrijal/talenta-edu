@@ -17,6 +17,7 @@ import BootcampDetail from './show-details';
 import BootcampParticipant from './show-participants';
 import BootcampRatingComponent from './show-ratings';
 import BootcampTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
 
 interface BootcampSchedule {
     id: string;
@@ -36,6 +37,9 @@ interface Bootcamp {
     batch?: string | null;
     strikethrough_price: number;
     price: number;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     quota: number;
     start_date: string | Date;
     end_date: string | Date;
@@ -154,8 +158,18 @@ export default function ShowBootcamp({ bootcamp, transactions, participants, rat
                         <TabsContent value="peserta">
                             <BootcampParticipant participants={participants} totalSchedules={totalSchedules} />
                         </TabsContent>
-                        <TabsContent value="detail">
+                        <TabsContent value="detail" className="space-y-4">
                             <BootcampDetail bootcamp={bootcamp} />
+                            {canManageBootcamp && (
+                                <InstallmentConfig
+                                    productType="bootcamp"
+                                    productId={bootcamp.id}
+                                    productPrice={bootcamp.price}
+                                    installmentEnabled={bootcamp.installment_enabled ?? false}
+                                    initialTerms={bootcamp.installment_terms || bootcamp.installmentTerms || []}
+                                    registrationDeadline={bootcamp.registration_deadline}
+                                />
+                            )}
                         </TabsContent>
                         <TabsContent value="transaksi">
                             <BootcampTransaction transactions={transactions} bootcampId={bootcamp.id} />

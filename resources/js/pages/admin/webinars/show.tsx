@@ -18,6 +18,7 @@ import WebinarDetail from './show-details';
 import WebinarParticipantSection from './show-participants';
 import WebinarRatingComponent from './show-ratings';
 import WebinarTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
 
 interface Webinar {
     id: string;
@@ -27,6 +28,9 @@ interface Webinar {
     batch?: string | null;
     strikethrough_price: number;
     price: number;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     quota: number;
     start_time: string | Date;
     end_time: string | Date;
@@ -160,8 +164,18 @@ export default function ShowWebinar({ webinar, transactions, participants, ratin
                                 </>
                             )}
                         </TabsList>
-                        <TabsContent value="detail">
+                        <TabsContent value="detail" className="space-y-4">
                             <WebinarDetail webinar={webinar} />
+                            {canManageWebinar && (
+                                <InstallmentConfig
+                                    productType="webinar"
+                                    productId={webinar.id}
+                                    productPrice={webinar.price}
+                                    installmentEnabled={webinar.installment_enabled ?? false}
+                                    initialTerms={webinar.installment_terms || webinar.installmentTerms || []}
+                                    registrationDeadline={webinar.registration_deadline}
+                                />
+                            )}
                         </TabsContent>
                         <TabsContent value="peserta">
                             <WebinarParticipantSection participants={participants} />

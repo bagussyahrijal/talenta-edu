@@ -90,7 +90,7 @@ export default function ShowModules({ modules, courseId }: { modules?: Module[];
                 </div>
             )}
             {modules && modules.length > 0 ? (
-                <Accordion type="single" collapsible className="w-full" defaultValue="mod-0">
+                <Accordion className="w-full">
                     {modules.map((mod, modIdx) => (
                         <AccordionItem key={modIdx} value={`mod-${modIdx}`}>
                             <AccordionTrigger>

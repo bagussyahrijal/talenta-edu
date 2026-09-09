@@ -60,7 +60,14 @@ class MidtransCallbackController extends Controller
 
             DB::beginTransaction();
             try {
-                $invoice = Invoice::where('invoice_code', $orderId)->first();
+                $invoice = Invoice::where('invoice_code', $orderId)
+                    ->orWhere('payment_reference', $orderId)
+                    ->first();
+
+                if (!$invoice && str_contains($orderId, '-')) {
+                    $baseOrderId = preg_replace('/-\d{8,}$/', '', $orderId);
+                    $invoice = Invoice::where('invoice_code', $baseOrderId)->first();
+                }
 
                 if (!$invoice) {
                     DB::rollBack();
@@ -213,6 +220,43 @@ class MidtransCallbackController extends Controller
             'payment_type' => $paymentChannel,
             'transaction_id' => $request->transaction_id
         ]);
+
+        // ====== INSTALLMENT CHILD HANDLER ======
+        if ($invoice->isInstallmentChild()) {
+            $parentInvoice = Invoice::with([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'certificationProgramItems.certificationProgram',
+                'bundleEnrollments.bundle.bundleItems.bundleable',
+            ])->find($invoice->parent_invoice_id);
+
+            if ($parentInvoice) {
+                // Jika termin ke-1 (DP): aktifkan akses
+                if ($invoice->installment_number === 1) {
+                    $this->processInvoiceEnrollments($parentInvoice);
+                }
+
+                // Pulihkan akses jika sebelumnya dibekukan
+                $parentInvoice->update(['access_suspended_at' => null]);
+
+                // Catat komisi affiliate untuk termin ini
+                $this->recordAffiliateCommission($invoice);
+
+                // Cek apakah semua termin lunas
+                if ($parentInvoice->isFullyPaid()) {
+                    $parentInvoice->update(['status' => 'paid', 'paid_at' => Carbon::now('Asia/Jakarta')]);
+                    event(new \App\Events\TransactionPaid($parentInvoice));
+                    $this->sendWhatsAppInstallmentComplete($parentInvoice);
+                } else {
+                    $this->sendWhatsAppTermPaid($invoice, $parentInvoice);
+                }
+            }
+
+            return;
+        }
+        // ====== END INSTALLMENT CHILD HANDLER ======
 
         $this->processInvoiceEnrollments($invoice);
         $this->recordAffiliateCommission($invoice);
@@ -763,6 +807,58 @@ class MidtransCallbackController extends Controller
                 'error' => $e->getMessage(),
                 'invoice_id' => $invoice->id
             ]);
+        }
+    }
+
+    /**
+     * Kirim WhatsApp saat satu termin cicilan berhasil dibayar (belum lunas)
+     */
+    private function sendWhatsAppTermPaid(Invoice $childInvoice, Invoice $parentInvoice): void
+    {
+        try {
+            $user = $parentInvoice->user;
+            if (!$user?->phone_number) return;
+
+            $phoneNumber = $this->formatPhoneNumber($user->phone_number);
+            $termNumber = $childInvoice->installment_number;
+            $totalTerms = $parentInvoice->installmentTerms()->count();
+            $nextTerm = $parentInvoice->nextUnpaidTerm();
+            $nextDue = $nextTerm && $nextTerm->installment_due_date ? Carbon::parse($nextTerm->installment_due_date)->translatedFormat('d F Y') : '-';
+
+            $message = "*[Talenta Edu - Pembayaran Cicilan Berhasil]*\n\n";
+            $message .= "Halo *{$user->name}*,\n\n";
+            $message .= "Pembayaran cicilan ke-*{$termNumber}/{$totalTerms}* sebesar *Rp " . number_format($childInvoice->amount, 0, ',', '.') . "* telah kami terima dan terkonfirmasi.\n\n";
+            if ($nextTerm) {
+                $message .= "📅 Tagihan cicilan ke-*" . ($termNumber + 1) . "/{$totalTerms}* jatuh tempo pada *{$nextDue}*.\n\n";
+            }
+            $message .= "Terima kasih!\n\n*Talenta Customer Support*";
+
+            self::sendText([['phone' => $phoneNumber, 'message' => $message, 'isGroup' => 'false']]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send WhatsApp term paid', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Kirim WhatsApp saat semua termin cicilan lunas
+     */
+    private function sendWhatsAppInstallmentComplete(Invoice $parentInvoice): void
+    {
+        try {
+            $user = $parentInvoice->user;
+            if (!$user?->phone_number) return;
+
+            $phoneNumber = $this->formatPhoneNumber($user->phone_number);
+
+            $message = "*[Talenta Edu - Cicilan Telah Lunas]*\n\n";
+            $message .= "Halo *{$user->name}*,\n\n";
+            $message .= "Selamat! Semua tagihan cicilan untuk invoice *{$parentInvoice->invoice_code}* telah *LUNAS*.\n\n";
+            $message .= "Anda memiliki akses penuh ke seluruh materi program dan sertifikat kelulusan dapat diakses melalui profil Anda.\n\n";
+            $message .= "Terima kasih!\n\n*Talenta Customer Support*";
+
+            self::sendText([['phone' => $phoneNumber, 'message' => $message, 'isGroup' => 'false']]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send WhatsApp installment complete', ['error' => $e->getMessage()]);
         }
     }
 }

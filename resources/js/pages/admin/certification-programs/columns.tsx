@@ -88,6 +88,7 @@ export type CertificationProgram = {
     slug: string;
     type: 'regular' | 'scholarship';
     status: 'draft' | 'published' | 'archived' | 'hidden';
+    installment_enabled?: boolean;
     category_id: string;
     category: {
         name: string;
@@ -115,6 +116,7 @@ export type CertificationProgram = {
         recording_url?: string | null;
     }[];
     batch?: string | null;
+    created_at: string;
 };
 
 function CertificationProgramPriceCell({ program }: { program: CertificationProgram }) {
@@ -166,12 +168,19 @@ export const columns: ColumnDef<CertificationProgram>[] = [
         header: ({ column }) => <DataTableColumnHeader column={column} title="Judul Program" />,
         cell: ({ row }) => {
             return (
-                <Link
-                    href={route('certification-programs.show', row.original.id)}
-                    className="text-primary line-clamp-2 font-medium hover:underline"
-                >
-                    {row.original.title}
-                </Link>
+                <div className="flex flex-col gap-1 items-start">
+                    <Link
+                        href={route('certification-programs.show', row.original.id)}
+                        className="text-primary line-clamp-2 font-medium hover:underline"
+                    >
+                        {row.original.title}
+                    </Link>
+                    {row.original.installment_enabled && (
+                        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                            Cicilan Aktif
+                        </Badge>
+                    )}
+                </div>
             );
         },
     },

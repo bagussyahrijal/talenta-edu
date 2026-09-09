@@ -91,11 +91,11 @@ export default function ScholarshipApply({ program }: { program: Program }) {
                 <section className="mx-auto w-full max-w-5xl px-4 py-12">
                     <div className="mb-8 px-4">
                         <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                            <a href="/certification-programs" className="hover:text-blue-600">
+                            <a href="/certification-program" className="hover:text-blue-600">
                                 Certification Program
                             </a>
                             <span>/</span>
-                            <a href={`/certification-programs/${program.slug}`} className="hover:text-blue-600">
+                            <a href={`/certification-program/${program.slug}`} className="hover:text-blue-600">
                                 {program.title}
                             </a>
                             <span>/</span>

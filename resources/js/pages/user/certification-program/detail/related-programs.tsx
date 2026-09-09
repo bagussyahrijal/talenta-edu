@@ -77,9 +77,11 @@ export default function RelatedPrograms({
                                             <p className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
                                         ) : (
                                             <div className="mb-2">
-                                                {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
+                                                {!isScholarshipNotApproved &&
+                                                typeof program.strikethrough_price === 'number' &&
+                                                program.strikethrough_price > 0 ? (
                                                     <p className="text-sm text-red-500 line-through">{formatRupiah(program.strikethrough_price)}</p>
-                                                )}
+                                                ) : null}
                                                 <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{formatRupiah(displayPrice)}</p>
                                             </div>
                                         );

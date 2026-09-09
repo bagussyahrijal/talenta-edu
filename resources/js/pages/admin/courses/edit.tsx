@@ -94,9 +94,9 @@ interface Lesson {
     video_url?: string;
     quizzes?: {
         id?: string | number;
-        instructions: string;
-        time_limit: number;
-        passing_score: number;
+        instructions?: string;
+        time_limit?: number;
+        passing_score?: number;
     }[];
 }
 

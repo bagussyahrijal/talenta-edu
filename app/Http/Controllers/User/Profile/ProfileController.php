@@ -17,25 +17,25 @@ class ProfileController extends Controller
         $userId = Auth::id();
 
         $courseCount = EnrollmentCourse::whereHas('invoice', function ($query) use ($userId) {
-            $query->where('user_id', $userId)->where('status', 'paid');
+            $query->purchasedByUser($userId);
         })->count();
 
         $bootcampCount = EnrollmentBootcamp::whereHas('invoice', function ($query) use ($userId) {
-            $query->where('user_id', $userId)->where('status', 'paid');
+            $query->purchasedByUser($userId);
         })->count();
 
         $webinarCount = EnrollmentWebinar::whereHas('invoice', function ($query) use ($userId) {
-            $query->where('user_id', $userId)->where('status', 'paid');
+            $query->purchasedByUser($userId);
         })->count();
 
         $certificationProgramCount = EnrollmentCertificationProgram::whereHas('invoice', function ($query) use ($userId) {
-            $query->where('user_id', $userId)->where('status', 'paid');
+            $query->purchasedByUser($userId);
         })->count();
 
         // Ambil enrollment courses dengan progress
         $enrolledCourses = EnrollmentCourse::with(['course:id,title,slug', 'invoice'])
             ->whereHas('invoice', function ($query) use ($userId) {
-                $query->where('user_id', $userId)->where('status', 'paid');
+                $query->purchasedByUser($userId);
             })
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -55,7 +55,7 @@ class ProfileController extends Controller
         // Ambil enrollment bootcamps dengan jadwal dan group URL
         $enrolledBootcamps = EnrollmentBootcamp::with(['bootcamp:id,title,slug,start_date,end_date,group_url', 'invoice'])
             ->whereHas('invoice', function ($query) use ($userId) {
-                $query->where('user_id', $userId)->where('status', 'paid');
+                $query->purchasedByUser($userId);
             })
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -76,7 +76,7 @@ class ProfileController extends Controller
         // Ambil enrollment webinars dengan jadwal dan group URL
         $enrolledWebinars = EnrollmentWebinar::with(['webinar:id,title,slug,start_time,end_time,group_url', 'invoice'])
             ->whereHas('invoice', function ($query) use ($userId) {
-                $query->where('user_id', $userId)->where('status', 'paid');
+                $query->purchasedByUser($userId);
             })
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -94,20 +94,29 @@ class ProfileController extends Controller
                 ];
             });
 
-        $enrolledCertificationPrograms = EnrollmentCertificationProgram::with(['certificationProgram:id,title,slug,group_url', 'invoice'])
+        $enrolledCertificationPrograms = EnrollmentCertificationProgram::with([
+            'certificationProgram:id,title,slug,group_url',
+            'certificationProgram.schedules' => function ($q) {
+                $q->orderBy('schedule_date', 'asc')->orderBy('start_time', 'asc');
+            },
+            'invoice',
+        ])
             ->whereHas('invoice', function ($query) use ($userId) {
-                $query->where('user_id', $userId)->where('status', 'paid');
+                $query->purchasedByUser($userId);
             })
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
+            ->filter(fn ($enrollment) => !is_null($enrollment->certificationProgram))
             ->map(function ($enrollment) {
+                $firstSchedule = $enrollment->certificationProgram?->schedules?->first();
                 return [
                     'id' => $enrollment->certificationProgram->id,
                     'title' => $enrollment->certificationProgram->title,
                     'slug' => $enrollment->certificationProgram->slug,
                     'type' => 'certification-program',
                     'routeParam' => 'program',
+                    'start_date' => $firstSchedule?->schedule_date,
                     'group_url' => $enrollment->certificationProgram->group_url,
                     'is_scholarship' => $enrollment->is_scholarship,
                     'enrolled_at' => $enrollment->created_at,

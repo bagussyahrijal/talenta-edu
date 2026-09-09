@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import InstallmentOptions, { InstallmentTermOption, ActiveInstallmentData } from '@/components/installment-options';
 
 interface Mentor {
     id: string;
@@ -92,19 +93,23 @@ function getErrorMessage(error: unknown, fallback: string): string {
 interface RegisterProps {
     program: Program;
     hasAccess: boolean;
+    activeInstallment?: ActiveInstallmentData | null;
     pendingInvoiceUrl?: string | null;
     regularApplication?: Application | null;
     scholarshipApplication?: Application | null;
     isScholarship: boolean;
+    installmentTerms?: InstallmentTermOption[];
 }
 
 export default function Register({
     program,
     hasAccess,
+    activeInstallment: initialActiveInstallment = null,
     pendingInvoiceUrl,
     regularApplication,
     scholarshipApplication,
     isScholarship,
+    installmentTerms = [],
 }: RegisterProps) {
     const { auth } = usePage<SharedData>().props;
     const user = auth.user as
@@ -120,6 +125,8 @@ export default function Register({
     const isLoggedIn = !!user;
     const isProfileComplete = !!(isLoggedIn && user?.phone_number && user?.instance && user?.city);
 
+    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment || null);
+    const [paymentMode, setPaymentMode] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [isLoading, setIsLoading] = useState(false);
     const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
     const [documentAttachment, setDocumentAttachment] = useState<File | null>(null);
@@ -316,6 +323,7 @@ export default function Register({
             try {
                 const response = await axios.post('/api/check-email', {
                     email,
+                    certification_program_id: program.id,
                     program_id: program.id,
                 });
                 const data = response.data;
@@ -329,8 +337,16 @@ export default function Register({
                         instance: data.instance || prev.instance,
                         city: data.city || prev.city,
                     }));
+
+                    if (data.active_installment) {
+                        setActiveInstallment(data.active_installment);
+                        setPaymentMode('installment');
+                    } else {
+                        setActiveInstallment(null);
+                    }
                 } else {
                     setEmailExists(false);
+                    setActiveInstallment(null);
                 }
 
                 // Always check and store scholarship application status, regardless of user existence
@@ -341,6 +357,7 @@ export default function Register({
                 }
             } catch {
                 setEmailExists(false);
+                setActiveInstallment(null);
                 setGuestScholarshipStatus(null);
             } finally {
                 setCheckingEmail(false);
@@ -756,10 +773,10 @@ export default function Register({
                                 </div>
                                 <div className="flex w-full gap-3">
                                     <Button asChild className="flex-1" size="lg">
-                                        <Link href={route('user.dashboard')}>Ke Dashboard</Link>
+                                        <Link href={route('profile.index')}>Ke Dashboard</Link>
                                     </Button>
                                     <Button asChild variant="outline" className="flex-1" size="lg">
-                                        <Link href={route('certification-programs.index')}>Lihat Program Lain</Link>
+                                        <Link href={route('certification-program.index')}>Lihat Program Lain</Link>
                                     </Button>
                                 </div>
                             </div>
@@ -830,11 +847,11 @@ export default function Register({
                 <section className="mx-auto w-full max-w-7xl px-4 py-12">
                     <div className="mb-8 px-4">
                         <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                            <Link href="/certification-programs" className="hover:text-blue-600">
+                            <Link href="/certification-program" className="hover:text-blue-600">
                                 Certification Program
                             </Link>
                             <span>/</span>
-                            <Link href={`/certification-programs/${program.slug}`} className="hover:text-blue-600">
+                            <Link href={`/certification-program/${program.slug}`} className="hover:text-blue-600">
                                 {program.title}
                             </Link>
                             <span>/</span>
@@ -1051,7 +1068,49 @@ export default function Register({
                                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ringkasan Pembayaran</h2>
                                 </div>
                                 <div className="p-6 space-y-4">
-                                    {/* Pilihan Jenis Kode */}
+                                    {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
+                                    {installmentTerms.length > 0 && !isScholarship && displayPrice > 0 && (
+                                        <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-700">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMode('full')}
+                                                disabled={!!activeInstallment}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                Bayar Lunas (Full)
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMode('installment')}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'installment' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'}`}
+                                            >
+                                                Cicilan ({installmentTerms.length}x)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {paymentMode === 'installment' && installmentTerms.length > 0 && !isScholarship && displayPrice > 0 ? (
+                                        <InstallmentOptions
+                                            productType="certification_program"
+                                            productId={program.id}
+                                            productPrice={program.price}
+                                            terms={installmentTerms}
+                                            activeInstallment={activeInstallment}
+                                            termsAccepted={termsAccepted}
+                                            onTermsAcceptedChange={setTermsAccepted}
+                                            onBeforePay={async () => {
+                                                if (!activeInstallment && !termsAccepted) {
+                                                    toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                    return false;
+                                                }
+                                                const authed = await ensureAuthenticated();
+                                                setIsLoading(false);
+                                                return authed;
+                                            }}
+                                        />
+                                    ) : (
+                                        <>
+                                            {/* Pilihan Jenis Kode */}
                                     <div className="space-y-2">
                                         <Label className="text-sm font-medium">Jenis Kode</Label>
                                         <RadioGroup
@@ -1246,7 +1305,10 @@ export default function Register({
                                     <Separator />
                                     
                                     <div className="space-y-3">
-                                        {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (    <>
+                                        {!isScholarshipNotApproved &&
+                                        typeof program.strikethrough_price === 'number' &&
+                                        program.strikethrough_price > 0 ? (
+                                            <>
                                                 <div className="flex items-center justify-between text-sm">
                                                     <span className="text-gray-600 dark:text-gray-400">Harga Asli</span>
                                                     <span className="font-medium text-gray-500 line-through dark:text-gray-400">
@@ -1260,7 +1322,7 @@ export default function Register({
                                                     </span>
                                                 </div>
                                             </>
-                                        )}
+                                        ) : null}
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-gray-600 dark:text-gray-400">Harga Program</span>
                                             <span className="font-semibold text-gray-900 dark:text-white">
@@ -1347,6 +1409,7 @@ export default function Register({
                                         onClick={handlePrimaryAction}
                                         disabled={
                                             isLoading ||
+                                            !!activeInstallment ||
                                             showScholarshipWarning ||
                                             (!isLoggedIn && !isGuestFormComplete()) ||
                                             (requiresDocumentUpload && (isDocumentPending || isDocumentRejected)) ||
@@ -1368,9 +1431,11 @@ export default function Register({
                                             : 'Bayar Sekarang'}
                                     </Button>
                                     <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">Pembayaran aman dan terenkripsi 🔒</p>
-                                </div>
+                                    </>
+                                )}
                             </div>
                         </div>
+                    </div>
                     </div>
                 </section>
 

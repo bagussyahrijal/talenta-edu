@@ -205,8 +205,8 @@ class CertificationProgramController extends Controller
             $data['price'] = 0;
         }
 
-        $data['program_url'] = url('/certification-programs/' . $slug);
-        $data['registration_url'] = url('/certification-programs/' . $slug . '/register');
+        $data['program_url'] = url('/certification-program/' . $slug);
+        $data['registration_url'] = url('/certification-program/' . $slug . '/register');
         $data['status'] = 'draft';
 
         $program = CertificationProgram::create($data);
@@ -227,7 +227,7 @@ class CertificationProgramController extends Controller
 
     public function show(string $id)
     {
-        $program = CertificationProgram::with(['category', 'mentors', 'schedules', 'socializationSchedules'])->findOrFail($id);
+        $program = CertificationProgram::with(['category', 'mentors', 'schedules', 'socializationSchedules', 'installmentTerms'])->findOrFail($id);
 
         $applications = [];
         if ($program->type === 'scholarship') {
@@ -244,6 +244,7 @@ class CertificationProgramController extends Controller
         $transactionQuery = Invoice::with([
             'user',
             'referrer',
+            'installmentTerms',
             'certificationProgramItems' => function ($query) use ($id) {
                 $query->where('certification_program_id', $id);
             }
@@ -360,8 +361,8 @@ class CertificationProgramController extends Controller
             $data['price'] = 0;
         }
 
-        $data['program_url'] = url('/certification-programs/' . $slug);
-        $data['registration_url'] = url('/certification-programs/' . $slug . '/register');
+        $data['program_url'] = url('/certification-program/' . $slug);
+        $data['registration_url'] = url('/certification-program/' . $slug . '/register');
 
         $program->update($data);
 
@@ -574,7 +575,7 @@ class CertificationProgramController extends Controller
 
         if (!empty($application->phone)) {
             $phoneNumber = $this->formatPhoneNumber($application->phone);
-            $paymentUrl = url('/certification-programs/' . $program->slug . '/register?scholarship=1');
+            $paymentUrl = url('/certification-program/' . $program->slug . '/register?scholarship=1');
 
             $message = "*[Talenta - Pengumuman Beasiswa]* 🎉\n\n";
             $message .= "Hai Kak *{$application->name}*,\n\n";
@@ -660,8 +661,8 @@ class CertificationProgramController extends Controller
         $slug = $this->buildSlug($newProgram->title, $newProgram->batch ?? null);
         $newProgram->slug = $slug;
         $newProgram->status = 'draft';
-        $newProgram->program_url = url('/certification-programs/' . $slug);
-        $newProgram->registration_url = url('/certification-programs/' . $slug . '/register');
+        $newProgram->program_url = url('/certification-program/' . $slug);
+        $newProgram->registration_url = url('/certification-program/' . $slug . '/register');
         $newProgram->save();
 
         // Duplicate schedules (program sessions)

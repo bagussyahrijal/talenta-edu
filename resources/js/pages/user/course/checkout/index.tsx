@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import InstallmentOptions, { InstallmentTermOption, ActiveInstallmentData } from '@/components/installment-options';
 
 interface Course {
     id: string;
@@ -85,31 +86,6 @@ interface PendingInvoice {
     expires_at: string;
 }
 
-// interface PaymentChannel {
-//     active: boolean;
-//     code: string;
-//     fee_customer: {
-//         flat: number;
-//         percent: number;
-//     };
-//     fee_merchant: {
-//         flat: number;
-//         percent: number;
-//     };
-//     group: string;
-//     icon_url: string;
-//     maximum_amount: number;
-//     maximum_fee: number | null;
-//     minimum_amount: number;
-//     minimum_fee: number | null;
-//     name: string;
-//     total_fee: {
-//         flat: number;
-//         percent: string;
-//     };
-//     type: string;
-// }
-
 interface InvoiceData {
     type: string;
     id: string;
@@ -126,22 +102,28 @@ interface InvoiceData {
 export default function CheckoutCourse({
     course,
     hasAccess,
+    activeInstallment: initialActiveInstallment = null,
     pendingInvoice,
     transactionDetail,
     // channels,
     referralInfo,
+    installmentTerms = [],
 }: {
     course: Course;
     hasAccess: boolean;
+    activeInstallment?: ActiveInstallmentData | null;
     pendingInvoice?: PendingInvoice | null;
     transactionDetail?: TransactionDetail | null;
     // channels: PaymentChannel[];
     referralInfo: ReferralInfo;
+    installmentTerms?: InstallmentTermOption[];
 }) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
     const isProfileComplete = isLoggedIn && auth.user?.phone_number;
 
+    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment || null);
+    const [paymentMode, setPaymentMode] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [cancellingInvoice, setCancellingInvoice] = useState(false);
@@ -865,21 +847,65 @@ export default function CheckoutCourse({
                                 </div>
                             </div>
                         ) : (
-                            <form onSubmit={handleCheckout}>
-                                <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                    <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                            {isFree ? 'Detail Pendaftaran' : 'Ringkasan Pembayaran'}
-                                        </h2>
-                                    </div>
+                            <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+                                <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        {isFree ? 'Detail Pendaftaran' : 'Ringkasan Pembayaran'}
+                                    </h2>
+                                </div>
 
-                                    <div className="space-y-4 p-6">
-                                        {isFree ? (
-                                            <div className="rounded-lg bg-green-50 p-6 text-center dark:bg-green-900/20">
-                                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">KELAS GRATIS</p>
-                                                <p className="mt-2 text-sm text-green-700 dark:text-green-300">Dapatkan akses penuh secara gratis</p>
-                                            </div>
-                                        ) : (
+                                <div className="space-y-4 p-6">
+                                    {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
+                                    {installmentTerms.length > 0 && !isFree && (
+                                        <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-700">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMode('full')}
+                                                disabled={!!activeInstallment}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                Bayar Lunas (Full)
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMode('installment')}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'installment' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'}`}
+                                            >
+                                                Cicilan ({installmentTerms.length}x)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {paymentMode === 'installment' && installmentTerms.length > 0 && !isFree ? (
+                                        <InstallmentOptions
+                                            productType="course"
+                                            productId={course.id}
+                                            productPrice={course.price}
+                                            terms={installmentTerms}
+                                            activeInstallment={activeInstallment}
+                                            termsAccepted={termsAccepted}
+                                            onTermsAcceptedChange={setTermsAccepted}
+                                            onBeforePay={async () => {
+                                                if (!activeInstallment && !termsAccepted) {
+                                                    toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                    return false;
+                                                }
+                                                if (!isProfileComplete) {
+                                                    alert('Profil Anda belum lengkap! Harap lengkapi nomor telepon terlebih dahulu.');
+                                                    window.location.href = route('profile.edit');
+                                                    return false;
+                                                }
+                                                return true;
+                                            }}
+                                        />
+                                    ) : (
+                                        <form onSubmit={handleCheckout} className="space-y-4">
+                                            {isFree ? (
+                                                <div className="rounded-lg bg-green-50 p-6 text-center dark:bg-green-900/20">
+                                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">KELAS GRATIS</p>
+                                                    <p className="mt-2 text-sm text-green-700 dark:text-green-300">Dapatkan akses penuh secara gratis</p>
+                                                </div>
+                                            ) : (
                                             <>
                                                 {/* Pilihan Jenis Kode */}
                                                 <div className="space-y-2">
@@ -1144,7 +1170,7 @@ export default function CheckoutCourse({
                                             </>
                                         )}
 
-                                        <Button className="w-full" type="submit" disabled={(isFree ? false : !termsAccepted) || loading} size="lg">
+                                        <Button className="w-full" type="submit" disabled={(isFree ? false : !termsAccepted) || loading || !!activeInstallment} size="lg">
                                             {loading ? (
                                                 <span className="flex items-center gap-2">
                                                     <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
@@ -1158,10 +1184,11 @@ export default function CheckoutCourse({
                                         </Button>
 
                                         <p className="text-center text-xs text-gray-500 dark:text-gray-400">Pembayaran aman dan terenkripsi 🔒</p>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     </div>
                 </div>
             </section>

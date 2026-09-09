@@ -64,14 +64,15 @@ class InvoiceController extends Controller
         $productType = $request->input('product_type');
 
         // Buat query dasar
-        $invoicesQuery = Invoice::with([
+        $invoicesQuery = Invoice::whereNull('parent_invoice_id')->with([
             'user',
             'referrer',
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
             'bundleEnrollments.bundle',
-            'certificationProgramItems.certificationProgram'
+            'certificationProgramItems.certificationProgram',
+            'installmentTerms',
         ]);
 
         // Apply date filter jika ada
@@ -168,6 +169,7 @@ class InvoiceController extends Controller
         $bootcampTransactions = (clone $statsBase)->whereHas('bootcampItems')->count();
         $webinarTransactions = (clone $statsBase)->whereHas('webinarItems')->count();
         $bundleTransactions = (clone $statsBase)->whereHas('bundleEnrollments')->count();
+        $certificationProgramTransactions = (clone $statsBase)->whereHas('certificationProgramItems')->count();
 
         $todayTransactions = (clone $statsBase)->whereDate('paid_at', Carbon::today())->count();
         $todayRevenue = $isStaff ? 0 : (clone $statsBase)->where('status', 'paid')->whereDate('paid_at', Carbon::today())->sum('nett_amount');
@@ -206,6 +208,7 @@ class InvoiceController extends Controller
                 'bootcamp' => $bootcampTransactions,
                 'webinar' => $webinarTransactions,
                 'bundle' => $bundleTransactions,
+                'certification_program' => $certificationProgramTransactions,
             ],
             'period' => [
                 'today_transactions' => $todayTransactions,
@@ -1229,6 +1232,51 @@ class InvoiceController extends Controller
 
         $isSuccess = ($request->status == 'PAID' || $request->status == 'SETTLED');
 
+        // ====== INSTALLMENT CHILD HANDLER ======
+        if ($invoice->isInstallmentChild() && $isSuccess) {
+            $invoice->update([
+                'paid_at' => Carbon::now('Asia/Jakarta'),
+                'status' => 'paid',
+                'payment_method' => $request->payment_method ?? 'XENDIT',
+                'payment_channel' => $request->payment_channel ?? 'XENDIT',
+            ]);
+
+            $parentInvoice = Invoice::with([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'certificationProgramItems.certificationProgram',
+                'bundleEnrollments.bundle',
+            ])->find($invoice->parent_invoice_id);
+
+            if ($parentInvoice) {
+                // Jika termin ke-1 (DP): aktifkan akses
+                if ($invoice->installment_number === 1) {
+                    $this->activateInstallmentEnrollments($parentInvoice);
+                    $this->addEnrollmentToCertificateParticipants($parentInvoice);
+                }
+
+                // Pulihkan akses jika sebelumnya dibekukan
+                $parentInvoice->update(['access_suspended_at' => null]);
+
+                // Catat komisi affiliate untuk termin ini
+                $this->recordAffiliateCommissionForTerm($invoice, $parentInvoice);
+
+                // Cek apakah semua termin lunas
+                if ($parentInvoice->isFullyPaid()) {
+                    $parentInvoice->update(['status' => 'paid', 'paid_at' => Carbon::now('Asia/Jakarta')]);
+                    event(new \App\Events\TransactionPaid($parentInvoice));
+                    $this->sendWhatsAppInstallmentComplete($parentInvoice);
+                } else {
+                    $this->sendWhatsAppTermPaid($invoice, $parentInvoice);
+                }
+            }
+
+            return response()->json(['message' => 'Success'], 200);
+        }
+        // ====== END INSTALLMENT CHILD HANDLER ======
+
         if ($isSuccess) {
             $invoice->update([
                 'paid_at' => Carbon::now('Asia/Jakarta'),
@@ -1394,6 +1442,95 @@ class InvoiceController extends Controller
             ]);
         }
     }
+
+    // ==================== INSTALLMENT HELPERS ====================
+
+    /**
+     * Aktifkan akses enrollment pada invoice induk cicilan setelah DP dibayar
+     */
+    private function activateInstallmentEnrollments(Invoice $parentInvoice): void
+    {
+        // Jika invoice adalah bundling, buat individual enrollments untuk setiap item di dalam bundle
+        if ($parentInvoice->bundleEnrollments && $parentInvoice->bundleEnrollments->count() > 0) {
+            foreach ($parentInvoice->bundleEnrollments as $bundleEnrollment) {
+                $bundleEnrollment->createIndividualEnrollments();
+            }
+        }
+
+        Log::info('Installment DP paid - access activated', [
+            'parent_invoice_code' => $parentInvoice->invoice_code,
+            'user_id' => $parentInvoice->user_id,
+        ]);
+    }
+
+    /**
+     * Catat komisi affiliate untuk sebuah termin cicilan yang berhasil dibayar
+     */
+    private function recordAffiliateCommissionForTerm(Invoice $childInvoice, Invoice $parentInvoice): void
+    {
+        try {
+            $this->recordAffiliateCommission($childInvoice);
+        } catch (\Throwable $e) {
+            Log::error('Failed to record affiliate commission for installment term', [
+                'child_invoice_code' => $childInvoice->invoice_code,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Kirim WhatsApp saat satu termin cicilan berhasil dibayar (belum lunas)
+     */
+    private function sendWhatsAppTermPaid(Invoice $childInvoice, Invoice $parentInvoice): void
+    {
+        try {
+            $user = $parentInvoice->user;
+            if (!$user?->phone_number) return;
+
+            $phoneNumber = $this->formatPhoneNumber($user->phone_number);
+            $termNumber = $childInvoice->installment_number;
+            $totalTerms = $parentInvoice->installmentTerms()->count();
+            $nextTerm = $parentInvoice->nextUnpaidTerm();
+            $nextDue = $nextTerm && $nextTerm->installment_due_date ? Carbon::parse($nextTerm->installment_due_date)->translatedFormat('d F Y') : '-';
+
+            $message = "*[Talenta Edu - Pembayaran Cicilan Berhasil]*\n\n";
+            $message .= "Halo *{$user->name}*,\n\n";
+            $message .= "Pembayaran cicilan ke-*{$termNumber}/{$totalTerms}* sebesar *Rp " . number_format($childInvoice->amount, 0, ',', '.') . "* telah kami terima dan terkonfirmasi.\n\n";
+            if ($nextTerm) {
+                $message .= "📅 Tagihan cicilan ke-*" . ($termNumber + 1) . "/{$totalTerms}* jatuh tempo pada *{$nextDue}*.\n\n";
+            }
+            $message .= "Terima kasih!\n\n*Talenta Customer Support*";
+
+            self::sendText([['phone' => $phoneNumber, 'message' => $message, 'isGroup' => 'false']]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send WhatsApp term paid', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Kirim WhatsApp saat semua termin cicilan lunas
+     */
+    private function sendWhatsAppInstallmentComplete(Invoice $parentInvoice): void
+    {
+        try {
+            $user = $parentInvoice->user;
+            if (!$user?->phone_number) return;
+
+            $phoneNumber = $this->formatPhoneNumber($user->phone_number);
+
+            $message = "*[Talenta Edu - Cicilan Telah Lunas]*\n\n";
+            $message .= "Halo *{$user->name}*,\n\n";
+            $message .= "Selamat! Semua tagihan cicilan untuk invoice *{$parentInvoice->invoice_code}* telah *LUNAS*.\n\n";
+            $message .= "Anda memiliki akses penuh ke seluruh materi program dan sertifikat kelulusan dapat diakses melalui profil Anda.\n\n";
+            $message .= "Terima kasih!\n\n*Talenta Customer Support*";
+
+            self::sendText([['phone' => $phoneNumber, 'message' => $message, 'isGroup' => 'false']]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send WhatsApp installment complete', ['error' => $e->getMessage()]);
+        }
+    }
+
+    // ==================== END INSTALLMENT HELPERS ====================
 
     /**
      * Buat pesan WhatsApp berdasarkan item yang dibeli

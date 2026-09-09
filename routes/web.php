@@ -44,6 +44,8 @@ use App\Http\Controllers\User\Profile\CertificationProgramController as ProfileC
 use App\Http\Controllers\User\Profile\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\InstallmentController;
+use App\Http\Controllers\Admin\InstallmentTermController;
 use App\Http\Controllers\Admin\ReferralAdminController;
 use App\Http\Controllers\WebinarController;
 use App\Http\Controllers\User\QuizController as UserQuizController;
@@ -132,8 +134,13 @@ Route::get('/webinar', [UserWebinarController::class, 'index'])->name('webinar.i
 Route::get('/webinar/{webinar:slug}', [UserWebinarController::class, 'detail'])->name('webinar.detail');
 Route::get('/bundle', [UserBundleController::class, 'index'])->name('bundle.index');
 Route::get('/bundle/{bundle:slug}', [UserBundleController::class, 'detail'])->name('bundle.detail');
-Route::get('/certification-programs', [UserCertificationProgramController::class, 'index'])->name('certification-programs.index');
-Route::get('/certification-programs/{program:slug}', [UserCertificationProgramController::class, 'detail'])->name('certification-programs.detail');
+Route::get('/certification-program', [UserCertificationProgramController::class, 'index'])->name('certification-program.index');
+Route::get('/certification-program/{program:slug}', [UserCertificationProgramController::class, 'detail'])->name('certification-programs.detail');
+
+// Compatibility routes for legacy /certification-programs routes
+Route::get('/certification-programs', [UserCertificationProgramController::class, 'index']);
+Route::get('/certification-programs/{program:slug}', [UserCertificationProgramController::class, 'detail']);
+
 Route::get('/certificate/{code}', [CertificateParticipantController::class, 'show'])->name('certificate.participant.detail');
 Route::get('/certificate/{code}/pdf', [CertificateParticipantController::class, 'viewPdf'])->name('certificate.participant.pdf');
 Route::get('/certificate/{code}/download', [CertificateParticipantController::class, 'downloadPdf'])->name('certificate.participant.download.public');
@@ -151,10 +158,16 @@ Route::get('/course/{course:slug}/checkout', [UserCourseController::class, 'show
 Route::get('/bootcamp/{bootcamp:slug}/register', [UserBootcampController::class, 'showRegister'])->name('bootcamp.register');
 Route::get('/webinar/{webinar:slug}/register', [UserWebinarController::class, 'showRegister'])->name('webinar.register');
 Route::get('/bundle/{bundle:slug}/checkout', [UserBundleController::class, 'showCheckout'])->name('bundle.checkout');
-Route::get('/certification-programs/{program:slug}/register', [UserCertificationProgramController::class, 'showRegister'])->name('certification-programs.register');
-Route::get('/certification-programs/{program:slug}/scholarship-apply', [UserCertificationProgramController::class, 'scholarshipApply'])->name('certification-programs.scholarship-apply');
-Route::post('/certification-programs/{program:slug}/scholarship-store', [UserCertificationProgramController::class, 'scholarshipStore'])->name('certification-programs.scholarship-store');
-Route::get('/certification-programs/{program:slug}/scholarship-success', [UserCertificationProgramController::class, 'scholarshipSuccess'])->name('certification-programs.scholarship-success');
+Route::get('/certification-program/{program:slug}/register', [UserCertificationProgramController::class, 'showRegister'])->name('certification-programs.register');
+Route::get('/certification-program/{program:slug}/scholarship-apply', [UserCertificationProgramController::class, 'scholarshipApply'])->name('certification-programs.scholarship-apply');
+Route::post('/certification-program/{program:slug}/scholarship-store', [UserCertificationProgramController::class, 'scholarshipStore'])->name('certification-programs.scholarship-store');
+Route::get('/certification-program/{program:slug}/scholarship-success', [UserCertificationProgramController::class, 'scholarshipSuccess'])->name('certification-programs.scholarship-success');
+
+// Legacy compatibility for subroutes with 's'
+Route::get('/certification-programs/{program:slug}/register', [UserCertificationProgramController::class, 'showRegister']);
+Route::get('/certification-programs/{program:slug}/scholarship-apply', [UserCertificationProgramController::class, 'scholarshipApply']);
+Route::post('/certification-programs/{program:slug}/scholarship-store', [UserCertificationProgramController::class, 'scholarshipStore']);
+Route::get('/certification-programs/{program:slug}/scholarship-success', [UserCertificationProgramController::class, 'scholarshipSuccess']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/course/checkout/success', [UserCourseController::class, 'showCheckoutSuccess'])->name('course.checkout.success');
@@ -164,13 +177,22 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/invoice', [InvoiceController::class, 'store'])->name('invoice.store');
     Route::post('/invoice-bundle', [InvoiceController::class, 'storeBundle'])->name('invoice.store.bundle');
     Route::post('/enroll/free', [InvoiceController::class, 'enrollFree'])->name('enroll.free');
-    Route::post('/certification-programs/{program:slug}/apply-regular', [UserCertificationProgramController::class, 'applyRegular'])->name('certification-programs.apply-regular');
+    Route::post('/certification-program/{program:slug}/apply-regular', [UserCertificationProgramController::class, 'applyRegular'])->name('certification-programs.apply-regular');
+    Route::post('/certification-programs/{program:slug}/apply-regular', [UserCertificationProgramController::class, 'applyRegular']);
     Route::get('/invoice/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
     Route::post('/invoice/{id}/cancel', [InvoiceController::class, 'cancel'])->name('invoice.cancel');
     Route::post('/invoice/expire-old', [InvoiceController::class, 'expireOldInvoices'])->name('invoice.expire-old');
 
+    // Installment routes
+    Route::post('/invoice/installment', [InstallmentController::class, 'store'])->name('installment.store');
+    Route::post('/installment/{id}/pay', [InstallmentController::class, 'payTerm'])->name('installment.pay-term');
+    Route::get('/profile/installments', [InstallmentController::class, 'index'])->name('profile.installments');
+
     Route::redirect('profile', 'profile/dashboard');
     Route::get('/profile/dashboard', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/user/dashboard', function () {
+        return redirect()->route('profile.index');
+    })->name('user.dashboard');
     Route::get('/profile/my-courses', [ProfileCourseController::class, 'index'])->name('profile.courses');
     Route::get('/profile/my-courses/{course}', [ProfileCourseController::class, 'detail'])->name('profile.course.detail');
     Route::get('/profile/my-courses/{course}/certificate', [ProfileCourseController::class, 'downloadCertificate'])->name('profile.course.certificate');
@@ -517,6 +539,13 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate|staff'])->pr
         Route::post('referral/settings', [ReferralAdminController::class, 'updateSettings'])->name('admin.referral.settings.update');
         Route::post('referral/adjust-points', [ReferralAdminController::class, 'adjustPoints'])->name('admin.referral.adjust-points');
     });
+
+    // Installment Term admin routes
+    Route::post('products/{type}/{id}/installments/toggle', [InstallmentTermController::class, 'toggleEnabled'])->name('installments.toggle');
+    Route::post('installment-terms', [InstallmentTermController::class, 'store'])->name('installment-terms.store');
+    Route::put('installment-terms/{id}', [InstallmentTermController::class, 'update'])->name('installment-terms.update');
+    Route::delete('installment-terms/{id}', [InstallmentTermController::class, 'destroy'])->name('installment-terms.destroy');
+    Route::post('installments/{id}/send-reminder', [InstallmentController::class, 'sendReminder'])->name('installments.send-reminder');
 });
 
 Route::post('/api/discount-codes/validate', [DiscountCodeController::class, 'validate'])->name('api.discount-codes.validate');

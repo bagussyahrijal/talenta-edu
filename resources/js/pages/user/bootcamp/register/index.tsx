@@ -13,6 +13,7 @@ import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import InstallmentOptions, { InstallmentTermOption, ActiveInstallmentData } from '@/components/installment-options';
 
 interface Bootcamp {
     id: string;
@@ -133,20 +134,26 @@ type RegisterForm = {
 export default function RegisterBootcamp({
     bootcamp,
     hasAccess,
+    activeInstallment: initialActiveInstallment = null,
     pendingInvoice,
     transactionDetail,
     referralInfo,
+    installmentTerms = [],
 }: {
     bootcamp: Bootcamp;
     hasAccess: boolean;
+    activeInstallment?: ActiveInstallmentData | null;
     pendingInvoice?: PendingInvoice | null;
     transactionDetail?: TransactionDetail | null;
     referralInfo: ReferralInfo;
+    installmentTerms?: InstallmentTermOption[];
 }) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
     const isProfileComplete = isLoggedIn && auth.user?.phone_number && auth.user?.instance && auth.user?.city;
 
+    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment || null);
+    const [paymentMode, setPaymentMode] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [cancellingInvoice, setCancellingInvoice] = useState(false);
@@ -210,6 +217,7 @@ export default function RegisterBootcamp({
             try {
                 const response = await axios.post('/api/check-email', {
                     email: data.email,
+                    bootcamp_id: bootcamp.id,
                 });
 
                 if (response.data.exists) {
@@ -218,19 +226,28 @@ export default function RegisterBootcamp({
                     setData('phone_number', response.data.phone_number || '');
                     setData('instance', response.data.instance || '');
                     setData('city', response.data.city || '');
+
+                    if (response.data.active_installment) {
+                        setActiveInstallment(response.data.active_installment);
+                        setPaymentMode('installment');
+                    } else {
+                        setActiveInstallment(null);
+                    }
                 } else {
                     setEmailExists(false);
+                    setActiveInstallment(null);
                 }
             } catch (error) {
                 console.error('Error checking email:', error);
                 setEmailExists(false);
+                setActiveInstallment(null);
             } finally {
                 setCheckingEmail(false);
             }
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [data.email]);
+    }, [data.email, bootcamp.id]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -462,16 +479,59 @@ export default function RegisterBootcamp({
         }
     };
 
+    const ensureAuth = async (): Promise<boolean> => {
+        if (isLoggedIn) return true;
+
+        if (!data.email || !data.name || !data.phone_number || !data.instance || !data.city) {
+            toast.error('Lengkapi data terlebih dahulu');
+            return false;
+        }
+
+        try {
+            if (emailExists) {
+                const response = await axios.post(route('auto-login'), {
+                    email: data.email,
+                    phone_number: data.phone_number,
+                    instance: data.instance,
+                    city: data.city,
+                });
+
+                if (!response.data.success) {
+                    throw new Error(response.data.message || 'Login gagal. Pastikan nomor telepon sesuai dengan yang terdaftar.');
+                }
+            } else {
+                const response = await axios.post(route('register'), {
+                    name: data.name,
+                    email: data.email,
+                    phone_number: data.phone_number,
+                    instance: data.instance,
+                    city: data.city,
+                    password: data.phone_number,
+                    password_confirmation: data.phone_number,
+                    affiliate_code: sessionStorage.getItem('affiliate_code') || '',
+                });
+
+                if (!(response.data?.success || response.status === 200 || response.status === 201)) {
+                    throw new Error('Registrasi gagal');
+                }
+            }
+            return true;
+        } catch (error: any) {
+            console.error('Login/Register error:', error);
+            if (error.response?.status === 419) {
+                toast.error('Sesi telah berakhir. Silakan muat ulang halaman.');
+            } else {
+                toast.error(error.response?.data?.message || error.message || 'Gagal login/registrasi');
+            }
+            return false;
+        }
+    };
+
     const handleCheckout = async (e: React.FormEvent) => {
         e.preventDefault();
 
         // Jika belum login, lakukan registrasi/login dan langsung bayar
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number || !data.instance || !data.city) {
-                toast.error('Lengkapi data terlebih dahulu');
-                return;
-            }
-
             if (!termsAccepted && !isFree) {
                 toast.error('Anda harus menyetujui syarat dan ketentuan!');
                 return;
@@ -480,36 +540,10 @@ export default function RegisterBootcamp({
             setLoading(true);
 
             try {
-                if (emailExists) {
-                    const response = await axios.post(route('auto-login'), {
-                        email: data.email,
-                        phone_number: data.phone_number,
-                        instance: data.instance,
-                        city: data.city,
-                    });
-
-                    if (!response.data.success) {
-                        throw new Error(response.data.message || 'Login gagal. Pastikan nomor telepon sesuai dengan yang terdaftar.');
-                    }
-
-                    toast.success('Login berhasil! Memproses pembayaran...');
-                } else {
-                    const response = await axios.post(route('register'), {
-                        name: data.name,
-                        email: data.email,
-                        phone_number: data.phone_number,
-                        instance: data.instance,
-                        city: data.city,
-                        password: data.phone_number,
-                        password_confirmation: data.phone_number,
-                        affiliate_code: sessionStorage.getItem('affiliate_code') || '',
-                    });
-
-                    if (!(response.data?.success || response.status === 200 || response.status === 201)) {
-                        throw new Error('Registrasi gagal');
-                    }
-
-                    toast.success('Registrasi berhasil! Memproses pembayaran...');
+                const authed = await ensureAuth();
+                if (!authed) {
+                    setLoading(false);
+                    return;
                 }
 
                 if (isFree) {
@@ -520,14 +554,7 @@ export default function RegisterBootcamp({
 
                 await submitPayment();
             } catch (error: any) {
-                console.error('Login/Register error:', error);
                 setLoading(false);
-
-                if (error.response?.status === 419) {
-                    toast.error('Sesi telah berakhir. Silakan muat ulang halaman.');
-                } else {
-                    toast.error(error.response?.data?.message || error.message || 'Gagal login/registrasi');
-                }
                 return;
             }
             return;
@@ -1219,28 +1246,67 @@ export default function RegisterBootcamp({
                                 </div>
                             </div>
                         ) : !showFreeForm ? (
-                            <form onSubmit={handleCheckout}>
-                                <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                    <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                            {isFree ? 'Detail Pendaftaran' : 'Ringkasan Pembayaran'}
-                                        </h2>
-                                    </div>
+                            <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+                                <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        {isFree ? 'Detail Pendaftaran' : 'Ringkasan Pembayaran'}
+                                    </h2>
+                                </div>
 
-                                    <div className="space-y-4 p-6">
-                                        {isFree ? (
-                                            <div className="rounded-lg bg-green-50 p-6 text-center dark:bg-green-900/20">
-                                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">BOOTCAMP GRATIS</p>
-                                                <p className="mt-2 text-sm text-green-700 dark:text-green-300">
-                                                    Dapatkan akses dengan mengikuti persyaratan berikut
-                                                </p>
-                                                <ul className="mt-4 space-y-1 text-left text-sm text-green-700 dark:text-green-300">
-                                                    {bootcamp.requirement_1 && <li>• {bootcamp.requirement_1}</li>}
-                                                    {bootcamp.requirement_2 && <li>• {bootcamp.requirement_2}</li>}
-                                                    {bootcamp.requirement_3 && <li>• {bootcamp.requirement_3}</li>}
-                                                </ul>
-                                            </div>
-                                        ) : (
+                                <div className="space-y-4 p-6">
+                                    {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
+                                    {installmentTerms.length > 0 && !isFree && (
+                                        <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-700">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMode('full')}
+                                                disabled={!!activeInstallment}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                Bayar Lunas (Full)
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMode('installment')}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'installment' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'}`}
+                                            >
+                                                Cicilan ({installmentTerms.length}x)
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {paymentMode === 'installment' && installmentTerms.length > 0 && !isFree ? (
+                                        <InstallmentOptions
+                                            productType="bootcamp"
+                                            productId={bootcamp.id}
+                                            productPrice={bootcamp.price}
+                                            terms={installmentTerms}
+                                            activeInstallment={activeInstallment}
+                                            termsAccepted={termsAccepted}
+                                            onTermsAcceptedChange={setTermsAccepted}
+                                            onBeforePay={async () => {
+                                                if (!activeInstallment && !termsAccepted) {
+                                                    toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                    return false;
+                                                }
+                                                return await ensureAuth();
+                                            }}
+                                        />
+                                    ) : (
+                                        <form onSubmit={handleCheckout} className="space-y-4">
+                                            {isFree ? (
+                                                <div className="rounded-lg bg-green-50 p-6 text-center dark:bg-green-900/20">
+                                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">BOOTCAMP GRATIS</p>
+                                                    <p className="mt-2 text-sm text-green-700 dark:text-green-300">
+                                                        Dapatkan akses dengan mengikuti persyaratan berikut
+                                                    </p>
+                                                    <ul className="mt-4 space-y-1 text-left text-sm text-green-700 dark:text-green-300">
+                                                        {bootcamp.requirement_1 && <li>• {bootcamp.requirement_1}</li>}
+                                                        {bootcamp.requirement_2 && <li>• {bootcamp.requirement_2}</li>}
+                                                        {bootcamp.requirement_3 && <li>• {bootcamp.requirement_3}</li>}
+                                                    </ul>
+                                                </div>
+                                            ) : (
                                             <>
                                                 {/* Pilihan Jenis Kode */}
                                                 <div className="space-y-2">
@@ -1540,10 +1606,11 @@ export default function RegisterBootcamp({
                                         </Button>
 
                                         <p className="text-center text-xs text-gray-500 dark:text-gray-400">Pembayaran aman dan terenkripsi 🔒</p>
-                                    </div>
-                                </div>
-                            </form>
-                        ) : (
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
                             <form onSubmit={handleFreeCheckout}>
                                 <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
                                     <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">

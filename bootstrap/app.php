@@ -50,4 +50,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->toResponse($request)
                 ->setStatusCode(404);
         });
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('installment:check-overdue')->dailyAt('08:00');
+        $schedule->command('invoices:expire-old')->hourly();
     })->create();

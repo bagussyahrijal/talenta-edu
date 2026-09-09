@@ -32,6 +32,7 @@ export type Bundle = {
     strikethrough_price: number;
     registration_deadline?: string | null;
     status: 'draft' | 'published' | 'archived';
+    installment_enabled?: boolean;
     bundle_items?: BundleItem[];
     enrollments_count?: number;
     created_at: string;
@@ -117,6 +118,7 @@ export const columns: ColumnDef<Bundle>[] = [
         header: 'No',
         cell: ({ row }) => {
             const index = row.index + 1;
+
             return <div className="font-medium">{index}</div>;
         },
     },
@@ -125,9 +127,16 @@ export const columns: ColumnDef<Bundle>[] = [
         header: ({ column }) => <DataTableColumnHeader column={column} title="Judul" />,
         cell: ({ row }) => {
             return (
-                <Link href={route('bundles.show', row.original.id)} className="text-primary font-medium hover:underline">
-                    {row.original.title}
-                </Link>
+                <div className="flex flex-col gap-1 items-start">
+                    <Link href={route('bundles.show', row.original.id)} className="text-primary font-medium hover:underline">
+                        {row.original.title}
+                    </Link>
+                    {row.original.installment_enabled && (
+                        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                            Cicilan Aktif
+                        </Badge>
+                    )}
+                </div>
             );
         },
     },

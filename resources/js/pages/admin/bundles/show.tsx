@@ -17,6 +17,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { BundleTransactionInvoice } from './columns-transactions';
 import BundleTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Product {
     id: string;
@@ -49,11 +51,17 @@ interface Invoice {
     user: User;
 }
 
-interface EnrollmentBundle {
+interface Enrollment {
     id: string;
     price: number;
     created_at: string;
     invoice: Invoice;
+}
+
+interface GroupedItems {
+    courses: BundleItem[];
+    bootcamps: BundleItem[];
+    webinars: BundleItem[];
 }
 
 interface Bundle {
@@ -66,24 +74,24 @@ interface Bundle {
     thumbnail?: string | null;
     batch?: string | null;
     price: number;
-    registration_deadline?: string | null;
-    description: string;
-    benefits?: string[];
-    price: number;
     discount_price?: number;
-    thumbnail?: string;
+    strikethrough_price?: number;
+    registration_deadline?: string | null;
     status: 'draft' | 'published' | 'archived';
     telegram_group_url?: string;
     whatsapp_group_url?: string;
     registration_url: string;
     bundle_url: string;
-    registration_deadline?: string;
     start_date?: string;
     end_date?: string;
-    is_lifetime: boolean;
+    is_lifetime?: boolean;
     bundle_items: BundleItem[];
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     enrollments: Enrollment[];
     created_at: string;
+    updated_at?: string;
 }
 
 interface ShowProps {
@@ -187,7 +195,10 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
     };
 
     const totalEnrollments = bundle.enrollments.length;
-    const paidEnrollments = bundle.enrollments.filter((e) => e.invoice.status === 'paid').length;
+    const paidEnrollments = bundle.enrollments.filter((e) => e.invoice?.status === 'paid').length;
+    const totalRevenue = bundle.enrollments
+        .filter((e) => e.invoice && (e.invoice.status === 'paid' || (e.invoice.status as string) === 'completed'))
+        .reduce((sum, e) => sum + (e.invoice?.amount || 0), 0);
     const transactions: BundleTransactionInvoice[] = bundle.enrollments.map((enrollment) => ({
         id: enrollment.invoice.id,
         user: {
@@ -548,6 +559,17 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {canManageBundle && (
+                                <InstallmentConfig
+                                    productType="bundle"
+                                    productId={bundle.id}
+                                    productPrice={bundle.price}
+                                    installmentEnabled={bundle.installment_enabled ?? false}
+                                    initialTerms={bundle.installment_terms || bundle.installmentTerms || []}
+                                    registrationDeadline={bundle.registration_deadline}
+                                />
+                            )}
                         </TabsContent>
 
                         {/* Enrollments Tab */}
@@ -810,10 +832,12 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
                                         <span className="text-muted-foreground text-xs">Dibuat:</span>
                                         <span className="text-xs">{format(new Date(bundle.created_at), 'dd MMM yyyy', { locale: id })}</span>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-muted-foreground text-xs">Diperbarui:</span>
-                                        <span className="text-xs">{format(new Date(bundle.updated_at), 'dd MMM yyyy', { locale: id })}</span>
-                                    </div>
+                                    {bundle.updated_at && (
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground text-xs">Diperbarui:</span>
+                                            <span className="text-xs">{format(new Date(bundle.updated_at), 'dd MMM yyyy', { locale: id })}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

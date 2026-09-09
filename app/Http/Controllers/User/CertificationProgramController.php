@@ -81,7 +81,7 @@ class CertificationProgramController extends Controller
                 'item' => $program->only(['title', 'slug', 'status']),
                 'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
                 'message' => 'Program tidak tersedia. Silahkan hubungi admin.',
-                'backUrl' => route('certification-programs.index'),
+                'backUrl' => route('certification-program.index'),
                 'backLabel' => 'Kembali ke Daftar Sertifikasi',
             ])->toResponse($request)->setStatusCode(404);
         }
@@ -157,7 +157,7 @@ class CertificationProgramController extends Controller
                 'item' => $program->only(['title', 'slug', 'status']),
                 'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
                 'message' => 'Program tidak tersedia. Silahkan hubungi admin.',
-                'backUrl' => route('certification-programs.index'),
+                'backUrl' => route('certification-program.index'),
                 'backLabel' => 'Kembali ke Daftar Sertifikasi',
             ])->toResponse($request)->setStatusCode(404);
         }
@@ -165,6 +165,7 @@ class CertificationProgramController extends Controller
         $program->load(['schedules', 'socializationSchedules', 'category', 'mentors']);
 
         $hasAccess = false;
+        $activeInstallment = null;
         $pendingInvoiceUrl = null;
         $regularApplication = null;
         $scholarshipApplication = null;
@@ -176,6 +177,7 @@ class CertificationProgramController extends Controller
 
         if (Auth::check()) {
             $userId = Auth::id();
+            $activeInstallment = Invoice::getActiveInstallmentForUser($userId, 'certification_program', $program->id);
 
             $hasAccess = Invoice::where('user_id', $userId)
                 ->where('status', 'paid')
@@ -183,6 +185,12 @@ class CertificationProgramController extends Controller
                     $query->where('certification_program_id', $program->id);
                 })
                 ->exists();
+
+            // Cek akses via cicilan aktif
+            if (!$hasAccess && $activeInstallment) {
+                $firstTermPaid = ($activeInstallment['terms'][0]['status'] ?? '') === 'paid';
+                $hasAccess = $firstTermPaid && empty($activeInstallment['access_suspended_at']);
+            }
 
             if (!$hasAccess) {
                 $pendingInvoice = Invoice::where('user_id', $userId)
@@ -216,10 +224,12 @@ class CertificationProgramController extends Controller
         return Inertia::render('user/certification-program/register/index', [
             'program' => $program,
             'hasAccess' => $hasAccess,
+            'activeInstallment' => $activeInstallment,
             'pendingInvoiceUrl' => $pendingInvoiceUrl,
             'regularApplication' => $regularApplication,
             'scholarshipApplication' => $scholarshipApplication,
             'isScholarship' => $isScholarship,
+            'installmentTerms' => $program->installmentTerms()->get(['term_number', 'amount', 'due_date']),
         ]);
     }
 
@@ -345,7 +355,7 @@ class CertificationProgramController extends Controller
             $program,
             $validated['name'],
             $validated['phone'],
-            url('/certification-programs/' . $program->slug . '/register?scholarship=1'),
+            url('/certification-program/' . $program->slug . '/register?scholarship=1'),
             $program->socialization_group_url
         );
 

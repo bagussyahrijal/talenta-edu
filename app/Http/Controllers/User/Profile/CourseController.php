@@ -24,9 +24,9 @@ class CourseController extends Controller
     public function index()
     {
         $userId = Auth::id();
-        $myCourses = Invoice::with('courseItems.course.category')
-            ->where('user_id', $userId)
-            ->where('status', 'paid')
+        $myCourses = Invoice::with(['courseItems.course.category', 'installmentTerms'])
+            ->purchasedByUser($userId)
+            ->whereHas('courseItems')
             ->orderBy('created_at', 'desc')
             ->get();
         return Inertia::render('user/profile/course/index', ['myCourses' => $myCourses]);
@@ -41,8 +41,7 @@ class CourseController extends Controller
                 $q->where('slug', $slug);
             })->with('course.category');
         }])
-            ->where('user_id', $userId)
-            ->where('status', 'paid')
+            ->purchasedByUser($userId)
             ->whereHas('courseItems.course', function ($query) use ($slug) {
                 $query->where('slug', $slug);
             })
@@ -92,8 +91,7 @@ class CourseController extends Controller
                     })->with('course'); // ✅ filter by slug
                 }
             ])
-                ->where('user_id', $userId)
-                ->where('status', 'paid')
+                ->purchasedByUser($userId)
                 ->whereHas('courseItems.course', function ($query) use ($slug) {
                     $query->where('slug', $slug);
                 })
@@ -161,8 +159,7 @@ class CourseController extends Controller
                     })->with('course'); // ✅ filter by slug
                 }
             ])
-                ->where('user_id', $userId)
-                ->where('status', 'paid')
+                ->purchasedByUser($userId)
                 ->whereHas('courseItems.course', function ($query) use ($slug) {
                     $query->where('slug', $slug);
                 })

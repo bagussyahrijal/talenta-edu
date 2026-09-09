@@ -172,6 +172,7 @@ export type Course = {
     price: number;
     status: 'draft' | 'published' | 'archived';
     level: 'beginner' | 'intermediate' | 'advanced';
+    installment_enabled?: boolean;
     created_at: string;
     certificate?: {
         id: string;
@@ -217,9 +218,16 @@ export const columns: ColumnDef<Course>[] = [
         header: ({ column }) => <DataTableColumnHeader column={column} title="Judul" />,
         cell: ({ row }) => {
             return (
-                <Link href={route('courses.show', row.original.id)} className="text-primary font-medium hover:underline">
-                    {row.original.title}
-                </Link>
+                <div className="flex flex-col gap-1 items-start">
+                    <Link href={route('courses.show', row.original.id)} className="text-primary font-medium hover:underline">
+                        {row.original.title}
+                    </Link>
+                    {row.original.installment_enabled && (
+                        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                            Cicilan Aktif
+                        </Badge>
+                    )}
+                </div>
             );
         },
     },

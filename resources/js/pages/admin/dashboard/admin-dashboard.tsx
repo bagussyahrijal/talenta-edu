@@ -28,6 +28,11 @@ import { useEffect, useState } from 'react';
 import { ParticipantChart } from './charts/participant-chart';
 import { RevenueChart } from './charts/revenue-chart';
 
+interface CertificationItem {
+    certification_program?: { title: string };
+    certificationProgram?: { title: string };
+}
+
 interface RecentSale {
     id: number | string;
     user: {
@@ -35,16 +40,23 @@ interface RecentSale {
     };
     nett_amount: number;
     course_items?: { course: { title: string } }[];
+    courseItems?: { course: { title: string } }[];
     bootcamp_items?: { bootcamp: { title: string } }[];
+    bootcampItems?: { bootcamp: { title: string } }[];
     webinar_items?: { webinar: { title: string } }[];
+    webinarItems?: { webinar: { title: string } }[];
     bundle_enrollments?: { bundle: { title: string } }[];
-    certification_program_items?: { certification_program: { title: string } }[];
+    bundleEnrollments?: { bundle: { title: string } }[];
+    certification_program_items?: CertificationItem[];
+    certificationProgramItems?: CertificationItem[];
+    parent_invoice?: RecentSale | null;
+    parentInvoice?: RecentSale | null;
 }
 
 interface PopularProduct {
     id: number | string;
     title: string;
-    type: 'course' | 'bootcamp' | 'webinar';
+    type: 'course' | 'bootcamp' | 'webinar' | 'certification_program';
     enrollment_count: number;
     thumbnail?: string;
     price: number;
@@ -61,7 +73,7 @@ interface MonthlyRevenueData {
 interface ParticipantData {
     date: string;
     count: number;
-    type: 'course' | 'bootcamp' | 'webinar';
+    type: 'course' | 'bootcamp' | 'webinar' | 'certification_program';
 }
 
 interface StatsProps {
@@ -125,11 +137,30 @@ const formatCurrency = (amount: number | string) => {
 };
 
 const getInvoiceItemName = (invoice: RecentSale): string => {
-    if (invoice.course_items?.length && invoice.course_items.length > 0) return `Kelas: ${invoice.course_items[0].course.title}`;
-    if (invoice.bootcamp_items?.length && invoice.bootcamp_items.length > 0) return `Bootcamp: ${invoice.bootcamp_items[0].bootcamp.title}`;
-    if (invoice.webinar_items?.length && invoice.webinar_items.length > 0) return `Webinar: ${invoice.webinar_items[0].webinar.title}`;
-    if (invoice.bundle_enrollments?.length && invoice.bundle_enrollments.length > 0) return `Bundle: ${invoice.bundle_enrollments[0].bundle.title}`;
-    if (invoice.certification_program_items?.length && invoice.certification_program_items.length > 0) return `Sertifikasi: ${invoice.certification_program_items[0].certification_program.title}`;
+    const courses = invoice.courseItems || invoice.course_items;
+    if (courses?.length && courses.length > 0) return `Kelas: ${courses[0].course.title}`;
+
+    const bootcamps = invoice.bootcampItems || invoice.bootcamp_items;
+    if (bootcamps?.length && bootcamps.length > 0) return `Bootcamp: ${bootcamps[0].bootcamp.title}`;
+
+    const webinars = invoice.webinarItems || invoice.webinar_items;
+    if (webinars?.length && webinars.length > 0) return `Webinar: ${webinars[0].webinar.title}`;
+
+    const bundles = invoice.bundleEnrollments || invoice.bundle_enrollments;
+    if (bundles?.length && bundles.length > 0) return `Bundle: ${bundles[0].bundle.title}`;
+
+    const certs = invoice.certificationProgramItems || invoice.certification_program_items;
+    if (certs?.length && certs.length > 0) {
+        const certItem = certs[0];
+        const title = certItem.certificationProgram?.title || certItem.certification_program?.title;
+        if (title) return `Sertifikasi: ${title}`;
+    }
+
+    const parent = invoice.parent_invoice || invoice.parentInvoice;
+    if (parent) {
+        return getInvoiceItemName(parent);
+    }
+
     return 'Produk tidak diketahui';
 };
 
@@ -138,17 +169,19 @@ const getProductTypeBadge = (type: string) => {
         course: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
         bootcamp: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
         webinar: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+        certification_program: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
     };
 
     const labels = {
         course: 'Kelas',
         bootcamp: 'Bootcamp',
         webinar: 'Webinar',
+        certification_program: 'Sertifikasi',
     };
 
     return (
-        <Badge className={styles[type as keyof typeof styles]}>
-            {labels[type as keyof typeof labels]}
+        <Badge className={styles[type as keyof typeof styles] || 'bg-gray-100 text-gray-800'}>
+            {labels[type as keyof typeof labels] || type}
         </Badge>
     );
 };

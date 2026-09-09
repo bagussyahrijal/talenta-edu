@@ -148,7 +148,7 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
                             <Link href={route('certification-programs.detail', program.slug)}>← Kembali ke Detail Program</Link>
                         </Button>
                         <Button asChild className="flex-1">
-                            <Link href='/certification-programs'>Jelajahi Program Lain</Link>
+                            <Link href='/certification-program'>Jelajahi Program Lain</Link>
                         </Button>
                     </div>
 

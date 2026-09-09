@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface ParticipantData {
     date: string;
     count: number;
-    type: 'course' | 'bootcamp' | 'webinar';
+    type: 'course' | 'bootcamp' | 'webinar' | 'certification_program';
 }
 
 interface ParticipantChartProps {
@@ -26,6 +26,9 @@ const chartConfig = {
     },
     webinar: {
         label: 'Webinar',
+    },
+    certification_program: {
+        label: 'Sertifikasi',
     },
 } satisfies ChartConfig;
 
@@ -44,9 +47,11 @@ export function ParticipantChart({ data }: ParticipantChartProps) {
                     course: 0,
                     bootcamp: 0,
                     webinar: 0,
+                    certification_program: 0,
                 });
             }
-            dateMap.get(date)[item.type] += item.count;
+            const current = dateMap.get(date);
+            current[item.type] = (current[item.type] || 0) + item.count;
         });
 
         return Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -72,7 +77,7 @@ export function ParticipantChart({ data }: ParticipantChartProps) {
     }, [transformedData, timeRange]);
 
     const totalParticipants = React.useMemo(() => {
-        return filteredData.reduce((sum, item) => sum + item.course + item.bootcamp + item.webinar, 0);
+        return filteredData.reduce((sum, item) => sum + item.course + item.bootcamp + item.webinar + (item.certification_program || 0), 0);
     }, [filteredData]);
 
     return (
@@ -115,6 +120,10 @@ export function ParticipantChart({ data }: ParticipantChartProps) {
                                 <stop offset="5%" stopColor="var(--color-webinar)" stopOpacity={0.8} />
                                 <stop offset="95%" stopColor="var(--color-webinar)" stopOpacity={0.1} />
                             </linearGradient>
+                            <linearGradient id="fillCert" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1} />
+                            </linearGradient>
                         </defs>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" />
                         <XAxis
@@ -150,6 +159,7 @@ export function ParticipantChart({ data }: ParticipantChartProps) {
                         <Area dataKey="course" type="natural" fill="url(#fillCourse)" stroke="var(--color-course)" stackId="a" />
                         <Area dataKey="bootcamp" type="natural" fill="url(#fillBootcamp)" stroke="var(--color-bootcamp)" stackId="a" />
                         <Area dataKey="webinar" type="natural" fill="url(#fillWebinar)" stroke="var(--color-webinar)" stackId="a" />
+                        <Area dataKey="certification_program" type="natural" fill="url(#fillCert)" stroke="#f59e0b" stackId="a" />
                         <ChartLegend content={<ChartLegendContent />} />
                     </AreaChart>
                 </ChartContainer>

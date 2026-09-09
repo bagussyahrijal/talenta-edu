@@ -105,15 +105,15 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
         const hasProductAccess = hasAccess(product);
         switch (product.type) {
             case 'course':
-                return hasProductAccess ? `profile/my-courses/${product.slug}` : `/course/${product.slug}`;
+                return hasProductAccess ? `/profile/my-courses/${product.slug}` : `/course/${product.slug}`;
             case 'bootcamp':
-                return hasProductAccess ? `profile/my-bootcamps/${product.slug}` : `/bootcamp/${product.slug}`;
+                return hasProductAccess ? `/profile/my-bootcamps/${product.slug}` : `/bootcamp/${product.slug}`;
             case 'webinar':
-                return hasProductAccess ? `profile/my-webinars/${product.slug}` : `/webinar/${product.slug}`;
+                return hasProductAccess ? `/profile/my-webinars/${product.slug}` : `/webinar/${product.slug}`;
             case 'bundle':
                 return `/bundle/${product.slug}`;
             case 'certification-program':
-                return hasProductAccess ? `profile/my-certification-programs/${product.slug}` : `/certification-program/${product.slug}`;
+                return hasProductAccess ? `/profile/my-certification-programs/${product.slug}` : `/certification-program/${product.slug}`;
             default:
                 return '#';
         }

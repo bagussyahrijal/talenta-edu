@@ -205,16 +205,16 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 <NavigationMenuItem className="relative flex h-full items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                                         <Link
-                                            href="/certification-programs"
+                                            href="/certification-program"
                                             className={cn(
                                                 'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
-                                                page.url.startsWith('/certification-programs') && activeItemStyles,
+                                                page.url.startsWith('/certification-program') && activeItemStyles,
                                             )}
                                         >
                                             Sertifikasi
                                         </Link>
                                     </NavigationMenuLink>
-                                    {page.url.startsWith('/certification-programs') && (
+                                    {page.url.startsWith('/certification-program') && (
                                         <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
                                     )}
                                 </NavigationMenuItem>

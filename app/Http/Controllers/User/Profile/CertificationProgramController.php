@@ -13,9 +13,8 @@ class CertificationProgramController extends Controller
     {
         $userId = Auth::id();
 
-        $invoices = Invoice::with(['certificationProgramItems.certificationProgram.category'])
-            ->where('user_id', $userId)
-            ->whereIn('status', ['paid', 'completed'])
+        $invoices = Invoice::with(['certificationProgramItems.certificationProgram.category', 'installmentTerms'])
+            ->purchasedByUser($userId)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -72,9 +71,9 @@ class CertificationProgramController extends Controller
             'certificationProgramItems.certificationProgram.socializationSchedules' => function($q) {
                 $q->orderBy('schedule_date')->orderBy('start_time');
             },
+            'installmentTerms',
         ])
-            ->where('user_id', $userId)
-            ->whereIn('status', ['paid', 'completed'])
+            ->purchasedByUser($userId)
             ->orderBy('created_at', 'desc')
             ->get();
 

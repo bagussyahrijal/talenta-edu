@@ -85,6 +85,7 @@ export type Bootcamp = {
     start_date: string;
     end_date: string;
     status: 'draft' | 'published' | 'archived' | 'hidden';
+    installment_enabled?: boolean;
     certificate?: {
         id: string;
         title: string;
@@ -129,9 +130,16 @@ export const columns: ColumnDef<Bootcamp>[] = [
         header: ({ column }) => <DataTableColumnHeader column={column} title="Judul" />,
         cell: ({ row }) => {
             return (
-                <Link href={route('bootcamps.show', row.original.id)} className="text-primary font-medium hover:underline">
-                    {row.original.title}
-                </Link>
+                <div className="flex flex-col gap-1 items-start">
+                    <Link href={route('bootcamps.show', row.original.id)} className="text-primary font-medium hover:underline">
+                        {row.original.title}
+                    </Link>
+                    {row.original.installment_enabled && (
+                        <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                            Cicilan Aktif
+                        </Badge>
+                    )}
+                </div>
             );
         },
     },

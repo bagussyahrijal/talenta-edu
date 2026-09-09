@@ -25,9 +25,9 @@ class WebinarController extends Controller
     public function index()
     {
         $userId = Auth::id();
-        $myWebinars = Invoice::with('webinarItems.webinar.category')
-            ->where('user_id', $userId)
-            ->where('status', 'paid')
+        $myWebinars = Invoice::with(['webinarItems.webinar.category', 'installmentTerms'])
+            ->purchasedByUser($userId)
+            ->whereHas('webinarItems')
             ->orderBy('created_at', 'desc')
             ->get();
         return Inertia::render('user/profile/webinar/index', ['myWebinars' => $myWebinars]);
@@ -45,8 +45,7 @@ class WebinarController extends Controller
             },
             'webinarItems.webinar.category'
         ])
-            ->where('user_id', $userId)
-            ->where('status', 'paid')
+            ->purchasedByUser($userId)
             ->whereHas('webinarItems.webinar', function ($query) use ($slug) {
                 $query->where('slug', $slug);
             })
@@ -126,8 +125,7 @@ class WebinarController extends Controller
                     })->with('webinar'); // ✅ filter by slug
                 }
             ])
-                ->where('user_id', $userId)
-                ->where('status', 'paid')
+                ->purchasedByUser($userId)
                 ->whereHas('webinarItems.webinar', function ($query) use ($slug) {
                     $query->where('slug', $slug);
                 })
@@ -196,8 +194,7 @@ class WebinarController extends Controller
                     })->with('webinar'); // ✅ filter by slug
                 }
             ])
-                ->where('user_id', $userId)
-                ->where('status', 'paid')
+                ->purchasedByUser($userId)
                 ->whereHas('webinarItems.webinar', function ($query) use ($slug) {
                     $query->where('slug', $slug);
                 })

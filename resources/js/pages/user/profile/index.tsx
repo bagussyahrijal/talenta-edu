@@ -80,21 +80,30 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
         }
     };
 
+    const getProductDetailUrl = (product: Product): string => {
+        if (!product.slug) return '#';
+        const paramKey = product.routeParam || (product.type === 'certification-program' ? 'program' : product.type);
+        return route(`profile.${product.type}.detail`, { [paramKey]: product.slug });
+    };
+
     const formatSchedule = (product: Product): string => {
         if (product.type === 'bootcamp') {
-            const startDate = format(new Date(product.start_date!), 'dd MMM yyyy', { locale: id });
+            if (!product.start_date) return '-';
+            const startDate = format(new Date(product.start_date), 'dd MMM yyyy', { locale: id });
             const endDate = product.end_date ? format(new Date(product.end_date), 'dd MMM yyyy', { locale: id }) : '';
             return endDate ? `${startDate} - ${endDate}` : startDate;
         }
 
         if (product.type === 'webinar') {
-            const startTime = format(new Date(product.start_time!), 'dd MMM yyyy, HH:mm', { locale: id });
+            if (!product.start_time) return '-';
+            const startTime = format(new Date(product.start_time), 'dd MMM yyyy, HH:mm', { locale: id });
             const endTime = product.end_time ? format(new Date(product.end_time), 'HH:mm', { locale: id }) : '';
             return endTime ? `${startTime} - ${endTime}` : startTime;
         }
 
         if (product.type === 'certification-program') {
-            const startDate = format(new Date(product.start_date!), 'dd MMM yyyy', { locale: id });
+            if (!product.start_date) return '-';
+            const startDate = format(new Date(product.start_date), 'dd MMM yyyy', { locale: id });
             const endDate = product.end_date ? format(new Date(product.end_date), 'dd MMM yyyy', { locale: id }) : '';
             return endDate ? `${startDate} - ${endDate}` : startDate;
         }
@@ -182,7 +191,7 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                 <div className="flex items-center gap-2">
                                                     {getProductTypeIcon(product.type)}
                                                     <Link
-                                                        href={route(`profile.${product.type}.detail`, { [product.type]: product.slug })}
+                                                        href={getProductDetailUrl(product)}
                                                         className="hover:text-primary"
                                                     >
                                                         {product.title}
@@ -225,7 +234,7 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                         <>
                                                             <Button asChild size="sm" variant="outline">
                                                                 <Link
-                                                                    href={route(`profile.${product.type}.detail`, { [product.type]: product.slug })}
+                                                                    href={getProductDetailUrl(product)}
                                                                 >
                                                                     <ExternalLink className="mr-1 h-4 w-4" />
                                                                     Detail

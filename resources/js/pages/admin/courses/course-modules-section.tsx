@@ -23,9 +23,9 @@ interface Lesson {
     video_url?: string; // Add video_url field
     quizzes?: {
         id?: string | number;
-        instructions: string;
-        time_limit: number;
-        passing_score: number;
+        instructions?: string;
+        time_limit?: number;
+        passing_score?: number;
     }[];
 }
 
@@ -74,24 +74,28 @@ export default function CourseModulesSection({ modules, setModules }: CourseModu
 
     const handleAddLesson = (idx: number, lesson: Lesson) => {
         const updated = [...modules];
-        if (!updated[idx].lessons) updated[idx].lessons = [];
-        updated[idx].lessons!.push(lesson);
-        setModules(updated);
-        setLessonOpenIdx(null);
+        const targetModule = updated[idx];
+        if (targetModule) {
+            if (!targetModule.lessons) targetModule.lessons = [];
+            targetModule.lessons.push(lesson);
+            setModules(updated);
+            setLessonOpenIdx(null);
+        }
     };
 
     const handleEditLesson = (modIdx: number, lessonIdx: number, lesson: Lesson) => {
         console.log('Editing lesson - Before:', lesson.title, 'ID:', lesson.id);
         const updated = [...modules];
-        if (updated[modIdx].lessons) {
+        const targetModule = updated[modIdx];
+        if (targetModule && targetModule.lessons) {
             // Preserve the original lesson ID if it exists
-            const originalLesson = updated[modIdx].lessons![lessonIdx];
+            const originalLesson = targetModule.lessons[lessonIdx];
             const updatedLesson = {
                 ...lesson,
-                id: lesson.id || originalLesson.id, // Preserve ID from original lesson if new lesson doesn't have one
+                id: lesson.id || originalLesson?.id,
             };
             console.log('Editing lesson - After:', updatedLesson.title, 'ID:', updatedLesson.id);
-            updated[modIdx].lessons![lessonIdx] = updatedLesson;
+            targetModule.lessons[lessonIdx] = updatedLesson;
             setModules(updated);
         }
         setEditLessonOpen(null);
@@ -99,8 +103,9 @@ export default function CourseModulesSection({ modules, setModules }: CourseModu
 
     const handleRemoveLesson = (idx: number, lessonIdx: number) => {
         const updated = [...modules];
-        if (updated[idx].lessons) {
-            updated[idx].lessons.splice(lessonIdx, 1);
+        const targetModule = updated[idx];
+        if (targetModule?.lessons) {
+            targetModule.lessons.splice(lessonIdx, 1);
             setModules(updated);
         }
     };

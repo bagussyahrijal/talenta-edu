@@ -311,7 +311,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {bootcamps.map((bootcamp) => {
                                     const isDisabled = bootcamp.is_registration_closed;
-                                    const LinkOrDiv = isDisabled ? 'div' : Link;
+                                    const LinkOrDiv: any = isDisabled ? 'div' : Link;
                                     const linkProps = isDisabled ? {} : { href: `/bootcamp/${bootcamp.slug}` };
 
                                     return (
@@ -409,7 +409,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {webinars.map((webinar) => {
                                     const isDisabled = webinar.is_registration_closed;
-                                    const LinkOrDiv = isDisabled ? 'div' : Link;
+                                    const LinkOrDiv: any = isDisabled ? 'div' : Link;
                                     const linkProps = isDisabled ? {} : { href: `/webinar/${webinar.slug}` };
 
                                     return (
