@@ -426,7 +426,7 @@ class CertificationProgramController extends Controller
 
         $message .= "Jika ada kendala, silakan balas pesan ini atau hubungi admin.\n\n";
         $message .= "Terima kasih dan selamat bergabung! 🚀\n\n";
-        $message .= "*Araska - Customer Support*";
+        $message .= "*Talenta*";
 
         self::sendText([
             [
