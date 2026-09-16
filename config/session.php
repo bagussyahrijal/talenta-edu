@@ -73,7 +73,7 @@ return [
     |
     */
 
-    'connection' => env('SESSION_CONNECTION'),
+    'connection' => env('SESSION_CONNECTION', 'session'),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,8 +169,7 @@ return [
     |
     */
 
-    'secure' => true,
-
+    'secure' => env('SESSION_SECURE_COOKIE'),
 
     /*
     |--------------------------------------------------------------------------
@@ -200,7 +199,7 @@ return [
     |
     */
 
-    'same_site' => 'none',
+    'same_site' => env('SESSION_SAME_SITE', 'lax'),
 
     /*
     |--------------------------------------------------------------------------
