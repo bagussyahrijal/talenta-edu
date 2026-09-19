@@ -27,7 +27,6 @@ class WebinarController extends Controller
         $userId = Auth::id();
         $myWebinars = Invoice::with(['webinarItems.webinar.category', 'installmentTerms'])
             ->purchasedByUser($userId)
-            ->whereHas('webinarItems')
             ->orderBy('created_at', 'desc')
             ->get();
         return Inertia::render('user/profile/webinar/index', ['myWebinars' => $myWebinars]);
@@ -38,6 +37,7 @@ class WebinarController extends Controller
         $userId = Auth::id();
 
         $webinar = Invoice::with([
+            'installmentTerms',
             'webinarItems' => function ($query) use ($slug) {
                 $query->whereHas('webinar', function ($q) use ($slug) {
                     $q->where('slug', $slug);
@@ -68,6 +68,8 @@ class WebinarController extends Controller
                 ->where('user_id', $userId)
                 ->first();
         }
+
+        $webinar->append(['has_active_access', 'is_fully_paid']);
 
         return Inertia::render('user/profile/webinar/detail', [
             'webinar' => $webinar,
@@ -119,6 +121,7 @@ class WebinarController extends Controller
             $userId = Auth::id();
 
             $webinar = Invoice::with([
+                'installmentTerms',
                 'webinarItems' => function ($query) use ($slug) {
                     $query->whereHas('webinar', function ($q) use ($slug) {
                         $q->where('slug', $slug);
@@ -133,6 +136,10 @@ class WebinarController extends Controller
 
             if (!$webinar) {
                 return back()->with('error', 'Webinar tidak ditemukan atau Anda belum terdaftar.');
+            }
+
+            if ($webinar->is_installment && !$webinar->isFullyPaid()) {
+                return back()->with('error', 'Sertifikat kelulusan hanya dapat diunduh setelah seluruh termin cicilan lunas.');
             }
 
             $enrollmentWebinar = $webinar->webinarItems->first(); // ✅ sudah difilter by slug
@@ -188,6 +195,7 @@ class WebinarController extends Controller
             $userId = Auth::id();
 
             $webinar = Invoice::with([
+                'installmentTerms',
                 'webinarItems' => function ($query) use ($slug) {
                     $query->whereHas('webinar', function ($q) use ($slug) {
                         $q->where('slug', $slug);
@@ -202,6 +210,10 @@ class WebinarController extends Controller
 
             if (!$webinar) {
                 return back()->with('error', 'Webinar tidak ditemukan atau Anda belum terdaftar.');
+            }
+
+            if ($webinar->is_installment && !$webinar->isFullyPaid()) {
+                return back()->with('error', 'Sertifikat kelulusan hanya dapat diakses setelah seluruh termin cicilan lunas.');
             }
 
             $enrollmentWebinar = $webinar->webinarItems->first(); // ✅ sudah difilter by slug

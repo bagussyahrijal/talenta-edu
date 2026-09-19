@@ -60,12 +60,27 @@ interface EnrollmentBundle {
     price: number;
 }
 
+interface InstallmentTerm {
+    id: string;
+    installment_number: number;
+    amount: number;
+    status: 'paid' | 'pending';
+    installment_due_date: string | null;
+    paid_at: string | null;
+    payment_channel?: string | null;
+    payment_method?: string | null;
+}
+
 interface Invoice {
     id: string;
     invoice_code: string;
     invoice_url: string;
     amount: number;
-    status: 'paid' | 'pending' | 'expired' | 'failed' | 'completed';
+    status: 'paid' | 'pending' | 'expired' | 'failed' | 'completed' | 'installment_pending';
+    is_installment?: boolean;
+    access_suspended_at?: string | null;
+    installment_terms?: InstallmentTerm[];
+    installmentTerms?: InstallmentTerm[];
     paid_at: string | null;
     payment_channel: string | null;
     payment_method: string | null;
@@ -95,6 +110,13 @@ interface TransactionItem {
     payment_channel: string | null;
     payment_method: string | null;
     created_at: string;
+    is_scholarship?: boolean;
+    is_installment?: boolean;
+    paid_terms?: number;
+    total_terms?: number;
+    is_fully_paid?: boolean;
+    is_suspended?: boolean;
+    latest_paid_at?: string | null;
 }
 
 interface Props {
@@ -108,157 +130,163 @@ export default function Transactions({ myTransactions }: Props) {
         return item.certificationProgram || item.certification_program;
     };
 
-    const getItemHref = (type: TransactionItem['type'], slug: string, status: Invoice['status']) => {
+    const getItemHref = (type: TransactionItem['type'], slug: string, item: TransactionItem) => {
         if (!slug) return '#';
 
-        if (status === 'paid' || status === 'completed') {
-            if (type === 'Course') {
-                return route('profile.course.detail', { course: slug });
+        if (item.is_suspended) {
+            return route('profile.installments');
+        }
+
+        const hasAccess =
+            item.invoice_status === 'paid' ||
+            item.invoice_status === 'completed' ||
+            (item.is_installment && (item.paid_terms ?? 0) > 0);
+
+        if (!hasAccess) {
+            // Jika belum berstatus paid/aktif, arahkan ke halaman publik produk agar tidak 404
+            switch (type) {
+                case 'Course':
+                    return route('course.detail', { course: slug });
+                case 'Bootcamp':
+                    return route('bootcamp.detail', { bootcamp: slug });
+                case 'Webinar':
+                    return route('webinar.detail', { webinar: slug });
+                case 'Certification Program':
+                    return route('certification-programs.detail', { program: slug });
+                case 'Bundle':
+                    return route('bundle.detail', { bundle: slug });
+                default:
+                    return '#';
             }
-            if (type === 'Bootcamp') {
-                return route('profile.bootcamp.detail', { bootcamp: slug });
-            }
-            if (type === 'Webinar') {
-                return route('profile.webinar.detail', { webinar: slug });
-            }
-            if (type === 'Certification Program') {
+        }
+
+        // Paid / Completed / Active installment -> Route ke user LMS / Profile area
+        switch (type) {
+            case 'Certification Program':
                 return route('profile.certification-program.detail', { program: slug });
-            }
-            if (type === 'Bundle') {
-                return route('bundle.detail', { bundle: slug });
-            }
+            case 'Bundle':
+                return route('profile.index');
+            case 'Course':
+                return route('profile.course.detail', { course: slug });
+            case 'Bootcamp':
+                return route('profile.bootcamp.detail', { bootcamp: slug });
+            case 'Webinar':
+                return route('profile.webinar.detail', { webinar: slug });
+            default:
+                return '#';
         }
-
-        // Jika belum berstatus paid (misal pending, failed, expired), arahkan ke halaman publik produk agar tidak 404
-        if (type === 'Course') {
-            return route('course.detail', { course: slug });
-        }
-        if (type === 'Bootcamp') {
-            return route('bootcamp.detail', { bootcamp: slug });
-        }
-        if (type === 'Webinar') {
-            return route('webinar.detail', { webinar: slug });
-        }
-        if (type === 'Certification Program') {
-            return route('certification-programs.detail', { program: slug });
-        }
-        if (type === 'Bundle') {
-            return route('bundle.detail', { bundle: slug });
-        }
-
-        return '#';
     };
 
     // Gabungkan semua items dari semua invoice menjadi satu array bertipe TransactionItem
     const allItems: TransactionItem[] = myTransactions.flatMap((invoice) => {
-        const items: TransactionItem[] = [];
+        const terms = invoice.installment_terms || invoice.installmentTerms || [];
+        const paidTerms = [...terms]
+            .filter((t) => t.status === 'paid')
+            .sort((a, b) => a.installment_number - b.installment_number);
+        const latestPaidTerm = paidTerms.length > 0 ? paidTerms[paidTerms.length - 1] : undefined;
+        const isInstallment = Boolean(invoice.is_installment || invoice.status === 'installment_pending' || terms.length > 0);
+        const isFullyPaid = invoice.status === 'paid' || (terms.length > 0 && paidTerms.length === terms.length);
+        const isSuspended = Boolean(invoice.access_suspended_at);
+        const effectivePaidAt = invoice.paid_at || latestPaidTerm?.paid_at || null;
+        const effectiveChannel = invoice.payment_channel || latestPaidTerm?.payment_channel || null;
+        const effectiveMethod = invoice.payment_method || latestPaidTerm?.payment_method || null;
+
+        const commonProps = {
+            invoice_id: invoice.id,
+            invoice_status: invoice.status,
+            invoice_code: invoice.invoice_code,
+            invoice_url: invoice.invoice_url,
+            paid_at: effectivePaidAt,
+            payment_channel: effectiveChannel,
+            payment_method: effectiveMethod,
+            created_at: invoice.created_at,
+            is_installment: isInstallment,
+            paid_terms: paidTerms.length,
+            total_terms: terms.length,
+            is_fully_paid: isFullyPaid,
+            is_suspended: isSuspended,
+            latest_paid_at: latestPaidTerm?.paid_at || null,
+        };
 
         const courseItems = invoice.course_items || invoice.courseItems || [];
-        for (const item of courseItems) {
-            items.push({
-                type: 'Course',
+        const bootcampItems = invoice.bootcamp_items || invoice.bootcampItems || [];
+        const webinarItems = invoice.webinar_items || invoice.webinarItems || [];
+        const bundleItems = invoice.bundle_enrollments || invoice.bundleEnrollments || [];
+        const certificationItems = invoice.certificationProgramItems || invoice.certification_program_items || [];
+
+        return [
+            ...courseItems.map((item) => ({
+                ...commonProps,
+                type: 'Course' as const,
                 title: item.course?.title || 'Kelas Online',
                 slug: item.course?.slug || '',
                 price: item.price,
-                invoice_id: invoice.id,
-                invoice_status: invoice.status,
-                invoice_code: invoice.invoice_code,
-                invoice_url: invoice.invoice_url,
-                paid_at: invoice.paid_at,
-                payment_channel: invoice.payment_channel,
-                payment_method: invoice.payment_method,
-                created_at: invoice.created_at,
-            });
-        }
-
-        const bootcampItems = invoice.bootcamp_items || invoice.bootcampItems || [];
-        for (const item of bootcampItems) {
-            items.push({
-                type: 'Bootcamp',
+            })),
+            ...bootcampItems.map((item) => ({
+                ...commonProps,
+                type: 'Bootcamp' as const,
                 title: item.bootcamp?.title || 'Bootcamp',
                 slug: item.bootcamp?.slug || '',
                 price: item.price,
-                invoice_id: invoice.id,
-                invoice_status: invoice.status,
-                invoice_code: invoice.invoice_code,
-                invoice_url: invoice.invoice_url,
-                paid_at: invoice.paid_at,
-                payment_channel: invoice.payment_channel,
-                payment_method: invoice.payment_method,
-                created_at: invoice.created_at,
-            });
-        }
-
-        const webinarItems = invoice.webinar_items || invoice.webinarItems || [];
-        for (const item of webinarItems) {
-            items.push({
-                type: 'Webinar',
+            })),
+            ...webinarItems.map((item) => ({
+                ...commonProps,
+                type: 'Webinar' as const,
                 title: item.webinar?.title || 'Webinar',
                 slug: item.webinar?.slug || '',
                 price: item.price,
-                invoice_id: invoice.id,
-                invoice_status: invoice.status,
-                invoice_code: invoice.invoice_code,
-                invoice_url: invoice.invoice_url,
-                paid_at: invoice.paid_at,
-                payment_channel: invoice.payment_channel,
-                payment_method: invoice.payment_method,
-                created_at: invoice.created_at,
-            });
-        }
-
-        const bundleItems = invoice.bundle_enrollments || invoice.bundleEnrollments || [];
-        for (const item of bundleItems) {
-            items.push({
-                type: 'Bundle',
+            })),
+            ...bundleItems.map((item) => ({
+                ...commonProps,
+                type: 'Bundle' as const,
                 title: item.bundle?.title || 'Paket Bundling',
                 slug: item.bundle?.slug || '',
                 price: item.price,
-                invoice_id: invoice.id,
-                invoice_status: invoice.status,
-                invoice_code: invoice.invoice_code,
-                invoice_url: invoice.invoice_url,
-                paid_at: invoice.paid_at,
-                payment_channel: invoice.payment_channel,
-                payment_method: invoice.payment_method,
-                created_at: invoice.created_at,
-            });
-        }
-
-        const certificationItems = invoice.certificationProgramItems || invoice.certification_program_items || [];
-        for (const item of certificationItems) {
-            const certificationProgram = getCertificationProgram(item);
-            if (certificationProgram) {
-                items.push({
-                    type: 'Certification Program',
-                    title: certificationProgram.title,
-                    slug: certificationProgram.slug,
-                    price: item.price,
-                    invoice_id: invoice.id,
-                    invoice_status: invoice.status,
-                    invoice_code: invoice.invoice_code,
-                    invoice_url: invoice.invoice_url,
-                    paid_at: invoice.paid_at,
-                    payment_channel: invoice.payment_channel,
-                    payment_method: invoice.payment_method,
-                    created_at: invoice.created_at,
-                });
-            }
-        }
-
-        return items;
+            })),
+            ...certificationItems.flatMap((item) => {
+                const certificationProgram = getCertificationProgram(item);
+                if (!certificationProgram) return [];
+                return [
+                    {
+                        ...commonProps,
+                        type: 'Certification Program' as const,
+                        title: certificationProgram.title,
+                        slug: certificationProgram.slug,
+                        price: item.price,
+                        is_scholarship: item.is_scholarship,
+                    },
+                ];
+            }),
+        ];
     });
 
     const filteredItems = allItems.filter((item) => item.title.toLowerCase().includes(search.toLowerCase()));
 
-    const getStatusComponent = (status: Invoice['status']) => {
-        if (status === 'paid' || status === 'completed') {
-            return <span className="font-medium text-green-600">Sudah Dibayar</span>;
+    const getStatusComponent = (item: TransactionItem) => {
+        if (item.is_installment) {
+            if (item.is_fully_paid || item.invoice_status === 'paid' || item.invoice_status === 'completed') {
+                return <span className="font-medium text-green-600 dark:text-green-400">Cicilan Lunas</span>;
+            }
+            if (item.is_suspended) {
+                return <span className="font-medium text-red-600 dark:text-red-400">Akses Dibekukan (Jatuh Tempo)</span>;
+            }
+            if ((item.paid_terms ?? 0) > 0) {
+                return (
+                    <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                        Cicilan Aktif ({item.paid_terms}/{item.total_terms} Termin)
+                    </span>
+                );
+            }
+            return <span className="font-medium text-yellow-600 dark:text-yellow-400">Menunggu DP (Termin 1)</span>;
         }
-        if (status === 'pending') {
-            return <span className="font-medium text-yellow-600">Menunggu Pembayaran</span>;
+
+        if (item.invoice_status === 'paid' || item.invoice_status === 'completed') {
+            return <span className="font-medium text-green-600 dark:text-green-400">Sudah Dibayar</span>;
         }
-        return <span className="font-medium text-red-600">Gagal/Kedaluwarsa</span>;
+        if (item.invoice_status === 'pending') {
+            return <span className="font-medium text-yellow-600 dark:text-yellow-400">Menunggu Pembayaran</span>;
+        }
+        return <span className="font-medium text-red-600 dark:text-red-400">Gagal/Kedaluwarsa</span>;
     };
 
     return (
@@ -293,7 +321,7 @@ export default function Transactions({ myTransactions }: Props) {
                                 filteredItems.map((item, idx) => (
                                     <tr key={idx} className="border-t dark:border-zinc-800">
                                         <td className="p-2">
-                                            <Link href={getItemHref(item.type, item.slug, item.invoice_status)} className="text-primary hover:underline font-medium">
+                                            <Link href={getItemHref(item.type, item.slug, item)} className="text-primary hover:underline font-medium">
                                                 {item.title}
                                             </Link>
                                         </td>
@@ -306,7 +334,7 @@ export default function Transactions({ myTransactions }: Props) {
                                                     ? 'Paket Bundling'
                                                     : item.type}
                                         </td>
-                                        <td className="p-2">{getStatusComponent(item.invoice_status)}</td>
+                                        <td className="p-2">{getStatusComponent(item)}</td>
                                         <td className="p-2">
                                             {item.price === 0 ? (
                                                 <span className="font-semibold text-green-600">GRATIS</span>
@@ -316,9 +344,20 @@ export default function Transactions({ myTransactions }: Props) {
                                         </td>
                                         <td className="p-2">{item.invoice_code}</td>
                                         <td className="p-2">
-                                            {item.invoice_status === 'pending' && item.invoice_url ? (
+                                            {item.is_installment ? (
+                                                item.latest_paid_at ? (
+                                                    <div>
+                                                        <div>{new Date(item.latest_paid_at).toLocaleString('id-ID')}</div>
+                                                        <div className="text-xs text-muted-foreground">Termin {item.paid_terms} terbayar</div>
+                                                    </div>
+                                                ) : (
+                                                    <Button asChild size="sm" variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50 font-medium">
+                                                        <Link href={route('profile.installments')}>Bayar DP</Link>
+                                                    </Button>
+                                                )
+                                            ) : item.invoice_status === 'pending' && item.invoice_url ? (
                                                 <Button asChild size="sm" variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50 font-medium">
-                                                    <a href={item.invoice_url}>
+                                                    <a href={item.invoice_url} target="_blank" rel="noopener noreferrer">
                                                         Lanjutkan Bayar
                                                     </a>
                                                 </Button>
@@ -329,9 +368,16 @@ export default function Transactions({ myTransactions }: Props) {
                                             )}
                                         </td>
                                         <td className="p-2">
-                                            <Button asChild size="sm" variant="outline">
-                                                <Link href={route('profile.transaction.detail', { invoice: item.invoice_id })}>Detail</Link>
-                                            </Button>
+                                            <div className="flex items-center gap-1.5">
+                                                <Button asChild size="sm" variant="outline">
+                                                    <Link href={route('profile.transaction.detail', { invoice: item.invoice_id })}>Detail</Link>
+                                                </Button>
+                                                {item.is_installment && !item.is_fully_paid && (
+                                                    <Button asChild size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/30">
+                                                        <Link href={route('profile.installments')}>Cicilan</Link>
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

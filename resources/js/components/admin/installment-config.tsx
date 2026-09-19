@@ -98,342 +98,275 @@ export default function InstallmentConfig({
             ...t,
             amount: idx === prev.length - 1 ? productPrice - splitAmount * (prev.length - 1) : splitAmount
         })));
-        toast.info(`Nominal telah dibagi rata (${terms.length} termin).`);
+        toast.success('Nominal berhasil dibagi rata ke seluruh termin');
     }
 
-    const totalAmount = terms.reduce((sum, t) => sum + Number(t.amount || 0), 0);
-    const isValidTotal = isFree || totalAmount === Number(productPrice);
-
-    function handleAddTerm() {
-        if (terms.length >= 6) {
-            toast.error('Maksimal termin cicilan adalah 6 termin.');
-            return;
-        }
-
-        const lastTerm = terms[terms.length - 1];
-        let nextDate = new Date();
-        if (lastTerm?.due_date) {
-            try {
-                nextDate = addWeeks(parseISO(lastTerm.due_date), 3);
-            } catch {
-                nextDate = addWeeks(new Date(), 3);
-            }
-        }
-
-        const newTerms = [
-            ...terms,
-            {
-                term_number: terms.length + 1,
-                amount: 0,
-                due_date: format(nextDate, 'yyyy-MM-dd'),
-            },
-        ];
-
-        // Hitung ulang pembagian rata jika memungkinkan
-        if (productPrice > 0) {
-            const splitAmount = Math.floor(productPrice / newTerms.length);
-            setTerms(
-                newTerms.map((t, idx) => ({
-                    ...t,
-                    amount: idx === newTerms.length - 1 ? productPrice - splitAmount * (newTerms.length - 1) : splitAmount,
-                }))
-            );
-        } else {
-            setTerms(newTerms);
-        }
-    }
-
-    function handleRemoveTerm(index: number) {
-        if (terms.length <= 2) {
-            toast.error('Minimal harus ada 2 termin cicilan (DP + Termin 2).');
-            return;
-        }
-
-        const newTerms = terms
-            .filter((_, i) => i !== index)
-            .map((t, i) => ({ ...t, term_number: i + 1 }));
-
-        if (productPrice > 0) {
-            const splitAmount = Math.floor(productPrice / newTerms.length);
-            setTerms(
-                newTerms.map((t, idx) => ({
-                    ...t,
-                    amount: idx === newTerms.length - 1 ? productPrice - splitAmount * (newTerms.length - 1) : splitAmount,
-                }))
-            );
-        } else {
-            setTerms(newTerms);
-        }
-    }
-
-    function handleAmountChange(index: number, val: string) {
-        const numericVal = parseRupiah(val);
-        setTerms(prev =>
-            prev.map((t, i) => (i === index ? { ...t, amount: numericVal } : t))
-        );
-    }
-
-    function handleDateChange(index: number, date: Date | undefined) {
-        if (!date) return;
-        const formatted = format(date, 'yyyy-MM-dd');
-        setTerms(prev =>
-            prev.map((t, i) => (i === index ? { ...t, due_date: formatted } : t))
-        );
-    }
+    const totalTermsAmount = terms.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    // Validasi: total termin TIDAK BOLEH KURANG dari harga produk (boleh sama atau lebih)
+    const isTermsValid = totalTermsAmount >= productPrice && productPrice > 0 && terms.length >= 2 && terms.every(t => t.amount > 0 && t.due_date);
 
     async function handleSave() {
-        if (enabled) {
+        if (enabled && !isTermsValid) {
+            if (productPrice <= 0) {
+                toast.error('Harga produk saat ini Rp 0. Cicilan hanya berlaku untuk produk berbayar.');
+                return;
+            }
+            if (totalTermsAmount < productPrice) {
+                toast.error(`Total termin (${rupiahFormatter.format(totalTermsAmount)}) tidak boleh kurang dari harga produk (${rupiahFormatter.format(productPrice)})`);
+                return;
+            }
             if (terms.length < 2) {
                 toast.error('Minimal harus ada 2 termin cicilan.');
                 return;
             }
-
-            for (const t of terms) {
-                if (!t.amount || t.amount <= 0) {
-                    toast.error(`Nominal untuk Termin ke-${t.term_number} tidak boleh 0.`);
-                    return;
-                }
-                if (!t.due_date) {
-                    toast.error(`Tanggal jatuh tempo untuk Termin ke-${t.term_number} wajib diisi.`);
-                    return;
-                }
-            }
-
-            if (!isValidTotal) {
-                toast.error(
-                    `Total termin (${rupiahFormatter.format(totalAmount)}) harus sama dengan harga produk (${rupiahFormatter.format(productPrice)}). Selisih: ${rupiahFormatter.format(Math.abs(productPrice - totalAmount))}`
-                );
+            const invalidTerm = terms.find(t => !t.amount || t.amount <= 0 || !t.due_date);
+            if (invalidTerm) {
+                toast.error(`Harap lengkapi nominal (> Rp 0) dan tanggal jatuh tempo pada Termin ke-${invalidTerm.term_number}.`);
                 return;
             }
+            return;
         }
 
         setIsSaving(true);
         try {
-            const payload = {
+            const res = await axios.post('/admin/installment-terms', {
                 type: productType,
                 id: productId,
                 installment_enabled: enabled,
-                terms: enabled ? terms : [],
-            };
-
-            const res = await axios.post('/admin/installment-terms', payload);
+                terms: enabled ? terms.map(t => ({
+                    term_number: t.term_number,
+                    amount: Number(t.amount),
+                    due_date: t.due_date,
+                })) : [],
+            });
 
             if (res.data.success) {
-                toast.success(res.data.message || 'Pengaturan cicilan berhasil disimpan.');
+                toast.success(res.data.message);
                 if (res.data.terms) {
-                    setTerms(
-                        res.data.terms.map((t: any) => ({
-                            ...t,
-                            due_date: t.due_date ? format(typeof t.due_date === 'string' ? parseISO(t.due_date) : t.due_date, 'yyyy-MM-dd') : '',
-                        }))
-                    );
+                    setTerms(res.data.terms.map((t: any) => ({
+                        ...t,
+                        due_date: t.due_date ? format(typeof t.due_date === 'string' ? parseISO(t.due_date) : t.due_date, 'yyyy-MM-dd') : ''
+                    })));
                 }
             } else {
-                toast.error(res.data.message || 'Gagal menyimpan pengaturan.');
+                toast.error(res.data.message || 'Gagal menyimpan konfigurasi');
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan.');
+            toast.error(error.response?.data?.message || 'Terjadi kesalahan saat menyimpan');
         } finally {
             setIsSaving(false);
         }
     }
 
-    if (isFree) {
-        return (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-                <div className="flex items-center gap-3">
-                    <Info className="size-5 text-muted-foreground" />
-                    <div>
-                        <h4 className="font-semibold text-sm text-foreground">Opsi Cicilan Tidak Tersedia</h4>
-                        <p className="text-xs text-muted-foreground mt-0.5">Produk ini gratis sehingga tidak memerlukan konfigurasi pembayaran cicilan.</p>
-                    </div>
-                </div>
-            </div>
+    function addTerm() {
+        const nextNumber = terms.length + 1;
+        const lastDueDate = terms[terms.length - 1]?.due_date;
+        const baseDate = lastDueDate ? parseISO(lastDueDate) : getDefaultTerm1Date();
+        const newDueDate = format(addWeeks(baseDate, 3), 'yyyy-MM-dd');
+
+        setTerms(prev => [...prev, {
+            term_number: nextNumber,
+            amount: 0,
+            due_date: newDueDate,
+        }]);
+    }
+
+    function removeTerm(index: number) {
+        if (terms.length <= 2) {
+            toast.error('Minimal harus ada 2 termin cicilan');
+            return;
+        }
+        setTerms(prev =>
+            prev.filter((_, i) => i !== index).map((t, i) => ({ ...t, term_number: i + 1 }))
         );
     }
 
+    function updateTerm(index: number, field: keyof InstallmentTerm, value: any) {
+        setTerms(prev => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], [field]: value };
+            return updated;
+        });
+    }
+
+    const difference = totalTermsAmount - productPrice;
+
     return (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-6">
-            {/* Header + Toggle */}
-            <div className="flex items-center justify-between">
+        <div className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-sm">
+            {/* Header & Toggle */}
+            <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <CalendarDays className="size-5 text-primary" />
-                        <h3 className="font-bold text-base text-foreground">Pengaturan Pembayaran Cicilan (Installment)</h3>
+                        <CalendarDays className="h-5 w-5 text-primary" />
+                        <h3 className="text-base font-semibold text-foreground">Konfigurasi Pembayaran Cicilan</h3>
+                        {enabled && (
+                            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20 font-medium">
+                                Aktif ({terms.length}x Termin)
+                            </Badge>
+                        )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Aktifkan skema pembayaran cicilan berjangka untuk produk ini dengan mengatur jumlah termin dan tanggal jatuh tempo.
+                        Aktifkan metode pembayaran bertahap (cicilan) untuk produk ini.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <span className={cn('text-xs font-semibold', enabled ? 'text-primary' : 'text-muted-foreground')}>
-                        {enabled ? 'Cicilan Aktif' : 'Cicilan Nonaktif'}
-                    </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <Label htmlFor="installment-toggle" className="text-xs font-medium text-foreground cursor-pointer">
+                        {enabled ? 'Cicilan Aktif' : 'Nonaktif'}
+                    </Label>
                     <Switch
+                        id="installment-toggle"
                         checked={enabled}
                         onCheckedChange={setEnabled}
-                        aria-label="Toggle cicilan"
+                        disabled={isFree}
                     />
                 </div>
             </div>
 
-            {/* Config Box (hanya jika diaktifkan) */}
-            {enabled && (
+            {isFree && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3.5 py-2.5 text-xs text-amber-600 dark:text-amber-400">
+                    <Info className="h-4 w-4 flex-shrink-0" />
+                    <span>Cicilan tidak dapat diaktifkan pada produk gratis (harga Rp 0).</span>
+                </div>
+            )}
+
+            {/* Termin List & Configurations */}
+            {enabled && !isFree && (
                 <div className="space-y-4 pt-2 border-t border-border">
-                    {/* Ringkasan Harga & Status Validasi Total */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/50 p-4 border border-border">
-                        <div className="space-y-1">
-                            <span className="text-xs text-muted-foreground">Harga Resmi Produk</span>
-                            <p className="text-base font-bold text-foreground">{rupiahFormatter.format(productPrice)}</p>
-                        </div>
-
-                        <div className="space-y-1">
-                            <span className="text-xs text-muted-foreground">Akumulasi Termin ({terms.length}x)</span>
-                            <p className={cn('text-base font-bold', isValidTotal ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive')}>
-                                {rupiahFormatter.format(totalAmount)}
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            {isValidTotal ? (
-                                <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-300">
-                                    Total Sesuai (100%)
-                                </Badge>
-                            ) : (
-                                <Badge variant="destructive">
-                                    Selisih: {rupiahFormatter.format(Math.abs(productPrice - totalAmount))}
+                    {/* Ringkasan Nominal */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/50 px-3.5 py-2.5">
+                        <span className="text-xs font-medium text-muted-foreground">Perbandingan Nominal</span>
+                        <div className="flex items-center gap-2 text-sm">
+                            <span className={cn(
+                                "font-medium",
+                                totalTermsAmount >= productPrice ? "text-green-600 dark:text-green-400" : "text-destructive"
+                            )}>
+                                Total: {rupiahFormatter.format(totalTermsAmount)}
+                            </span>
+                            <span className="text-muted-foreground">/ {rupiahFormatter.format(productPrice)}</span>
+                            {difference > 0 && (
+                                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 border-green-200 dark:border-green-800">
+                                    +{rupiahFormatter.format(difference)}
                                 </Badge>
                             )}
+                        </div>
+                    </div>
+
+                    {totalTermsAmount < productPrice && (
+                        <div className="flex items-center justify-between gap-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 px-3.5 py-2.5 rounded-lg">
+                            <span>⚠️ Total nominal seluruh termin ({rupiahFormatter.format(totalTermsAmount)}) tidak boleh kurang dari harga produk ({rupiahFormatter.format(productPrice)})</span>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={distributeEvenly}
-                                className="text-xs h-7"
+                                className="h-7 text-xs bg-background text-foreground border-border hover:bg-muted"
                             >
-                                Bagi Rata
+                                Bagi Rata Nominal
                             </Button>
                         </div>
-                    </div>
+                    )}
 
-                    {/* List Termin */}
                     <div className="space-y-3">
-                        <Label className="text-xs font-semibold text-foreground">Daftar Termin Pembayaran</Label>
-
                         {terms.map((term, index) => {
-                            const dateObj = term.due_date ? parseISO(term.due_date) : undefined;
-                            const isDP = index === 0;
+                            const dueDateObj = term.due_date ? parseISO(term.due_date) : undefined;
 
                             return (
-                                <div
-                                    key={index}
-                                    className="flex flex-wrap md:flex-nowrap items-center gap-3 rounded-lg border border-border p-3 bg-card hover:bg-muted/30 transition-colors"
-                                >
-                                    {/* Badge Urutan */}
-                                    <div className="flex items-center gap-2 min-w-[130px]">
-                                        <div className={cn(
-                                            'flex size-7 items-center justify-center rounded-full text-xs font-bold',
-                                            isDP
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-muted text-muted-foreground'
-                                        )}>
-                                            {term.term_number}
-                                        </div>
-                                        <span className="text-xs font-medium text-foreground">
-                                            {isDP ? 'Termin 1 (DP)' : `Termin ke-${term.term_number}`}
-                                        </span>
+                                <div key={index} className="grid grid-cols-[auto_1fr_1fr_auto] gap-3 items-end rounded-lg border border-border bg-muted/30 p-3.5">
+                                    {/* Number Badge */}
+                                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold self-end mb-0.5">
+                                        {term.term_number}
                                     </div>
 
-                                    {/* Input Nominal */}
-                                    <div className="flex-1 min-w-[160px]">
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                                                Rp
-                                            </span>
-                                            <Input
-                                                type="text"
-                                                value={term.amount ? term.amount.toLocaleString('id-ID') : ''}
-                                                onChange={e => handleAmountChange(index, e.target.value)}
-                                                placeholder="0"
-                                                className="pl-9 text-xs font-medium"
-                                            />
-                                        </div>
+                                    {/* Nominal */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium text-foreground">
+                                            Nominal {index === 0 ? '(DP)' : ''}
+                                        </Label>
+                                        <Input
+                                            type="text"
+                                            value={rupiahFormatter.format(term.amount || 0)}
+                                            onChange={e => updateTerm(index, 'amount', parseRupiah(e.target.value))}
+                                            placeholder="Rp 0"
+                                            className="h-9 text-sm"
+                                        />
                                     </div>
 
-                                    {/* Date Picker Jatuh Tempo */}
-                                    <div className="min-w-[200px]">
+                                    {/* Due Date with Shadcn Popover & Calendar */}
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium text-foreground">
+                                            Jatuh Tempo
+                                        </Label>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button
                                                     variant="outline"
                                                     className={cn(
-                                                        'w-full justify-start text-left text-xs font-normal h-9',
-                                                        !term.due_date && 'text-muted-foreground'
+                                                        "w-full justify-between text-left font-normal h-9 text-sm bg-background",
+                                                        !term.due_date && "text-muted-foreground"
                                                     )}
                                                 >
-                                                    <CalendarFold className="mr-2 size-3.5" />
-                                                    {dateObj && !isNaN(dateObj.getTime()) ? (
-                                                        format(dateObj, 'dd MMMM yyyy', { locale: id })
+                                                    {dueDateObj ? (
+                                                        format(dueDateObj, 'dd MMMM yyyy', { locale: id })
                                                     ) : (
-                                                        <span>Pilih tanggal jatuh tempo</span>
+                                                        <span>Pilih tanggal</span>
                                                     )}
+                                                    <CalendarFold className="ml-2 h-4 w-4 opacity-50 flex-shrink-0" />
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">
                                                 <Calendar
                                                     mode="single"
-                                                    selected={dateObj && !isNaN(dateObj.getTime()) ? dateObj : undefined}
-                                                    onSelect={d => handleDateChange(index, d)}
-                                                    initialFocus
+                                                    selected={dueDateObj}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            const formatted = format(date, 'yyyy-MM-dd');
+                                                            updateTerm(index, 'due_date', formatted);
+                                                        }
+                                                    }}
+                                                    defaultMonth={dueDateObj || new Date()}
+                                                    captionLayout="dropdown"
                                                 />
                                             </PopoverContent>
                                         </Popover>
                                     </div>
 
-                                    {/* Hapus Termin (hanya jika > 2 termin & bukan DP) */}
-                                    {!isDP && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleRemoveTerm(index)}
-                                            className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                                            title="Hapus termin ini"
-                                        >
-                                            <Trash2 className="size-4" />
-                                        </Button>
-                                    )}
+                                    {/* Delete Button */}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive self-end"
+                                        onClick={() => removeTerm(index)}
+                                        disabled={terms.length <= 2}
+                                        title="Hapus termin"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
                             );
                         })}
                     </div>
 
-                    {/* Tombol Tambah Termin */}
-                    {terms.length < 6 && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAddTerm}
-                            className="w-full border-dashed text-xs text-muted-foreground hover:text-foreground"
-                        >
-                            <Plus className="mr-1.5 size-3.5" />
-                            Tambah Termin Cicilan ({terms.length + 1})
+                    <div className="flex items-center gap-2 pt-2">
+                        <Button variant="outline" size="sm" onClick={addTerm} className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Tambah Termin
                         </Button>
-                    )}
+                        <Button variant="secondary" size="sm" onClick={distributeEvenly}>
+                            Bagi Rata Nominal
+                        </Button>
+                    </div>
                 </div>
             )}
 
-            {/* Action Footer */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            {/* Save Button for both enabled and disabled states */}
+            <div className="pt-2 flex justify-start">
                 <Button
-                    type="button"
+                    size="default"
                     onClick={handleSave}
-                    disabled={isSaving || (enabled && !isValidTotal)}
-                    size="sm"
-                    className="text-xs"
+                    disabled={isSaving || (enabled && !isTermsValid)}
+                    className="gap-2"
                 >
-                    {isSaving ? 'Menyimpan...' : 'Simpan Pengaturan Cicilan'}
+                    {isSaving ? 'Menyimpan...' : 'Simpan Konfigurasi'}
                 </Button>
             </div>
         </div>

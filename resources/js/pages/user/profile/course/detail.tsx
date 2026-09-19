@@ -1,8 +1,9 @@
 import RatingDialog from '@/components/rating-dialog';
 import { Button } from '@/components/ui/button';
 import UserLayout from '@/layouts/user-layout';
+import { formatExternalUrl } from '@/lib/utils';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Award, BadgeCheck, CheckCircle, Download, Eye, Star } from 'lucide-react';
+import { ArrowLeft, Award, BadgeCheck, CheckCircle, Download, Eye, MessageCircle, Star } from 'lucide-react';
 import { useState } from 'react';
 
 interface Category {
@@ -20,6 +21,7 @@ interface Course {
     category: Category;
     course_url: string;
     registration_url: string;
+    group_url?: string | null;
     key_points: string;
     description: string | null;
     short_description: string | null;
@@ -51,6 +53,11 @@ interface CourseProps {
     course_items: EnrollmentCourseItem[];
     created_at: string;
     updated_at: string;
+    is_installment?: boolean;
+    installment_terms?: any[];
+    access_suspended_at?: string | null;
+    has_active_access?: boolean;
+    is_fully_paid?: boolean;
 }
 
 interface CourseRating {
@@ -116,9 +123,30 @@ export default function DetailMyCourse({
     const courseItem = course.course_items?.[0];
     const courseData = courseItem?.course;
     const courseInvoiceStatus = course.status;
+    const isInstallment = !!course.is_installment;
+    const isSuspended = !!course.access_suspended_at;
+    const terms = course.installment_terms || (course as any).installmentTerms || [];
+    const firstTermPaid = terms.some((t: any) => t.installment_number === 1 && t.status === 'paid');
+
+    const hasActiveAccess = Boolean(
+        course.has_active_access ?? (
+            isInstallment
+                ? (!isSuspended && firstTermPaid)
+                : (courseInvoiceStatus === 'paid' || courseInvoiceStatus === 'completed')
+        )
+    );
+
+    const isFullyPaid = Boolean(
+        course.is_fully_paid ?? (
+            isInstallment
+                ? (terms.length > 0 && terms.every((t: any) => t.status === 'paid'))
+                : (courseInvoiceStatus === 'paid' || courseInvoiceStatus === 'completed')
+        )
+    );
+
     const keyPointList = parseList(courseData?.key_points);
     const isCompleted = courseItem?.progress === 100;
-    const hasCertificate = certificate && isCompleted && courseRating && courseInvoiceStatus === 'paid';
+    const hasCertificate = certificate && isCompleted && courseRating && isFullyPaid;
 
     const renderCertificateSection = () => {
         if (!courseItem || courseItem.progress !== 100) return null;
@@ -162,7 +190,11 @@ export default function DetailMyCourse({
                             <div>
                                 <h3 className="font-semibold text-gray-900 dark:text-gray-100">🎉 Terima kasih atas rating Anda!</h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {!certificate ? 'Sertifikat belum dibuat untuk course ini.' : 'Sertifikat sedang diproses.'}
+                                    {!certificate
+                                        ? 'Sertifikat belum dibuat untuk course ini.'
+                                        : !isFullyPaid
+                                          ? (isInstallment ? 'Lunasi seluruh cicilan untuk membuka sertifikat.' : 'Selesaikan pembayaran untuk membuka sertifikat.')
+                                          : 'Sertifikat sedang diproses.'}
                                 </p>
                                 <div className="mt-1 flex items-center gap-1">
                                     <span className="text-xs text-gray-500">Rating Anda:</span>
@@ -178,7 +210,11 @@ export default function DetailMyCourse({
                         </div>
                         <Button size="sm" disabled>
                             <Download className="mr-2 h-4 w-4" />
-                            {!certificate ? 'Sertifikat Belum Tersedia' : 'Menunggu Sertifikat'}
+                            {!certificate
+                                ? 'Sertifikat Belum Tersedia'
+                                : !isFullyPaid
+                                  ? (isInstallment ? 'Lunasi Seluruh Cicilan' : 'Selesaikan Pembayaran')
+                                  : 'Menunggu Sertifikat'}
                         </Button>
                     </div>
                 </div>
@@ -291,18 +327,32 @@ export default function DetailMyCourse({
                                 <p className="mb-6 text-lg text-gray-600 dark:text-gray-400">{courseData.description}</p>
 
                                 <div className="flex items-center justify-center gap-4">
-                                    <span className={`font-semibold ${courseInvoiceStatus === 'paid' ? 'text-green-600' : 'text-red-600'}`}>
-                                        {courseInvoiceStatus !== 'paid' && (
-                                            <>
-                                                <span className="block text-red-600">⚠️ Status Pembayaran: {courseInvoiceStatus.toUpperCase()}</span>
-                                                <span className="block text-sm text-gray-600">
-                                                    {courseInvoiceStatus === 'failed'
-                                                        ? 'Pembayaran gagal atau dibatalkan. Silakan lakukan pembelian ulang.'
-                                                        : 'Selesaikan pembayaran untuk mengakses kelas.'}
-                                                </span>
-                                            </>
-                                        )}
-                                    </span>
+                                    {isSuspended ? (
+                                        <div className="mx-auto max-w-xl rounded-lg border border-red-300 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-950/50">
+                                            <p className="font-semibold text-red-900 dark:text-red-100">⚠️ Akses Kelas Dibekukan</p>
+                                            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                                Akses kelas dibekukan karena ada tagihan cicilan yang melewati jatuh tempo. Silakan lakukan pelunasan di menu Transaksi.
+                                            </p>
+                                        </div>
+                                    ) : !hasActiveAccess ? (
+                                        <div className="mx-auto max-w-xl rounded-lg border border-red-300 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-950/50">
+                                            <p className="font-semibold text-red-900 dark:text-red-100">
+                                                Status Pembayaran: {courseInvoiceStatus.toUpperCase()}
+                                            </p>
+                                            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                                {courseInvoiceStatus === 'failed'
+                                                    ? 'Pembayaran gagal atau dibatalkan. Silakan lakukan pembelian ulang.'
+                                                    : 'Selesaikan pembayaran untuk mengakses kelas.'}
+                                            </p>
+                                        </div>
+                                    ) : isInstallment && !isFullyPaid ? (
+                                        <div className="mx-auto max-w-xl rounded-lg border border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-950/50">
+                                            <p className="font-semibold text-amber-900 dark:text-amber-100">ℹ️ Pembayaran Cicilan Aktif</p>
+                                            <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                                                Anda memiliki akses penuh ke materi kelas.
+                                            </p>
+                                        </div>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
@@ -381,18 +431,50 @@ export default function DetailMyCourse({
                                 <div className="flex h-full flex-col rounded-xl bg-white p-6 shadow dark:bg-zinc-800">
                                     <h2 className="mb-4 text-center font-semibold">{courseData.title}</h2>
                                     <img
-                                        src={courseData.thumbnail ? `/storage/${courseData.thumbnail}` : '/assets/images/placeholder.png'}
+                                        src={
+                                            !courseData.thumbnail
+                                                ? '/assets/images/placeholder.png'
+                                                : courseData.thumbnail.startsWith('http') || courseData.thumbnail.startsWith('/storage')
+                                                  ? courseData.thumbnail
+                                                  : `/storage/${courseData.thumbnail}`
+                                        }
                                         alt={courseData.title}
                                         className="aspect-video rounded-xl object-cover shadow-lg"
                                     />
                                     <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">{courseData.short_description}</p>
 
                                     <Button
-                                        className="mt-2 w-full"
+                                        className="mt-4 w-full"
                                         onClick={() => router.get(route('learn.course.detail', { course: courseData.slug }))}
+                                        disabled={!hasActiveAccess}
                                     >
                                         {isCompleted ? 'Lihat Kembali Materi' : 'Lanjutkan Belajar'}
                                     </Button>
+
+                                    {courseData.group_url && (
+                                        <Button
+                                            variant="outline"
+                                            className="mt-2 w-full border-green-600/30 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-500/30 dark:text-green-400 dark:hover:bg-green-950/30"
+                                            asChild={hasActiveAccess}
+                                            disabled={!hasActiveAccess}
+                                        >
+                                            {hasActiveAccess ? (
+                                                <a
+                                                    href={formatExternalUrl(courseData.group_url)}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <MessageCircle size={16} className="mr-2" />
+                                                    Masuk Grup WA
+                                                </a>
+                                            ) : (
+                                                <span>
+                                                    <MessageCircle size={16} className="mr-2" />
+                                                    Masuk Grup WA
+                                                </span>
+                                            )}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>

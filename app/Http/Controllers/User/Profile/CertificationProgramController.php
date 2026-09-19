@@ -109,6 +109,11 @@ class CertificationProgramController extends Controller
                 'created_at' => $matchedInvoice->created_at,
                 'payment_method' => $matchedInvoice->payment_method,
                 'payment_channel' => $matchedInvoice->payment_channel,
+                'is_installment' => (bool) $matchedInvoice->is_installment,
+                'is_access_suspended' => $matchedInvoice->isAccessSuspended(),
+                'paid_terms' => $matchedInvoice->paidTermsCount(),
+                'total_terms' => $matchedInvoice->installmentTerms ? $matchedInvoice->installmentTerms->count() : 0,
+                'is_fully_paid' => $matchedInvoice->isFullyPaid(),
             ],
             'programItem' => [
                 'id' => $matchedItem->id,

@@ -32,14 +32,14 @@ export interface Invoice {
     invoice_code: string;
     invoice_url: string | null;
     amount: number;
-    status: 'paid' | 'pending' | 'failed' | 'completed' | 'expired' | 'installment_pending';
+    status: 'paid' | 'pending' | 'failed' | 'installment_pending';
     is_installment?: boolean;
     access_suspended_at?: string | null;
     paid_at: string | null;
     created_at: string;
-    webinar_items: WebinarItem[];
     installment_terms?: InstallmentTermItem[];
     installmentTerms?: InstallmentTermItem[];
+    webinar_items: WebinarItem[];
 }
 
 export interface WebinarItem {
@@ -56,7 +56,7 @@ function ProofModal({ requirement, userName }: { requirement: FreeRequirement; u
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="size-8">
                     <Image className="size-4" />
                 </Button>
             </DialogTrigger>
@@ -167,9 +167,9 @@ function ActionCell({ row }: { row: Row<Invoice> }) {
     const { roles, isAdmin } = usePermission();
     const isStaff = roles.includes('staff') && !isAdmin;
     const invoice = row.original;
+    const webinarItem = invoice.webinar_items[0];
     const terms = invoice.installment_terms || invoice.installmentTerms || [];
     const isInstallment = invoice.is_installment || invoice.status === 'installment_pending' || terms.length > 0;
-    const webinarItem = invoice.webinar_items?.[0];
 
     const hasProof =
         webinarItem?.free_requirement &&
@@ -213,11 +213,11 @@ function ActionCell({ row }: { row: Row<Invoice> }) {
                 />
             )}
 
-            {hasProof && webinarItem?.free_requirement && (
+            {hasProof && (
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <div>
-                            <ProofModal requirement={webinarItem.free_requirement} userName={invoice.user?.name || 'Unknown'} />
+                            <ProofModal requirement={webinarItem.free_requirement!} userName={invoice.user?.name || 'Unknown'} />
                         </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -264,21 +264,26 @@ export const columns: ColumnDef<Invoice>[] = [
                 const isSuspended = !!invoice.access_suspended_at;
 
                 return (
-                    <div className="flex flex-col gap-1 items-start">
-                        {isFullyPaid ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                                Cicilan Lunas
-                            </Badge>
-                        ) : isSuspended ? (
-                            <Badge variant="destructive">
-                                Akses Dibekukan
-                            </Badge>
-                        ) : (
-                            <Badge className="bg-amber-100 text-amber-800 border-amber-300">
-                                Cicilan ({paidCount}/{totalCount || '?'})
-                            </Badge>
-                        )}
-                    </div>
+                    <InstallmentMonitorModal
+                        invoice={invoice as any}
+                        trigger={
+                            <div className="flex flex-col gap-1 items-start cursor-pointer hover:opacity-80 transition-opacity" title="Klik untuk monitor cicilan">
+                                {isFullyPaid ? (
+                                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 cursor-pointer">
+                                        Cicilan Lunas
+                                    </Badge>
+                                ) : isSuspended ? (
+                                    <Badge variant="destructive" className="cursor-pointer">
+                                        Akses Dibekukan
+                                    </Badge>
+                                ) : (
+                                    <Badge className="bg-amber-100 text-amber-800 border-amber-300 cursor-pointer">
+                                        Cicilan ({paidCount}/{totalCount || '?'})
+                                    </Badge>
+                                )}
+                            </div>
+                        }
+                    />
                 );
             }
 
