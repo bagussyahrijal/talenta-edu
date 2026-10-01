@@ -597,7 +597,7 @@ export default function Register({
         }
 
         if (requiresDocumentUpload && !hasApprovedDocument) {
-            if (isDocumentPending || isDocumentRejected) {
+            if (isDocumentPending) {
                 setIsLoading(false);
                 return;
             }
@@ -817,7 +817,7 @@ export default function Register({
 
     const handlePrimaryAction = () => {
         if (requiresDocumentUpload && !hasApprovedDocument) {
-            if (isDocumentPending || isDocumentRejected) {
+            if (isDocumentPending) {
                 return;
             }
 
@@ -1018,9 +1018,20 @@ export default function Register({
                                         )}
                                         {isDocumentPending && <p>Dokumen sudah dikirim dan sedang menunggu verifikasi admin.</p>}
                                         {isDocumentRejected && (
-                                            <p className="text-red-600 dark:text-red-300">
-                                                Dokumen Anda ditolak. Silakan hubungi admin untuk tindak lanjut.
-                                            </p>
+                                            <div className="space-y-2">
+                                                <p className="text-red-600 dark:text-red-300 font-semibold">
+                                                    Dokumen Anda ditolak. Silakan unggah ulang dokumen yang sesuai untuk diverifikasi kembali.
+                                                </p>
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    className="w-full rounded-full border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+                                                    variant="outline"
+                                                    onClick={() => handlePrimaryAction()}
+                                                >
+                                                    Unggah Ulang Dokumen
+                                                </Button>
+                                            </div>
                                         )}
                                     </AlertDescription>
                                 </Alert>
@@ -1069,13 +1080,13 @@ export default function Register({
                                 </div>
                                 <div className="p-6 space-y-4">
                                     {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
-                                    {installmentTerms.length > 0 && !isScholarship && displayPrice > 0 && (
+                                    {((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && !isScholarship && displayPrice > 0 && (
                                         <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-700">
                                             <button
                                                 type="button"
                                                 onClick={() => setPaymentMode('full')}
-                                                disabled={!!activeInstallment}
-                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment && !activeInstallment.is_fully_paid ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 Bayar Lunas (Full)
                                             </button>
@@ -1084,12 +1095,12 @@ export default function Register({
                                                 onClick={() => setPaymentMode('installment')}
                                                 className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'installment' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'}`}
                                             >
-                                                Cicilan ({installmentTerms.length}x)
+                                                Cicilan ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
                                             </button>
                                         </div>
                                     )}
 
-                                    {paymentMode === 'installment' && installmentTerms.length > 0 && !isScholarship && displayPrice > 0 ? (
+                                    {paymentMode === 'installment' && ((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && !isScholarship && displayPrice > 0 ? (
                                         <InstallmentOptions
                                             productType="certification_program"
                                             productId={program.id}
@@ -1412,9 +1423,9 @@ export default function Register({
                                             !!activeInstallment ||
                                             showScholarshipWarning ||
                                             (!isLoggedIn && !isGuestFormComplete()) ||
-                                            (requiresDocumentUpload && (isDocumentPending || isDocumentRejected)) ||
+                                            (requiresDocumentUpload && isDocumentPending) ||
                                             (!!regularApplication &&
-                                                regularApplication.status !== 'approved' &&
+                                                regularApplication.status === 'pending' &&
                                                 !isScholarship &&
                                                 requiresDocumentUpload) ||
                                             scholarshipNotApproved ||
@@ -1426,8 +1437,10 @@ export default function Register({
                                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         {isLoading
                                             ? 'Memproses...'
-                                            : requiresDocumentUpload && !hasApprovedDocument && !isDocumentPending && !isDocumentRejected
-                                            ? 'Upload Dokumen Pendukung'
+                                            : requiresDocumentUpload && !hasApprovedDocument && !isDocumentPending
+                                                              ? isDocumentRejected
+                                                                  ? 'Unggah Ulang Dokumen'
+                                                                  : 'Upload Dokumen Pendukung'
                                             : 'Bayar Sekarang'}
                                     </Button>
                                     <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">Pembayaran aman dan terenkripsi 🔒</p>

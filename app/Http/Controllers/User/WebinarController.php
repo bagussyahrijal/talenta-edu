@@ -181,7 +181,7 @@ class WebinarController extends Controller
             'transactionDetail' => $transactionDetail,
             // 'channels' => $this->midtransService->getPaymentChannels(),
             'referralInfo' => $this->getReferralInfo(),
-            'installmentTerms' => $webinar->installmentTerms()->get(['term_number', 'amount', 'due_date']),
+            'installmentTerms' => $webinar->installment_enabled ? $webinar->installmentTerms()->get(['term_number', 'amount', 'due_date']) : [],
         ]);
     }
 

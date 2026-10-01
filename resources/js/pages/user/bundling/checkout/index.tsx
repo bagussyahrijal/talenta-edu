@@ -1168,13 +1168,13 @@ export default function CheckoutBundle({
 
                                 <div className="space-y-4 p-6">
                                     {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
-                                    {installmentTerms.length > 0 && bundle.price > 0 && (
+                                    {((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && bundle.price > 0 && (
                                         <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-700">
                                             <button
                                                 type="button"
                                                 onClick={() => setPaymentMode('full')}
-                                                disabled={!!activeInstallment}
-                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
+                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment && !activeInstallment.is_fully_paid ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 Bayar Lunas (Full)
                                             </button>
@@ -1183,12 +1183,12 @@ export default function CheckoutBundle({
                                                 onClick={() => setPaymentMode('installment')}
                                                 className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'installment' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'}`}
                                             >
-                                                Cicilan ({installmentTerms.length}x)
+                                                Cicilan ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
                                             </button>
                                         </div>
                                     )}
 
-                                    {paymentMode === 'installment' && installmentTerms.length > 0 && bundle.price > 0 ? (
+                                    {paymentMode === 'installment' && ((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && bundle.price > 0 ? (
                                         <InstallmentOptions
                                             productType="bundle"
                                             productId={bundle.id}
