@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:public/build/assets/transition-panel-ojo1h1wX.js
-import{j as i}from"./app-C3Frf0el.js";import{c as o}from"./utils-BxSLavnc.js";import{A as s}from"./index-Dp1VSJds.js";import{m as c}from"./proxy-DPNX0qu0.js";function u({children:r,className:n,transition:a,variants:m,activeIndex:e,...t}){return i.jsx("div",{className:o("relative",n),children:i.jsx(s,{initial:!1,mode:"popLayout",custom:t.custom,children:i.jsx(c.div,{variants:m,transition:a,initial:"enter",animate:"center",exit:"exit",...t,children:r[e]},e)})})}export{u as T};
-========
-import{j as i}from"./app-BiziCeSQ.js";import{c as o}from"./utils-Dfw14OBc.js";import{A as s}from"./index-CmVXaeNT.js";import{m as c}from"./proxy-DLX2skD9.js";function u({children:r,className:n,transition:a,variants:m,activeIndex:e,...t}){return i.jsx("div",{className:o("relative",n),children:i.jsx(s,{initial:!1,mode:"popLayout",custom:t.custom,children:i.jsx(c.div,{variants:m,transition:a,initial:"enter",animate:"center",exit:"exit",...t,children:r[e]},e)})})}export{u as T};
->>>>>>>> 7cb14ada532b27fb255d257fbc002ab36b5e4fc0:public/build/assets/transition-panel-DBQZ4pcc.js
