@@ -19,10 +19,12 @@ class TransactionController extends Controller
             'certificationProgramItems.certificationProgram',
             'bundleEnrollments.bundle.bundleItems.bundleable',
             'installmentTerms',
+            'discountUsage.discountCode',
             'parentInvoice.courseItems.course',
             'parentInvoice.bootcampItems.bootcamp',
             'parentInvoice.webinarItems.webinar',
             'parentInvoice.certificationProgramItems.certificationProgram',
+            'parentInvoice.installmentTerms',
         ])
             ->where('user_id', $userId)
             ->whereNull('parent_invoice_id')
