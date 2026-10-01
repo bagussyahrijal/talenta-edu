@@ -719,18 +719,23 @@ class MidtransCallbackController extends Controller
                 ]);
             }
         } else {
-            $defaultAffiliate = User::where('affiliate_code', 'SPJ2025')->first();
+            $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first()
+                ?? User::role('affiliate')->first();
 
-            if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && (float) $defaultAffiliate->commission > 0) {
-                $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
+            if ($defaultAffiliate && $defaultAffiliate->id !== $invoice->user_id) {
+                $invoice->update(['referred_by_user_id' => $defaultAffiliate->id]);
 
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $defaultAffiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $defaultAffiliate->commission,
-                    'status' => 'approved',
-                ]);
+                if ($defaultAffiliate->affiliate_status === 'Active' && (float) $defaultAffiliate->commission > 0) {
+                    $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
+
+                    AffiliateEarning::create([
+                        'affiliate_user_id' => $defaultAffiliate->id,
+                        'invoice_id' => $invoice->id,
+                        'amount' => $commissionAmount,
+                        'rate' => $defaultAffiliate->commission,
+                        'status' => 'approved',
+                    ]);
+                }
             }
         }
 

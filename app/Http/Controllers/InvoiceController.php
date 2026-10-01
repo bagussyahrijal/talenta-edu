@@ -63,17 +63,18 @@ class InvoiceController extends Controller
         $paymentType = $request->input('payment_type');
         $productType = $request->input('product_type');
 
-        // Buat query dasar
-        $invoicesQuery = Invoice::whereNull('parent_invoice_id')->with([
+        // Buat query dasar (hanya transaksi utama / parent invoice)
+        $invoicesQuery = Invoice::with([
             'user',
-            'referrer',
+            'referredByUser',
+            'referralUser',
+            'installmentTerms',
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
             'bundleEnrollments.bundle',
             'certificationProgramItems.certificationProgram',
-            'installmentTerms',
-        ]);
+        ])->whereNull('parent_invoice_id');
 
         // Apply date filter jika ada
         if ($startDate && $endDate) {
@@ -1100,13 +1101,172 @@ class InvoiceController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('success', 'Invoice berhasil dibatalkan.');
+            if (request()->header('X-Inertia')) {
+                return redirect()->back()->with('success', 'Transaksi berhasil dibatalkan.');
+            }
+
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi berhasil dibatalkan.'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Transaksi berhasil dibatalkan.');
         } catch (\Exception $e) {
             DB::rollBack();
+            if (request()->header('X-Inertia')) {
+                return redirect()->back()->with('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
+            }
+
             return response()->json([
                 'message' => 'Gagal membatalkan invoice. ' . $e->getMessage(),
                 'success' => false
             ], 400);
+        }
+    }
+
+    /**
+     * Approve a pending invoice manually (mark as paid with Midtrans payment method)
+     * Also records affiliate commission and fires TransactionPaid event
+     */
+    public function approvePending($id)
+    {
+        DB::beginTransaction();
+        try {
+            $invoice = Invoice::with([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'certificationProgramItems.certificationProgram',
+                'bundleEnrollments.bundle.bundleItems.bundleable',
+            ])
+                ->where('id', $id)
+                ->where('status', 'pending')
+                ->firstOrFail();
+
+            // Update invoice to paid with Midtrans payment method
+            $invoice->update([
+                'status'           => 'paid',
+                'paid_at'          => Carbon::now('Asia/Jakarta'),
+                'payment_method'   => 'midtrans',
+                'payment_channel'  => 'midtrans',
+            ]);
+
+            // Process bundle individual enrollments if any
+            if ($invoice->bundleEnrollments && $invoice->bundleEnrollments->count() > 0) {
+                foreach ($invoice->bundleEnrollments as $bundleEnrollment) {
+                    $bundleEnrollment->createIndividualEnrollments();
+                    $bundle = $bundleEnrollment->bundle;
+                    if ($bundle && $bundle->bundleItems) {
+                        foreach ($bundle->bundleItems as $item) {
+                            $this->addToCertificateParticipantsHelper($item->getTypeSlug(), $item->bundleable_id, $invoice->user_id);
+                        }
+                    }
+                }
+            }
+
+            // Add to certificate participants for course/bootcamp/webinar items
+            $this->addEnrollmentToCertificateParticipantsHelper($invoice);
+
+            // Record affiliate commission
+            $this->recordAffiliateCommissionHelper($invoice);
+
+            // Fire event for referral rewards & other side effects
+            event(new \App\Events\TransactionPaid($invoice));
+
+            DB::commit();
+
+            // Kirim notifikasi WhatsApp via Wablas setelah transaksi berhasil di-approve
+            try {
+                $this->sendWhatsAppNotification($invoice);
+            } catch (\Exception $e) {
+                Log::error('Failed to send WhatsApp notification after manual approve', [
+                    'invoice_id' => $invoice->id,
+                    'error'      => $e->getMessage(),
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Transaksi berhasil di-approve dan statusnya menjadi Paid.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to approve invoice: ' . $e->getMessage(), ['invoice_id' => $id]);
+            return redirect()->back()->with('error', 'Gagal meng-approve transaksi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Record affiliate commission for an invoice (helper for approvePending)
+     */
+    private function recordAffiliateCommissionHelper(Invoice $invoice)
+    {
+        $referredByUserId = $invoice->referred_by_user_id;
+
+        if (!$referredByUserId) {
+            $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first()
+                ?? User::role('affiliate')->first();
+            if ($defaultAffiliate && $defaultAffiliate->id !== $invoice->user_id) {
+                $referredByUserId = $defaultAffiliate->id;
+                $invoice->update(['referred_by_user_id' => $referredByUserId]);
+            }
+        }
+
+        if ($referredByUserId) {
+            $affiliate = User::find($referredByUserId);
+            if ($affiliate && $affiliate->affiliate_status === 'Active' && $affiliate->commission > 0) {
+                // Avoid duplicate affiliate earning for this invoice
+                $alreadyExists = AffiliateEarning::where('invoice_id', $invoice->id)
+                    ->where('affiliate_user_id', $affiliate->id)
+                    ->exists();
+
+                if (!$alreadyExists) {
+                    $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
+                    AffiliateEarning::create([
+                        'affiliate_user_id' => $affiliate->id,
+                        'invoice_id'        => $invoice->id,
+                        'amount'            => $commissionAmount,
+                        'rate'              => $affiliate->commission,
+                        'status'            => 'approved',
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Add a single item to certificate participants (helper for approvePending)
+     */
+    private function addToCertificateParticipantsHelper($type, $itemId, $userId)
+    {
+        $certificate = match ($type) {
+            'course'   => Certificate::where('course_id', $itemId)->first(),
+            'bootcamp' => Certificate::where('bootcamp_id', $itemId)->first(),
+            'webinar'  => Certificate::where('webinar_id', $itemId)->first(),
+            default    => null,
+        };
+
+        if ($certificate) {
+            CertificateParticipant::firstOrCreate([
+                'certificate_id' => $certificate->id,
+                'user_id'        => $userId,
+            ]);
+        }
+    }
+
+    /**
+     * Add all enrollment items to certificate participants (helper for approvePending)
+     */
+    private function addEnrollmentToCertificateParticipantsHelper(Invoice $invoice)
+    {
+        foreach ($invoice->courseItems as $courseItem) {
+            $this->addToCertificateParticipantsHelper('course', $courseItem->course_id, $invoice->user_id);
+        }
+        foreach ($invoice->bootcampItems as $bootcampItem) {
+            $this->addToCertificateParticipantsHelper('bootcamp', $bootcampItem->bootcamp_id, $invoice->user_id);
+        }
+        foreach ($invoice->webinarItems as $webinarItem) {
+            $this->addToCertificateParticipantsHelper('webinar', $webinarItem->webinar_id, $invoice->user_id);
         }
     }
 
@@ -1816,18 +1976,23 @@ class InvoiceController extends Controller
                 ]);
             }
         } else {
-            $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
+            $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first()
+                ?? User::role('affiliate')->first();
 
-            if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && $defaultAffiliate->commission > 0) {
-                $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
+            if ($defaultAffiliate && $defaultAffiliate->id !== $invoice->user_id) {
+                $invoice->update(['referred_by_user_id' => $defaultAffiliate->id]);
 
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $defaultAffiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $defaultAffiliate->commission,
-                    'status' => 'approved',
-                ]);
+                if ($defaultAffiliate->affiliate_status === 'Active' && $defaultAffiliate->commission > 0) {
+                    $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
+
+                    AffiliateEarning::create([
+                        'affiliate_user_id' => $defaultAffiliate->id,
+                        'invoice_id' => $invoice->id,
+                        'amount' => $commissionAmount,
+                        'rate' => $defaultAffiliate->commission,
+                        'status' => 'approved',
+                    ]);
+                }
             }
         }
 

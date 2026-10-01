@@ -20,7 +20,8 @@ interface User {
 export interface BundleTransactionInvoice {
     id: string;
     user: User;
-    referrer: { id: string; name: string } | null;
+    referred_by_user?: { id: string; name: string } | null;
+    referredByUser?: { id: string; name: string } | null;
     invoice_code: string;
     invoice_url: string | null;
     amount: number;
@@ -115,9 +116,17 @@ export const columns: ColumnDef<BundleTransactionInvoice>[] = [
         cell: ({ row }) => <PriceCell row={row} />,
     },
     {
-        accessorKey: 'referrer.name',
+        id: 'affiliate',
+        accessorFn: (row) => {
+            const inv = row as any;
+            return inv.referred_by_user?.name || inv.referredByUser?.name || '-';
+        },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Afiliasi" />,
-        cell: ({ row }) => <p>{row.original.referrer?.name || '-'}</p>,
+        cell: ({ row }) => {
+            const inv = row.original as any;
+            const name = inv.referred_by_user?.name || inv.referredByUser?.name || '-';
+            return <p>{name}</p>;
+        },
     },
     {
         accessorKey: 'status',
