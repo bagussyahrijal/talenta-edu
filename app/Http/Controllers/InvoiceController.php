@@ -74,7 +74,18 @@ class InvoiceController extends Controller
             'webinarItems.webinar',
             'bundleEnrollments.bundle',
             'certificationProgramItems.certificationProgram',
-        ])->whereNull('parent_invoice_id');
+            'parentInvoice.user',
+            'parentInvoice.installmentTerms',
+            'parentInvoice.courseItems.course',
+            'parentInvoice.bootcampItems.bootcamp',
+            'parentInvoice.webinarItems.webinar',
+            'parentInvoice.bundleEnrollments.bundle',
+            'parentInvoice.certificationProgramItems.certificationProgram',
+        ])->where(function ($q) {
+            $q->where(function ($sq) {
+                $sq->whereNull('parent_invoice_id')->where('is_installment', false);
+            })->orWhereNotNull('parent_invoice_id');
+        });
 
         // Apply date filter jika ada
         if ($startDate && $endDate) {
@@ -86,7 +97,7 @@ class InvoiceController extends Controller
                     $q2->where('status', 'paid')
                         ->whereBetween('paid_at', [$start, $end]);
                 })->orWhere(function ($q2) use ($start, $end) {
-                    $q2->whereIn('status', ['paid', 'pending', 'failed'])
+                    $q2->where('status', '!=', 'paid')
                         ->whereBetween('created_at', [$start, $end]);
                 });
             });
@@ -125,9 +136,13 @@ class InvoiceController extends Controller
                 foreach ($productTypes as $idx => $pType) {
                     $relation = $relationMap[$pType] ?? (\Illuminate\Support\Str::camel($pType) . 'Items');
                     if ($idx === 0) {
-                        $q->whereHas($relation);
+                        $q->where(function ($sq) use ($relation) {
+                            $sq->whereHas($relation)->orWhereHas('parentInvoice.' . $relation);
+                        });
                     } else {
-                        $q->orWhereHas($relation);
+                        $q->orWhere(function ($sq) use ($relation) {
+                            $sq->whereHas($relation)->orWhereHas('parentInvoice.' . $relation);
+                        });
                     }
                 }
             });
@@ -166,10 +181,11 @@ class InvoiceController extends Controller
         $paidEnrollments = (clone $statsBase)->where('status', 'paid')->where('nett_amount', '>', 0)->count();
 
         // Product Type Breakdown
-        $courseTransactions = (clone $statsBase)->whereHas('courseItems')->count();
-        $bootcampTransactions = (clone $statsBase)->whereHas('bootcampItems')->count();
-        $webinarTransactions = (clone $statsBase)->whereHas('webinarItems')->count();
-        $bundleTransactions = (clone $statsBase)->whereHas('bundleEnrollments')->count();
+        $courseTransactions = (clone $statsBase)->where(fn($q) => $q->whereHas('courseItems')->orWhereHas('parentInvoice.courseItems'))->count();
+        $bootcampTransactions = (clone $statsBase)->where(fn($q) => $q->whereHas('bootcampItems')->orWhereHas('parentInvoice.bootcampItems'))->count();
+        $webinarTransactions = (clone $statsBase)->where(fn($q) => $q->whereHas('webinarItems')->orWhereHas('parentInvoice.webinarItems'))->count();
+        $bundleTransactions = (clone $statsBase)->where(fn($q) => $q->whereHas('bundleEnrollments')->orWhereHas('parentInvoice.bundleEnrollments'))->count();
+        $certificationTransactions = (clone $statsBase)->where(fn($q) => $q->whereHas('certificationProgramItems')->orWhereHas('parentInvoice.certificationProgramItems'))->count();
         $certificationProgramTransactions = (clone $statsBase)->whereHas('certificationProgramItems')->count();
 
         $todayTransactions = (clone $statsBase)->whereDate('paid_at', Carbon::today())->count();
@@ -209,6 +225,7 @@ class InvoiceController extends Controller
                 'bootcamp' => $bootcampTransactions,
                 'webinar' => $webinarTransactions,
                 'bundle' => $bundleTransactions,
+                'certification_program' => $certificationTransactions,
                 'certification_program' => $certificationProgramTransactions,
             ],
             'period' => [
@@ -221,7 +238,7 @@ class InvoiceController extends Controller
 
         // Paginate invoices per page
         $perPage = min(100, max(5, (int) $request->input('per_page', 10)));
-        $invoices = $invoicesQuery->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+        $invoices = $invoicesQuery->orderByRaw('COALESCE(paid_at, created_at) DESC')->paginate($perPage)->withQueryString();
 
         return Inertia::render('admin/transactions/index', [
             'invoices' => $invoices,
