@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminLayout from '@/layouts/admin-layout';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { SharedData, type BreadcrumbItem } from '@/types';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Download, FileOutput, FileUp, LoaderCircle, Plus, Upload } from 'lucide-react';
@@ -57,8 +57,10 @@ interface QuizzesProps {
 import { usePermission } from '@/hooks/use-permission';
 
 export default function Quizzes({ course, quiz, submissions = [], flash }: QuizzesProps) {
+    const { auth } = usePage<SharedData>().props;
     const { canManage } = usePermission();
-    const canManageCourse = canManage('courses');
+    const isMentor = auth.role.includes('mentor');
+    const canManageCourse = canManage('courses') || isMentor;
     const [importModalOpen, setImportModalOpen] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
