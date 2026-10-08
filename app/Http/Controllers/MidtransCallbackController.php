@@ -729,13 +729,17 @@ class MidtransCallbackController extends Controller
             if ($affiliate && $affiliate->affiliate_status === 'Active' && (float) $affiliate->commission > 0) {
                 $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
 
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $affiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $affiliate->commission,
-                    'status' => 'approved',
-                ]);
+                AffiliateEarning::firstOrCreate(
+                    [
+                        'affiliate_user_id' => $affiliate->id,
+                        'invoice_id' => $invoice->id,
+                    ],
+                    [
+                        'amount' => $commissionAmount,
+                        'rate' => $affiliate->commission,
+                        'status' => 'approved',
+                    ]
+                );
             }
         } else {
             $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first()

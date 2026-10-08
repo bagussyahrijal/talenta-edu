@@ -3,8 +3,11 @@ import { Button } from '@/components/ui/button';
 import UserLayout from '@/layouts/user-layout';
 import { formatExternalUrl } from '@/lib/utils';
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, Award, BadgeCheck, CheckCircle, Download, Eye, MessageCircle, Star } from 'lucide-react';
+import { ArrowLeft, Award, BadgeCheck, CheckCircle, Clock, CreditCard, Download, Eye, MessageCircle, Star } from 'lucide-react';
 import { useState } from 'react';
+import axios from 'axios';
+import { toast } from 'sonner';
+import ProfileInstallmentAction from '@/components/profile-installment-action';
 
 interface Category {
     id: string;
@@ -96,13 +99,34 @@ export default function DetailMyCourse({
     courseRating,
     certificate,
     certificateParticipant,
+    active_installment,
 }: {
     course: CourseProps | null;
     courseRating: CourseRating | null;
     certificate?: Certificate | null;
     certificateParticipant?: CertificateParticipant | null;
+    active_installment?: any | null;
 }) {
     const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+    const [isPayingCert, setIsPayingCert] = useState(false);
+
+    const handlePayCertInstallment = async () => {
+        if (!course) return;
+        setIsPayingCert(true);
+        try {
+            const res = await axios.post(`/installment/${course.id}/pay`);
+            if (res.data?.success && res.data?.payment_url) {
+                toast.success('Mengarahkan ke pembayaran...');
+                window.location.href = res.data.payment_url;
+            } else {
+                toast.error(res.data?.message || 'Gagal memproses pembayaran cicilan');
+                setIsPayingCert(false);
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Terjadi kesalahan saat memproses pembayaran');
+            setIsPayingCert(false);
+        }
+    };
 
     if (!course) {
         return (
@@ -208,14 +232,27 @@ export default function DetailMyCourse({
                                 </div>
                             </div>
                         </div>
-                        <Button size="sm" disabled>
-                            <Download className="mr-2 h-4 w-4" />
-                            {!certificate
-                                ? 'Sertifikat Belum Tersedia'
-                                : !isFullyPaid
-                                  ? (isInstallment ? 'Lunasi Seluruh Cicilan' : 'Selesaikan Pembayaran')
-                                  : 'Menunggu Sertifikat'}
-                        </Button>
+                        {isInstallment && !isFullyPaid ? (
+                            <Button
+                                size="sm"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 font-semibold"
+                                onClick={handlePayCertInstallment}
+                                disabled={isPayingCert || isSuspended}
+                                id="btn-lunasi-sertifikat-course"
+                            >
+                                <CreditCard className="h-4 w-4" />
+                                {isPayingCert ? 'Mengarahkan...' : 'Lunasi Cicilan Sekarang'}
+                            </Button>
+                        ) : (
+                            <Button size="sm" disabled>
+                                <Download className="mr-2 h-4 w-4" />
+                                {!certificate
+                                    ? 'Sertifikat Belum Tersedia'
+                                    : !isFullyPaid
+                                      ? 'Menunggu Pembayaran'
+                                      : 'Menunggu Sertifikat'}
+                            </Button>
+                        )}
                     </div>
                 </div>
             );
@@ -293,8 +330,11 @@ export default function DetailMyCourse({
                 </div>
             ) : (
                 <>
-                    <section className=" dark:via-background dark:to-background relative bg-gradient-to-b py-12 text-gray-900 dark:text-white">
-                        
+                    <section className="to-background from-background via-tertiary dark:via-background dark:to-background relative bg-gradient-to-b py-12 text-gray-900 dark:text-white">
+                        <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 animate-spin items-center gap-8 duration-[10s]">
+                            <div className="bg-primary h-[300px] w-[300px] rounded-full blur-[200px]" />
+                            <div className="bg-secondary h-[300px] w-[300px] rounded-full blur-[200px]" />
+                        </div>
                         <div className="relative mx-auto max-w-7xl px-4 text-center">
                             <Button className="top-0 left-4 mb-4 rounded-full md:absolute md:mb-0" variant="secondary" asChild>
                                 <Link href="/profile/my-courses">
@@ -303,17 +343,17 @@ export default function DetailMyCourse({
                             </Button>
                             <div className="col-span-2">
                                 <div className="flex flex-col items-center justify-center md:flex-row md:gap-4">
-                                    {/* <span className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
+                                    <span className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
                                         📌 Enrolled in{' '}
                                         {courseItem &&
                                             new Date(courseItem.created_at).toLocaleDateString('id-ID', {
                                                 month: 'long',
                                                 year: 'numeric',
                                             })}
-                                    </span> */}
-                                    {/* <span className="text-secondary border-secondary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
+                                    </span>
+                                    <span className="text-secondary border-secondary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
                                         🎮 Level <span className="capitalize">{courseData.level}</span>
-                                    </span> */}
+                                    </span>
                                     {hasCertificate ? (
                                         <span className="mb-4 flex w-fit items-center gap-2 rounded-full border border-green-800 bg-green-100 px-4 py-1 text-sm font-medium text-green-800 shadow-xs">
                                             <Award size={16} />
@@ -322,35 +362,44 @@ export default function DetailMyCourse({
                                     ) : null}
                                 </div>
 
-                                <h1 className="mx-auto mb-4 max-w-2xl text-4xl leading-tight font-bold font-literata sm:text-5xl">{courseData.title}</h1>
+                                <h1 className="mx-auto mb-4 max-w-2xl text-4xl leading-tight font-bold italic sm:text-5xl">{courseData.title}</h1>
 
                                 <p className="mb-6 text-lg text-gray-600 dark:text-gray-400">{courseData.description}</p>
 
                                 <div className="flex items-center justify-center gap-4">
                                     {isSuspended ? (
-                                        <div className="mx-auto max-w-xl rounded-lg border border-red-300 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-950/50">
-                                            <p className="font-semibold text-red-900 dark:text-red-100">⚠️ Akses Kelas Dibekukan</p>
-                                            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                                                Akses kelas dibekukan karena ada tagihan cicilan yang melewati jatuh tempo. Silakan lakukan pelunasan di menu Transaksi.
-                                            </p>
+                                        <div className="text-center">
+                                            <span className="block font-semibold text-red-600">
+                                                ⚠️ Akses kelas dibekukan karena ada tagihan cicilan yang melewati jatuh tempo.
+                                            </span>
+                                            <span className="block text-sm text-red-600/90">
+                                                Silakan lakukan pelunasan di menu Transaksi.
+                                            </span>
                                         </div>
                                     ) : !hasActiveAccess ? (
-                                        <div className="mx-auto max-w-xl rounded-lg border border-red-300 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-950/50">
-                                            <p className="font-semibold text-red-900 dark:text-red-100">
-                                                Status Pembayaran: {courseInvoiceStatus.toUpperCase()}
-                                            </p>
-                                            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                        <div className="text-center">
+                                            <span className="block font-semibold text-red-600">
+                                                ⚠️ Status Pembayaran: {courseInvoiceStatus.toUpperCase()}
+                                            </span>
+                                            <span className="block text-sm text-gray-600 dark:text-gray-400">
                                                 {courseInvoiceStatus === 'failed'
                                                     ? 'Pembayaran gagal atau dibatalkan. Silakan lakukan pembelian ulang.'
                                                     : 'Selesaikan pembayaran untuk mengakses kelas.'}
-                                            </p>
+                                            </span>
                                         </div>
                                     ) : isInstallment && !isFullyPaid ? (
-                                        <div className="mx-auto max-w-xl rounded-lg border border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-950/50">
-                                            <p className="font-semibold text-amber-900 dark:text-amber-100">ℹ️ Pembayaran Cicilan Aktif</p>
-                                            <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                                                Anda memiliki akses penuh ke materi kelas.
-                                            </p>
+                                        <div className="w-full">
+                                            <ProfileInstallmentAction
+                                                variant="banner"
+                                                activeInstallment={active_installment}
+                                                invoiceId={course.id}
+                                                isInstallment={isInstallment}
+                                                isFullyPaid={isFullyPaid}
+                                                isSuspended={isSuspended}
+                                                paidTerms={terms.filter((t: any) => t.status === 'paid').length}
+                                                totalTerms={terms.length}
+                                                installmentTerms={terms}
+                                            />
                                         </div>
                                     ) : null}
                                 </div>
@@ -428,23 +477,30 @@ export default function DetailMyCourse({
                             </div>
 
                             <div className="col-span-1 space-y-4">
+                                {isInstallment && (
+                                    <ProfileInstallmentAction
+                                        variant="card"
+                                        activeInstallment={active_installment}
+                                        invoiceId={course.id}
+                                        isInstallment={isInstallment}
+                                        isFullyPaid={isFullyPaid}
+                                        isSuspended={isSuspended}
+                                        paidTerms={terms.filter((t: any) => t.status === 'paid').length}
+                                        totalTerms={terms.length}
+                                        installmentTerms={terms}
+                                    />
+                                )}
                                 <div className="flex h-full flex-col rounded-xl bg-white p-6 shadow dark:bg-zinc-800">
                                     <h2 className="mb-4 text-center font-semibold">{courseData.title}</h2>
                                     <img
-                                        src={
-                                            !courseData.thumbnail
-                                                ? '/assets/images/placeholder.png'
-                                                : courseData.thumbnail.startsWith('http') || courseData.thumbnail.startsWith('/storage')
-                                                  ? courseData.thumbnail
-                                                  : `/storage/${courseData.thumbnail}`
-                                        }
+                                        src={courseData.thumbnail ? `/storage/${courseData.thumbnail}` : '/assets/images/placeholder.png'}
                                         alt={courseData.title}
                                         className="aspect-video rounded-xl object-cover shadow-lg"
                                     />
                                     <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">{courseData.short_description}</p>
 
                                     <Button
-                                        className="mt-4 w-full"
+                                        className="mt-2 w-full"
                                         onClick={() => router.get(route('learn.course.detail', { course: courseData.slug }))}
                                         disabled={!hasActiveAccess}
                                     >
@@ -454,7 +510,7 @@ export default function DetailMyCourse({
                                     {courseData.group_url && (
                                         <Button
                                             variant="outline"
-                                            className="mt-2 w-full border-green-600/30 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-500/30 dark:text-green-400 dark:hover:bg-green-950/30"
+                                            className="mt-2 w-full"
                                             asChild={hasActiveAccess}
                                             disabled={!hasActiveAccess}
                                         >
@@ -464,12 +520,12 @@ export default function DetailMyCourse({
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
-                                                    <MessageCircle size={16} className="mr-2" />
+                                                    <MessageCircle className="mr-2 h-4 w-4" />
                                                     Masuk Grup WA
                                                 </a>
                                             ) : (
                                                 <span>
-                                                    <MessageCircle size={16} className="mr-2" />
+                                                    <MessageCircle className="mr-2 h-4 w-4" />
                                                     Masuk Grup WA
                                                 </span>
                                             )}

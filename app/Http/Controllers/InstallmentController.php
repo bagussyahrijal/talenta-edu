@@ -13,7 +13,6 @@ use App\Models\EnrollmentCourse;
 use App\Models\EnrollmentWebinar;
 use App\Models\Invoice;
 use App\Models\ProductInstallmentTerm;
-use App\Models\User;
 use App\Models\Webinar;
 use App\Services\MidtransService;
 use App\Traits\WablasTrait;
@@ -126,109 +125,95 @@ class InstallmentController extends Controller
      */
     public function store(Request $request)
     {
-        DB::beginTransaction();
+        $userId = Auth::id();
+        $type = $request->input('type');
+        $itemId = $request->input('id');
+
+        // Cek apakah user sudah memiliki cicilan aktif yang belum lunas
+        if ($userId) {
+            $activeInstallment = Invoice::getActiveInstallmentForUser($userId, $type, $itemId);
+            if ($activeInstallment && !$activeInstallment['is_fully_paid']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda memiliki transaksi cicilan yang sedang aktif untuk program ini. Silakan lanjutkan pembayaran termin cicilan Anda.',
+                ], 422);
+            }
+        }
+
+        // Validasi: cicilan tidak bisa dikombinasikan dengan poin/voucher
+        if ($request->input('discount_code_id') || $request->input('points_redeemed', 0) > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cicilan tidak dapat dikombinasikan dengan poin atau voucher.',
+            ], 422);
+        }
+
         try {
-            $userId = Auth::id();
-            $type = $request->input('type');
-            $itemId = $request->input('id');
-
-                        // Cek apakah user sudah memiliki cicilan aktif yang belum lunas
-            if ($userId) {
-                $activeInstallment = Invoice::getActiveInstallmentForUser($userId, $type, $itemId);
-                if ($activeInstallment && !$activeInstallment['is_fully_paid']) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Anda memiliki transaksi cicilan yang sedang aktif untuk program ini. Silakan lanjutkan pembayaran termin cicilan Anda.',
-                    ], 422);
-                }
-            }
-
-            // Validasi: cicilan tidak bisa dikombinasikan dengan poin/voucher
-            if ($request->input('discount_code_id') || $request->input('points_redeemed', 0) > 0) {
-                throw new \Exception('Cicilan tidak dapat dikombinasikan dengan poin atau voucher.');
-            }
-
             // Ambil produk
             [$item, $enrollmentTable, $enrollmentField] = $this->resolveProduct($type, $itemId);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat cicilan: ' . $e->getMessage(),
+            ], 422);
+        }
 
-            // Validasi cicilan tersedia
-            if (!$item->installment_enabled) {
-                throw new \Exception('Produk ini tidak tersedia untuk pembayaran cicilan.');
+        // Validasi cicilan tersedia
+        if (!$item->installment_enabled) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat cicilan: Produk ini tidak tersedia untuk pembayaran cicilan.',
+            ], 422);
+        }
+
+        $terms = ProductInstallmentTerm::where('termable_type', get_class($item))
+            ->where('termable_id', $item->id)
+            ->orderBy('term_number')
+            ->get();
+
+        if ($terms->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat cicilan: Konfigurasi termin cicilan belum diatur oleh admin.',
+            ], 422);
+        }
+
+        $totalNettAmount = $terms->sum('amount');
+        $adminFeePerTerm = 5000;
+        $termsCount = $terms->count();
+        $totalGrossAmount = $totalNettAmount + ($termsCount * $adminFeePerTerm);
+        $dpGrossAmount = $terms->first()->amount + $adminFeePerTerm;
+
+        // Ambil referral / affiliate code jika ada
+        $affiliateCode = $request->cookie('affiliate_code') ?? $request->input('affiliate_code');
+        $referredByUserId = null;
+        if ($affiliateCode) {
+            $affiliateUser = \App\Models\User::where('affiliate_code', $affiliateCode)->first();
+            if ($affiliateUser && $affiliateUser->id !== $userId) {
+                $referredByUserId = $affiliateUser->id;
             }
+        }
 
-            $terms = ProductInstallmentTerm::where('termable_type', get_class($item))
-                ->where('termable_id', $item->id)
-                ->orderBy('term_number')
-                ->get();
+        // Generate kode invoice induk
+        try {
+            $parentCode = IdGenerator::generate([
+                'table' => 'invoices',
+                'field' => 'invoice_code',
+                'length' => 11,
+                'reset_on_prefix_change' => true,
+                'prefix' => 'TLT-' . date('y'),
+            ]);
+        } catch (\Throwable $e) {
+            $count = Invoice::where('invoice_code', 'like', 'TLT-' . date('y') . '%')->count() + 1;
+            $parentCode = 'TLT-' . date('y') . str_pad($count, 5, '0', STR_PAD_LEFT);
+        }
 
-            if ($terms->isEmpty()) {
-                throw new \Exception('Konfigurasi termin cicilan belum diatur oleh admin.');
-            }
-
-            $totalNettAmount = $terms->sum('amount');
-            $adminFeePerTerm = 5000;
-            $termsCount = $terms->count();
-            $totalGrossAmount = $totalNettAmount + ($termsCount * $adminFeePerTerm);
-            $totalGrossAmount = $totalAmount + $totalAdminFees;
-            $dpGrossAmount = $terms->first()->amount + $adminFeePerTerm;
-
-            // Ambil referral / affiliate code jika ada (Decoupled tracking untuk Talenta Edu)
-            $affiliateCode = $request->input('affiliate_code')
-                ?? $request->input('ref')
-                ?? session('affiliate_code')
-                ?? $request->cookie('affiliate_code')
-                ?? $request->cookie('ref');
-            $referredByUserId = null;
-
-            if ($affiliateCode && strtoupper($affiliateCode) !== 'TAL2025') {
-                $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
-                if ($affiliateUser && $affiliateUser->id !== $userId) {
-                    $referredByUserId = $affiliateUser->id;
-                }
-            }
-
-            if (!$referredByUserId) {
-                $defaultAffiliate = User::where('affiliate_code', 'TAL2025')->first();
-                if ($defaultAffiliate) {
-                    $referredByUserId = $defaultAffiliate->id;
-                }
-            }
-
-            $referralCodeInput = $request->input('referral_code');
-            $referralUserId = null;
-
-            if ($referralCodeInput) {
-                $referralService = app(\App\Services\ReferralService::class);
-                $userObj = User::find($userId);
-                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj);
-                if ($validation['valid'] && isset($validation['referrer'])) {
-                    $referralUserId = $validation['referrer']->id;
-                }
-            }
-
-            // Generate kode invoice induk
-            try {
-                $parentCode = IdGenerator::generate([
-                    'table' => 'invoices',
-                    'field' => 'invoice_code',
-                    'length' => 11,
-                    'reset_on_prefix_change' => true,
-                    'prefix' => 'TLT-' . date('y'),
-                ]);
-            } catch (\Throwable $e) {
-                $lastInvoice = Invoice::where('invoice_code', 'like', 'TLT-' . date('y') . '%')
-                    ->whereNull('parent_invoice_id')
-                    ->orderByDesc('invoice_code')
-                    ->first();
-                $lastNumber = $lastInvoice ? (int) substr($lastInvoice->invoice_code, 6) : 0;
-                $parentCode = 'TLT-' . date('y') . str_pad((string)($lastNumber + 1), 5, '0', STR_PAD_LEFT);
-            }
-
+        DB::beginTransaction();
+        try {
             // Buat invoice induk
             $parentInvoice = Invoice::create([
                 'user_id' => $userId,
                 'referred_by_user_id' => $referredByUserId,
-                'referral_user_id' => $referralUserId,
                 'invoice_code' => $parentCode,
                 'amount' => $totalGrossAmount,
                 'nett_amount' => $totalNettAmount,
@@ -246,7 +231,6 @@ class InstallmentController extends Controller
                 $child = Invoice::create([
                     'user_id' => $userId,
                     'referred_by_user_id' => $referredByUserId,
-                    'referral_user_id' => $referralUserId,
                     'invoice_code' => $childCode,
                     'amount' => $term->amount + $adminFeePerTerm,
                     'nett_amount' => $term->amount,
@@ -314,43 +298,60 @@ class InstallmentController extends Controller
      */
     public function payTerm(Request $request, string $parentInvoiceId)
     {
+        $userId = Auth::id();
+
+        $parentInvoice = Invoice::with(['installmentTerms'])
+            ->where('id', $parentInvoiceId)
+            ->where('user_id', $userId)
+            ->where('is_installment', true)
+            ->whereNull('parent_invoice_id')
+            ->firstOrFail();
+
+        if ($parentInvoice->status === 'paid') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Semua cicilan sudah lunas.',
+            ], 422);
+        }
+
+        $nextTerm = $parentInvoice->nextUnpaidTerm();
+        if (!$nextTerm) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada termin yang perlu dibayar.',
+            ], 422);
+        }
+
+        // Validasi overdue: tidak bisa bayar mandiri jika jatuh tempo sudah terlewat
+        if ($nextTerm->installment_due_date) {
+            $dueDate = Carbon::parse($nextTerm->installment_due_date)->endOfDay();
+            if (Carbon::now('Asia/Jakarta')->gt($dueDate)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Batas waktu pembayaran untuk termin ini telah melewati jatuh tempo. Pembayaran online ditutup, silakan hubungi admin untuk penyelesaian cicilan.',
+                ], 422);
+            }
+        }
+
+        // Pastikan termin ke-1 (DP) sudah dibayar jika sedang membayar termin berikutnya (jangan loncat)
+        if ($nextTerm->installment_number > 1) {
+            $dp = $parentInvoice->installmentTerms()->where('installment_number', 1)->first();
+            if ($dp && $dp->status !== 'paid') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Termin ke-1 (DP) belum dibayar.',
+                ], 422);
+            }
+        }
+
         DB::beginTransaction();
         try {
-            $userId = Auth::id();
-
-            $parentInvoice = Invoice::with(['installmentTerms'])
-                ->where('id', $parentInvoiceId)
-                ->where('user_id', $userId)
-                ->where('is_installment', true)
-                ->whereNull('parent_invoice_id')
-                ->firstOrFail();
-
-            if ($parentInvoice->status === 'paid') {
-                throw new \Exception('Semua cicilan sudah lunas.');
+            // Pastikan nominal tagihan child invoice sudah mencakup biaya admin Rp 5.000
+            if ($nextTerm->amount == $nextTerm->nett_amount) {
+                $nextTerm->amount = (float) $nextTerm->nett_amount + 5000;
+                $nextTerm->save();
             }
 
-            $nextTerm = $parentInvoice->nextUnpaidTerm();
-            if (!$nextTerm) {
-                throw new \Exception('Tidak ada termin yang perlu dibayar.');
-            }
-
-            // Validasi overdue: tidak bisa bayar mandiri jika jatuh tempo sudah terlewat
-            if ($nextTerm->installment_due_date) {
-                $dueDate = Carbon::parse($nextTerm->installment_due_date)->endOfDay();
-                if (Carbon::now('Asia/Jakarta')->gt($dueDate)) {
-                    throw new \Exception('Batas waktu pembayaran untuk termin ini telah melewati jatuh tempo. Pembayaran online ditutup, silakan hubungi admin untuk penyelesaian cicilan.');
-                }
-            }
-
-            // Pastikan termin ke-1 sudah dibayar jika sedang membayar termin berikutnya (jangan loncat)
-            if ($nextTerm->installment_number > 1) {
-                $dp = $parentInvoice->installmentTerms()->where('installment_number', 1)->first();
-                if ($dp && $dp->status !== 'paid') {
-                    throw new \Exception('Termin ke-1 (DP) belum dibayar.');
-                }
-            }
-
-            // Buat Midtrans Transaction baru yang selalu valid & fresh (mencegah token expired)
             $productInvoice = $parentInvoice->load([
                 'courseItems.course',
                 'bootcampItems.bootcamp',
@@ -360,17 +361,14 @@ class InstallmentController extends Controller
             ]);
             $item = $this->getProductFromInvoice($productInvoice);
 
-            
-            // Pastikan nominal tagihan child invoice sudah mencakup biaya admin Rp 5.000
-            if ($nextTerm->amount == $nextTerm->nett_amount) {
-                $nextTerm->amount = $nextTerm->nett_amount + 5000;
-                $nextTerm->save();
-            }
+            // Buat Midtrans Transaction baru yang selalu valid & fresh (mencegah token expired)
             $midtransResponse = $this->createMidtransTransaction($nextTerm, $item, Auth::user());
+
             $nextTerm->update([
                 'status' => 'pending',
                 'invoice_url' => $midtransResponse['redirect_url'] ?? null,
-                'payment_reference' => $nextTerm->payment_reference ?: $nextTerm->invoice_code,
+                'payment_url' => $midtransResponse['redirect_url'] ?? null,
+                'snap_token' => $midtransResponse['snap_token'] ?? null,
                 'expires_at' => Carbon::now()->addHours(24),
             ]);
 
@@ -379,16 +377,20 @@ class InstallmentController extends Controller
             return response()->json([
                 'success' => true,
                 'payment_url' => $midtransResponse['redirect_url'] ?? null,
+                'invoice_url' => $midtransResponse['redirect_url'] ?? null,
                 'snap_token' => $midtransResponse['snap_token'] ?? null,
                 'term_number' => $nextTerm->installment_number,
+                'installment_number' => $nextTerm->installment_number,
+                'invoice_code' => $nextTerm->invoice_code,
                 'amount' => $nextTerm->amount,
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Pay installment term failed (Midtrans)', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
-            ], 422);
+            ], 500);
         }
     }
 
@@ -400,7 +402,7 @@ class InstallmentController extends Controller
             'course' => [Course::findOrFail($itemId), EnrollmentCourse::class, 'course_id'],
             'bootcamp' => [Bootcamp::findOrFail($itemId), EnrollmentBootcamp::class, 'bootcamp_id'],
             'webinar' => [Webinar::findOrFail($itemId), EnrollmentWebinar::class, 'webinar_id'],
-            'certification_program', 'certification-program' => [CertificationProgram::findOrFail($itemId), EnrollmentCertificationProgram::class, 'certification_program_id'],
+            'certification_program' => [CertificationProgram::findOrFail($itemId), EnrollmentCertificationProgram::class, 'certification_program_id'],
             'bundle' => [Bundle::findOrFail($itemId), EnrollmentBundle::class, 'bundle_id'],
             default => throw new \Exception('Tipe produk tidak valid'),
         };
@@ -428,17 +430,17 @@ class InstallmentController extends Controller
 
     private function formatPhoneNumber(string $phoneNumber): string
     {
-        $cleaned = preg_replace('/[^0-9]/', '', $phoneNumber);
+        $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
 
-        if (str_starts_with($cleaned, '0')) {
-            return '62' . substr($cleaned, 1);
+        if (substr($phoneNumber, 0, 1) == '0') {
+            $phoneNumber = '62' . substr($phoneNumber, 1);
         }
 
-        if (!str_starts_with($cleaned, '62')) {
-            return '62' . $cleaned;
+        if (substr($phoneNumber, 0, 2) != '62') {
+            $phoneNumber = '62' . $phoneNumber;
         }
 
-        return $cleaned;
+        return $phoneNumber;
     }
 
     /**
@@ -566,3 +568,4 @@ class InstallmentController extends Controller
         return $response;
     }
 }
+

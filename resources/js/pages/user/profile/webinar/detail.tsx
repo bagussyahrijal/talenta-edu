@@ -5,8 +5,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import UserLayout from '@/layouts/user-layout';
 import { formatExternalUrl } from '@/lib/utils';
 import { Head, Link, router } from '@inertiajs/react';
-import {  ArrowLeft, Award, BadgeCheck, Calendar, CheckCircle, Clock, Download, Eye, MessageSquare, Upload, Users, X, Youtube , ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Award, BadgeCheck, Calendar, CheckCircle, Clock, CreditCard, Download, Eye, MessageSquare, Sparkles, Upload, Users, X, Youtube } from 'lucide-react';
 import { useState } from 'react';
+import axios from 'axios';
+import { toast } from 'sonner';
+import ProfileInstallmentAction from '@/components/profile-installment-action';
 
 interface Category {
     id: string;
@@ -98,6 +101,7 @@ interface DetailWebinarProps {
     webinar: WebinarProps;
     certificate?: Certificate | null;
     certificateParticipant?: CertificateParticipant | null;
+    active_installment?: any | null;
 }
 
 function parseList(items?: string | null): string[] {
@@ -143,7 +147,7 @@ const StarRating = ({
     );
 };
 
-export default function DetailMyWebinar({ webinar, certificate, certificateParticipant }: DetailWebinarProps) {
+export default function DetailMyWebinar({ webinar, certificate, certificateParticipant, active_installment }: DetailWebinarProps) {
     const webinarItem = webinar.webinar_items?.[0];
     const webinarData = webinarItem?.webinar;
     const webinarInvoiceStatus = webinar.status;
@@ -176,6 +180,24 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [reviewText, setReviewText] = useState('');
     const [rating, setRating] = useState(0);
+    const [isPayingCert, setIsPayingCert] = useState(false);
+
+    const handlePayCertInstallment = async () => {
+        setIsPayingCert(true);
+        try {
+            const res = await axios.post(`/installment/${webinar.id}/pay`);
+            if (res.data?.success && res.data?.payment_url) {
+                toast.success('Mengarahkan ke pembayaran...');
+                window.location.href = res.data.payment_url;
+            } else {
+                toast.error(res.data?.message || 'Gagal memproses pembayaran cicilan');
+                setIsPayingCert(false);
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Terjadi kesalahan saat memproses pembayaran');
+            setIsPayingCert(false);
+        }
+    };
 
     const handleIframeLoad = () => {
         setIsLoading(false);
@@ -200,11 +222,6 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
     };
 
     const handleSubmitForm = async () => {
-        if (!hasActiveAccess) {
-            alert('Akses webinar tidak aktif.');
-            return;
-        }
-
         if (!selectedFile || !reviewText.trim() || rating === 0 || !webinarItem) {
             alert('Mohon lengkapi semua field: upload bukti kehadiran, review, dan rating');
             return;
@@ -272,8 +289,11 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
     return (
         <UserLayout>
             <Head title={webinarData.title} />
-            <section className=" dark:via-background dark:to-background relative bg-gradient-to-b py-12 text-gray-900 dark:text-white">
-                
+            <section className="to-background from-background via-tertiary dark:via-background dark:to-background relative bg-gradient-to-b py-12 text-gray-900 dark:text-white">
+                <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 animate-spin items-center gap-8 duration-[10s]">
+                    <div className="bg-primary h-[300px] w-[300px] rounded-full blur-[200px]" />
+                    <div className="bg-secondary h-[300px] w-[300px] rounded-full blur-[200px]" />
+                </div>
                 <div className="relative mx-auto max-w-7xl px-4 text-center">
                     <Button className="top-0 left-4 mb-4 rounded-full md:absolute md:mb-0" variant="secondary" asChild>
                         <Link href="/profile/my-webinars">
@@ -282,13 +302,13 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
                     </Button>
                     <div className="col-span-2">
                         <div className="flex flex-col items-center justify-center md:flex-row md:gap-4">
-                            {/* <span className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
+                            <span className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
                                 📌 Enrolled in{' '}
                                 {new Date(webinarItem.created_at).toLocaleDateString('id-ID', {
                                     month: 'long',
                                     year: 'numeric',
                                 })}
-                            </span> */}
+                            </span>
                             {hasCertificate ? (
                                 <span className="mb-4 flex w-fit items-center gap-2 rounded-full border border-green-800 bg-green-100 px-4 py-1 text-sm font-medium text-green-800 shadow-xs">
                                     <Award size={16} />
@@ -303,35 +323,44 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
                             ) : null}
                         </div>
 
-                        <h1 className="mx-auto mb-4 max-w-2xl text-4xl leading-tight font-bold font-literata sm:text-5xl">{webinarData.title}</h1>
+                        <h1 className="mx-auto mb-4 max-w-2xl text-4xl leading-tight font-bold italic sm:text-5xl">{webinarData.title}</h1>
 
                         <p className="mb-6 text-lg text-gray-600 dark:text-gray-400">{webinarData.description}</p>
 
                         <div className="flex items-center justify-center gap-4">
                             {isSuspended ? (
-                                <div className="mx-auto max-w-xl rounded-lg border border-red-300 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-950/50">
-                                    <p className="font-semibold text-red-900 dark:text-red-100">⚠️ Akses Webinar Dibekukan</p>
-                                    <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                                        Akses webinar dibekukan karena ada tagihan cicilan yang melewati jatuh tempo. Silakan lakukan pelunasan di menu Transaksi.
-                                    </p>
+                                <div className="text-center">
+                                    <span className="block font-semibold text-red-600">
+                                        ⚠️ Akses webinar dibekukan karena ada tagihan cicilan yang melewati jatuh tempo.
+                                    </span>
+                                    <span className="block text-sm text-red-600/90">
+                                        Silakan lakukan pelunasan di menu Transaksi.
+                                    </span>
                                 </div>
                             ) : !hasActiveAccess ? (
-                                <div className="mx-auto max-w-xl rounded-lg border border-red-300 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-950/50">
-                                    <p className="font-semibold text-red-900 dark:text-red-100">
-                                        Status Pembayaran: {webinarInvoiceStatus.toUpperCase()}
-                                    </p>
-                                    <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                <div className="text-center">
+                                    <span className="block font-semibold text-red-600">
+                                        ⚠️ Status Pembayaran: {webinarInvoiceStatus.toUpperCase()}
+                                    </span>
+                                    <span className="block text-sm text-gray-600 dark:text-gray-400">
                                         {webinarInvoiceStatus === 'failed'
                                             ? 'Pembayaran gagal atau dibatalkan. Silakan lakukan pembelian ulang.'
-                                            : 'Selesaikan Pembayaran Untuk Bergabung Webinar!!'}
-                                    </p>
+                                            : 'Selesaikan pembayaran untuk mengakses webinar.'}
+                                    </span>
                                 </div>
                             ) : isInstallment && !isFullyPaid ? (
-                                <div className="mx-auto max-w-xl rounded-lg border border-amber-300 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-950/50">
-                                    <p className="font-semibold text-amber-900 dark:text-amber-100">ℹ️ Pembayaran Cicilan Aktif</p>
-                                    <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                                        Anda memiliki akses penuh ke webinar dan grup WhatsApp. Pastikan membayar termin berikutnya tepat waktu.
-                                    </p>
+                                <div className="w-full">
+                                    <ProfileInstallmentAction
+                                        variant="banner"
+                                        activeInstallment={active_installment}
+                                        invoiceId={webinar.id}
+                                        isInstallment={isInstallment}
+                                        isFullyPaid={isFullyPaid}
+                                        isSuspended={isSuspended}
+                                        paidTerms={terms.filter((t: any) => t.status === 'paid').length}
+                                        totalTerms={terms.length}
+                                        installmentTerms={terms}
+                                    />
                                 </div>
                             ) : null}
                         </div>
@@ -657,9 +686,7 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
                                 <div className="space-y-4">
                                     <div className="rounded-lg bg-purple-100 p-4 dark:bg-purple-800/50">
                                         <p className="text-center text-purple-800 dark:text-purple-200">
-                                            {!isFullyPaid && isInstallment
-                                                ? '🎯 Upload bukti kehadiran & berikan review, serta lunasi seluruh cicilan untuk mendapatkan sertifikat kelulusan!'
-                                                : '🎯 Untuk mendapatkan sertifikat, silakan upload bukti kehadiran dan berikan review untuk webinar ini.'}
+                                            🎯 Untuk mendapatkan sertifikat, silakan upload bukti kehadiran dan berikan review untuk webinar ini.
                                         </p>
                                     </div>
 
@@ -749,7 +776,7 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
                                                 </Button>
                                                 <Button
                                                     onClick={handleSubmitForm}
-                                                    disabled={!hasActiveAccess || !selectedFile || !reviewText.trim() || rating === 0 || submittingForm}
+                                                    disabled={!selectedFile || !reviewText.trim() || rating === 0 || submittingForm}
                                                     className="flex-1 bg-purple-600 hover:bg-purple-700"
                                                 >
                                                     {submittingForm ? 'Mengirim...' : 'Kirim Data'}
@@ -902,22 +929,30 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
                                                       ? (isInstallment ? 'Lunasi seluruh cicilan untuk membuka sertifikat.' : 'Selesaikan pembayaran untuk mendapatkan sertifikat.')
                                                       : requiresReview && !hasReview
                                                         ? 'Lengkapi bukti kehadiran dan review untuk mendapatkan sertifikat.'
-                                                        : !isCompleted
-                                                          ? 'Sertifikat akan tersedia setelah webinar selesai.'
-                                                          : 'Sertifikat sedang diproses.'}
+                                                        : 'Sertifikat akan tersedia setelah webinar selesai.'}
                                             </p>
-                                            <Button variant="outline" className="mt-3 w-full" disabled>
-                                                <Download size={16} className="mr-2" />
-                                                {!certificate
-                                                    ? 'Sertifikat Belum Tersedia'
-                                                    : !isFullyPaid
-                                                      ? (isInstallment ? 'Lunasi Cicilan' : 'Selesaikan Pembayaran')
-                                                      : requiresReview && !hasReview
-                                                        ? 'Lengkapi Data Diperlukan'
-                                                        : !isCompleted
-                                                          ? 'Menunggu Webinar Selesai'
-                                                          : 'Sertifikat Tidak Tersedia'}
-                                            </Button>
+                                            {isInstallment && !isFullyPaid ? (
+                                                <Button
+                                                    className="mt-3 w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-semibold"
+                                                    onClick={handlePayCertInstallment}
+                                                    disabled={isPayingCert || isSuspended}
+                                                    id="btn-lunasi-sertifikat-webinar"
+                                                >
+                                                    <CreditCard size={16} />
+                                                    {isPayingCert ? 'Mengarahkan...' : 'Lunasi Cicilan Sekarang'}
+                                                </Button>
+                                            ) : (
+                                                <Button variant="outline" className="mt-3 w-full" disabled>
+                                                    <Download size={16} className="mr-2" />
+                                                    {!certificate
+                                                        ? 'Sertifikat Belum Tersedia'
+                                                        : !isFullyPaid
+                                                          ? 'Selesaikan Pembayaran'
+                                                          : requiresReview && !hasReview
+                                                            ? 'Lengkapi Data Diperlukan'
+                                                            : 'Menunggu Webinar Selesai'}
+                                                </Button>
+                                            )}
                                         </>
                                     )}
                                         </>
@@ -925,18 +960,25 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
                                 </div>
                             </div>
                         ) : (
-                            <div className="sticky top-6">
+                            <div className="sticky top-6 space-y-4">
+                                {isInstallment && (
+                                    <ProfileInstallmentAction
+                                        variant="card"
+                                        activeInstallment={active_installment}
+                                        invoiceId={webinar.id}
+                                        isInstallment={isInstallment}
+                                        isFullyPaid={isFullyPaid}
+                                        isSuspended={isSuspended}
+                                        paidTerms={terms.filter((t: any) => t.status === 'paid').length}
+                                        totalTerms={terms.length}
+                                        installmentTerms={terms}
+                                    />
+                                )}
                                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
                                     <h3 className="mb-4 text-center font-semibold">{webinarData.title}</h3>
                                     <div className="group relative">
                                         <img
-                                            src={
-                                                !webinarData.thumbnail
-                                                    ? '/assets/images/placeholder.png'
-                                                    : webinarData.thumbnail.startsWith('http') || webinarData.thumbnail.startsWith('/storage')
-                                                      ? webinarData.thumbnail
-                                                      : `/storage/${webinarData.thumbnail}`
-                                            }
+                                            src={webinarData.thumbnail ? `/storage/${webinarData.thumbnail}` : '/assets/images/placeholder.png'}
                                             alt={webinarData.title}
                                             className="aspect-video rounded-lg object-cover shadow-lg transition-transform group-hover:scale-105"
                                         />
@@ -945,7 +987,7 @@ export default function DetailMyWebinar({ webinar, certificate, certificateParti
                                     <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">{webinarData.short_description}</p>
                                     <Button
                                         className="mt-4 w-full"
-                                        disabled={!hasActiveAccess || !webinarData.group_url}
+                                        disabled={!hasActiveAccess}
                                         onClick={() => {
                                             const url = formatExternalUrl(webinarData.group_url);
                                             if (url) window.open(url, '_blank');

@@ -469,4 +469,38 @@ class Invoice extends Model
         }
         return 0;
     }
+
+    public function getPaidTermsCount(): int
+    {
+        return $this->installmentTerms()->where('status', 'paid')->count();
+    }
+
+    public function getTotalTermsCount(): int
+    {
+        return $this->installmentTerms()->count();
+    }
+
+    public function scopeOnlyParents($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('parent_invoice_id')
+              ->orWhere('is_installment', true);
+        });
+    }
+
+    public function scopeOnlyIndependentOrParents($query)
+    {
+        return $query->whereNull('parent_invoice_id');
+    }
+
+    public function getFormattedInstallmentProgressAttribute(): string
+    {
+        if (!$this->is_installment) {
+            return '';
+        }
+        $paid = $this->getPaidTermsCount();
+        $total = $this->getTotalTermsCount();
+        return "{$paid}/{$total} Termin";
+    }
+
 }

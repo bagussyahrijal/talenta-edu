@@ -2397,17 +2397,57 @@ class InvoiceController extends Controller
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
-            'certificationProgramItems.certificationProgram'
-        ])->findOrFail($id);
+            'bundleEnrollments.bundle',
+            'certificationProgramItems.certificationProgram',
+            'parentInvoice.courseItems.course',
+            'parentInvoice.bootcampItems.bootcamp',
+            'parentInvoice.webinarItems.webinar',
+            'parentInvoice.bundleEnrollments.bundle',
+            'parentInvoice.certificationProgramItems.certificationProgram',
+        ])
+            ->where(function ($q) use ($id) {
+                $q->where('id', $id)->orWhere('invoice_code', $id);
+            })
+            ->firstOrFail();
 
-        if ($invoice->status !== 'paid') {
-            abort(403, 'Invoice belum dibayar');
+        // Cek otorisasi kepemilikan invoice
+        if (!$user->hasRole('admin') && $invoice->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses ke invoice ini');
+        }
+
+        // Izinkan download jika:
+        // 1. Invoice reguler yang sudah paid
+        // 2. Invoice parent cicilan yang sudah lunas (status=paid)
+        // 3. Invoice anak cicilan (termin) yang statusnya paid
+        $isAllowed = false;
+        if (in_array($invoice->status, ['paid', 'completed'])) {
+            $isAllowed = true;
+        } elseif ($invoice->is_installment) {
+            $isAllowed = $invoice->installmentTerms()->where('status', 'paid')->exists();
+        } elseif ($invoice->isInstallmentChild() && $invoice->status === 'paid') {
+            $isAllowed = true;
+        }
+
+        if (!$isAllowed) {
+            abort(403, 'Invoice belum dibayar atau belum lunas');
+        }
+
+        // Jika invoice anak cicilan, gunakan data produk dari parent
+        $invoiceForView = $invoice;
+        if ($invoice->isInstallmentChild() && $invoice->parentInvoice) {
+            $parent = $invoice->parentInvoice;
+            $invoice->setRelation('courseItems', $parent->courseItems);
+            $invoice->setRelation('bootcampItems', $parent->bootcampItems);
+            $invoice->setRelation('webinarItems', $parent->webinarItems);
+            $invoice->setRelation('bundleEnrollments', $parent->bundleEnrollments);
+            $invoice->setRelation('certificationProgramItems', $parent->certificationProgramItems);
+            $invoiceForView = $invoice;
         }
 
         $data = [
-            'invoice' => $invoice,
+            'invoice' => $invoiceForView,
             'company' => [
-                'name' => 'Talenta',
+                'name' => 'Talenta Edu',
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
                 'phone' => '+6285606391730',
                 'email' => 'talentaskill.academic@gmail.com',
@@ -2415,7 +2455,7 @@ class InvoiceController extends Controller
             ]
         ];
 
-        $pdf = PDF::loadView('invoices.pdf', $data);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.pdf', $data);
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->stream("invoice-{$invoice->invoice_code}.pdf");
