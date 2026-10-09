@@ -67,6 +67,8 @@ interface ProgramItem {
     id: string;
     title: string;
     batch?: string | number | null;
+    price?: number;
+    strikethrough_price?: number;
 }
 
 interface AvailablePrograms {
@@ -139,6 +141,7 @@ export default function EditBootcamp({
     const getInitials = useInitials();
     const [isItemPopoverOpen, setIsItemPopoverOpen] = useState(false);
     const [isMentorPopoverOpen, setIsMentorPopoverOpen] = useState(false);
+    const [isNextStepPopoverOpen, setIsNextStepPopoverOpen] = useState(false);
     const [openStartCalendar, setOpenStartCalendar] = useState(false);
     const [openEndCalendar, setOpenEndCalendar] = useState(false);
     const [openRegistrationCalendar, setOpenRegistrationCalendar] = useState(false);
@@ -676,32 +679,21 @@ export default function EditBootcamp({
                                                         ? availablePrograms?.certification_programs || []
                                                         : [];
 
+                                            const selectedProgram = items.find((item) => item.id === field.value);
+
                                             return (
-                                                <FormItem>
+                                                <FormItem className="flex flex-col">
                                                     <FormLabel>Pilih Program</FormLabel>
-                                                    <Select
-                                                        value={field.value || ''}
-                                                        onValueChange={field.onChange}
-                                                    >
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Pilih program lanjutan" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {items.map((item) => (
-                                                                <SelectItem key={item.id} value={item.id}>
-                                                                    {item.title} {item.batch ? `(Batch ${item.batch})` : ''}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            );
-                                        }}
-                                    />
-                                )}
+                                                    <Popover open={isNextStepPopoverOpen} onOpenChange={setIsNextStepPopoverOpen}>
+                                                        <PopoverTrigger asChild>
+                                                            <FormControl>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    role="combobox"
+                                                                    className={cn(
+                                                                        'h-auto min-h-9 w-full justify-between py-1.5 px-3 font-normal text-left',
+                                                                        !field.value && 'text-muted-foreground',
+                                                                    )}
                             </div>
                         </div>
 
