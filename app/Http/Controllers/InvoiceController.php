@@ -1171,6 +1171,43 @@ class InvoiceController extends Controller
                 'payment_channel'  => 'midtrans',
             ]);
 
+            // ====== INSTALLMENT CHILD HANDLER ======
+            if ($invoice->isInstallmentChild()) {
+                $parentInvoice = $invoice->parentInvoice ?? Invoice::with([
+                    'user',
+                    'courseItems.course',
+                    'bootcampItems.bootcamp',
+                    'webinarItems.webinar',
+                    'certificationProgramItems.certificationProgram',
+                    'bundleEnrollments.bundle',
+                ])->find($invoice->parent_invoice_id);
+
+                if ($parentInvoice) {
+                    // Jika termin ke-1 (DP): aktifkan akses
+                    if ($invoice->installment_number === 1) {
+                        $this->activateInstallmentEnrollments($parentInvoice);
+                    }
+
+                    // Pulihkan akses jika sebelumnya dibekukan
+                    $parentInvoice->update(['access_suspended_at' => null]);
+
+                    // Catat komisi affiliate untuk termin ini
+                    if (method_exists($this, 'recordAffiliateCommissionForTerm')) {
+                        $this->recordAffiliateCommissionForTerm($invoice, $parentInvoice);
+                    } elseif (method_exists($this, 'recordAffiliateCommission')) {
+                        $this->recordAffiliateCommission($invoice);
+                    }
+
+                    // Cek apakah semua termin lunas
+                    if ($parentInvoice->isFullyPaid()) {
+                        $parentInvoice->update([
+                            'status' => 'paid',
+                            'paid_at' => Carbon::now('Asia/Jakarta'),
+                        ]);
+                        event(new \App\Events\TransactionPaid($parentInvoice));
+                    }
+                }
+            } else {
             // Process bundle individual enrollments if any
             if ($invoice->bundleEnrollments && $invoice->bundleEnrollments->count() > 0) {
                 foreach ($invoice->bundleEnrollments as $bundleEnrollment) {
@@ -1192,6 +1229,8 @@ class InvoiceController extends Controller
 
             // Fire event for referral rewards & other side effects
             event(new \App\Events\TransactionPaid($invoice));
+
+            }
 
             DB::commit();
 
@@ -1848,6 +1887,8 @@ class InvoiceController extends Controller
                 $message .= "👥 {$course->group_url}\n\n";
                 $message .= "⚠️ *Penting:*\n";
                 $message .= "• Bergabung dengan group untuk mendapatkan info materi dan diskusi\n\n";
+            } else {
+                $message .= "⚠️ *Penting:* Akses materi dan modul pembelajaran dapat langsung dipelajari melalui menu Kelas Saya di dashboard Anda.\n\n";
             }
         } elseif ($itemType === 'webinar') {
             $webinar = $typeInfo['item'];
@@ -1865,7 +1906,7 @@ class InvoiceController extends Controller
                 $message .= "• Bergabung dengan group untuk update terbaru\n";
                 $message .= "• Jangan lupa attend sesuai jadwal!\n\n";
             } else {
-                $message .= "⚠️ *Penting:* Jangan lupa bergabung sesuai jadwal!\n\n";
+                $message .= "⚠️ *Penting:* Link streaming webinar dan informasi kegiatan dapat diakses melalui menu Webinar Saya di dashboard profil Anda.\n\n";
             }
         } elseif ($itemType === 'bootcamp') {
             $bootcamp = $typeInfo['item'];
@@ -1882,6 +1923,8 @@ class InvoiceController extends Controller
                 $message .= "⚠️ *Penting:* \n";
                 $message .= "• Bergabung dengan group untuk mendapatkan info penting dan diskusi\n";
                 $message .= "• Aktif mengikuti seluruh kegiatan bootcamp\n\n";
+            } else {
+                $message .= "⚠️ *Penting:* Jadwal sesi mentoring dan informasi kegiatan dapat diakses melalui menu Bootcamp Saya di dashboard profil Anda.\n\n";
             }
         } elseif ($itemType === 'certification_program') {
             $program = $typeInfo['item'];
@@ -1897,6 +1940,10 @@ class InvoiceController extends Controller
             if (!empty($program?->socialization_group_url)) {
                 $message .= "*Join Group Sosialisasi:*\n";
                 $message .= "👥 {$program->socialization_group_url}\n\n";
+            }
+
+            if (empty($program?->group_url) && empty($program?->socialization_group_url)) {
+                $message .= "⚠️ *Penting:* Informasi dan jadwal program sertifikasi dapat diakses melalui menu Sertifikasi Saya di dashboard profil Anda.\n\n";
             }
         }
 
