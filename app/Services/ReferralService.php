@@ -8,19 +8,58 @@ use App\Models\Setting;
 
 class ReferralService
 {
-    public function validateReferralCode(string $code, ?string $email = null, ?User $user = null): array
-    {
+    /**
+     * Validate a referral code for a specific user or email and optional product type.
+     *
+     * @param string $code
+     * @param string|null $email
+     * @param User|null $user
+     * @param string|null $productType
+     * @return array
+     */
+    public function validateReferralCode(
+        string $code,
+        ?string $email = null,
+        ?User $user = null,
+        ?string $productType = null
+    ): array {
         $code = strtoupper(trim($code));
 
         if (empty($code)) {
             return ['valid' => false, 'message' => 'Kode referral tidak boleh kosong.', 'referrer' => null];
         }
 
-        $referrer = User::where('referral_code', $code)
-            ->first();
+        $referrer = User::where('referral_code', $code)->first();
 
         if (!$referrer) {
             return ['valid' => false, 'message' => 'Kode referral tidak ditemukan.', 'referrer' => null];
+        }
+
+        // Check if referral is enabled for this specific product type
+        $rewardInfo = null;
+        if (!empty($productType)) {
+            $normalizedType = match ($productType) {
+                'certification', 'certification_program' => 'certification_program',
+                'bootcamp' => 'bootcamp',
+                'course' => 'course',
+                'webinar' => 'webinar',
+                'bundle' => 'bundle',
+                default => $productType,
+            };
+
+            $programSettings = Setting::getReferralProgramSettings();
+            if (isset($programSettings[$normalizedType])) {
+                $config = $programSettings[$normalizedType];
+                if (empty($config['is_enabled'])) {
+                    $programName = $config['name'] ?? 'program ini';
+                    return [
+                        'valid' => false,
+                        'message' => "Penggunaan kode referral tidak aktif untuk {$programName}.",
+                        'referrer' => null
+                    ];
+                }
+                $rewardInfo = $config;
+            }
         }
 
         if (!$user && !empty($email)) {
@@ -44,6 +83,11 @@ class ReferralService
             }
         }
 
-        return ['valid' => true, 'message' => 'Kode referral valid.', 'referrer' => $referrer];
+        return [
+            'valid' => true,
+            'message' => 'Kode referral valid.',
+            'referrer' => $referrer,
+            'reward_info' => $rewardInfo
+        ];
     }
 }

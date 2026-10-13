@@ -302,7 +302,7 @@ class InvoiceController extends Controller
             if ($referralCodeInput) {
                 $referralService = app(\App\Services\ReferralService::class);
                 $userObj = User::find($userId);
-                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj);
+                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj, $type);
                 if ($validation['valid'] && isset($validation['referrer'])) {
                     $referralUserId = $validation['referrer']->id;
                 }
@@ -627,7 +627,7 @@ class InvoiceController extends Controller
             if ($referralCodeInput) {
                 $referralService = app(\App\Services\ReferralService::class);
                 $userObj = User::find($userId);
-                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj);
+                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj, 'bundle');
                 if ($validation['valid'] && isset($validation['referrer'])) {
                     $referralUserId = $validation['referrer']->id;
                 }
@@ -907,7 +907,7 @@ class InvoiceController extends Controller
             if ($referralCodeInput) {
                 $referralService = app(\App\Services\ReferralService::class);
                 $userObj = User::find($userId);
-                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj);
+                $validation = $referralService->validateReferralCode($referralCodeInput, null, $userObj, $type);
                 if ($validation['valid'] && isset($validation['referrer'])) {
                     $referralUserId = $validation['referrer']->id;
                 }

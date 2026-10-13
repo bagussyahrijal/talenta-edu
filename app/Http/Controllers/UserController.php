@@ -6,10 +6,12 @@ use App\Models\EnrollmentBootcamp;
 use App\Models\EnrollmentCourse;
 use App\Models\EnrollmentWebinar;
 use App\Models\Invoice;
+use App\Models\PointTransaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -291,7 +293,14 @@ class UserController extends Controller
 
     public function show(string $id, Request $request)
     {
-        $user = User::with(['roles'])->findOrFail($id);
+                $user = User::with(['roles'])->findOrFail($id);
+
+        if (empty($user->referral_code)) {
+            do {
+                $code = 'TALE-' . strtoupper(Str::random(6));
+            } while (User::where('referral_code', $code)->exists());
+            $user->update(['referral_code' => $code]);
+        }
 
         $invoicesPage = $request->input('invoices_page', 1);
         $enrollmentsPage = $request->input('enrollments_page', 1);
@@ -301,7 +310,7 @@ class UserController extends Controller
             ->with([
                 'courseItems.course:id,title,thumbnail,price,user_id',
                 'courseItems.course.user:id,name',
-                'bootcampItems.bootcamp:id,title,thumbnail,price,host_name',
+                'bootcampItems.bootcamp:id,title,thumbnail,price',
                 'bootcampItems.bootcamp.mentors:id,name',
                 'webinarItems.webinar:id,title,thumbnail,price,user_id',
                 'webinarItems.webinar.user:id,name'
@@ -323,7 +332,7 @@ class UserController extends Controller
 
         $bootcampEnrollments = EnrollmentBootcamp::whereIn('invoice_id', $paidInvoiceIds)
             ->with([
-                'bootcamp:id,title,thumbnail,price,host_name',
+                'bootcamp:id,title,thumbnail,price',
                 'bootcamp.mentors:id,name',
                 'invoice:id,status,paid_at'
             ])
@@ -368,11 +377,17 @@ class UserController extends Controller
             'active_courses' => $courseEnrollments->where('progress', '<', 100)->count(),
         ];
 
+                $pointTransactions = PointTransaction::where('user_id', $id)
+            ->latest()
+            ->take(5)
+            ->get();
+
         return Inertia::render('admin/users/show', [
             'user' => $user,
             'invoices' => $invoices,
             'enrollments' => $enrollmentsPagination,
-            'stats' => $stats
+            'stats' => $stats,
+            'pointTransactions' => $pointTransactions,
         ]);
     }
 
