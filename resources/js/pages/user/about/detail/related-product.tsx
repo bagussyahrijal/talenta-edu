@@ -2,8 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { Spotlight } from '@/components/ui/spotlight';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id, enUS } from 'date-fns/locale';
 import { Calendar, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PartnershipProduct {
     id: string;
@@ -25,12 +26,15 @@ interface RelatedProductProps {
 }
 
 export default function RelatedProduct({ relatedPartnershipProducts }: RelatedProductProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
+
     if (!relatedPartnershipProducts || relatedPartnershipProducts.length === 0) {
         return null;
     }
 
     const formatRupiah = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
+        return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'id-ID', {
             style: 'currency',
             currency: 'IDR',
             minimumFractionDigits: 0,
@@ -40,9 +44,9 @@ export default function RelatedProduct({ relatedPartnershipProducts }: RelatedPr
     return (
         <section className="mx-auto mt-16 w-full max-w-7xl px-4" id="related">
             <h2 className="dark:text-primary-foreground mb-4 text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Program Sertifikasi Lainnya
+                {t('about.detail.relatedTitle')}
             </h2>
-            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">Program sertifikasi lain yang mungkin menarik untuk Anda</p>
+            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">{t('about.detail.relatedSubtitle')}</p>
 
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {relatedPartnershipProducts.map((product) => {
@@ -85,7 +89,7 @@ export default function RelatedProduct({ relatedPartnershipProducts }: RelatedPr
                                         {product.duration_days > 0 && (
                                             <div className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                                 <Clock size="16" />
-                                                <span>{product.duration_days} hari</span>
+                                                <span>{t('about.detail.days', { count: product.duration_days })}</span>
                                             </div>
                                         )}
                                     </div>
@@ -94,7 +98,7 @@ export default function RelatedProduct({ relatedPartnershipProducts }: RelatedPr
                                 <div className="w-full border-t p-4">
                                     {/* Price */}
                                     {product.price === 0 ? (
-                                        <p className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                        <p className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">{t('about.detail.free')}</p>
                                     ) : (
                                         <div className="mb-2">
                                             {product.strikethrough_price > 0 && (
@@ -108,7 +112,7 @@ export default function RelatedProduct({ relatedPartnershipProducts }: RelatedPr
                                     <div className="flex items-center gap-2 text-sm">
                                         <Calendar size="16" className="text-red-500" />
                                         <p className="text-gray-600 dark:text-gray-400">
-                                            Daftar sebelum: <span className="font-medium">{format(deadlineDate, 'dd MMM yyyy', { locale: id })}</span>
+                                            {t('about.detail.deadline')} <span className="font-medium">{format(deadlineDate, 'dd MMM yyyy', { locale: dateLocale })}</span>
                                         </p>
                                     </div>
                                 </div>

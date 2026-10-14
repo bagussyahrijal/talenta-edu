@@ -8,9 +8,10 @@ import ProfileLayout from '@/layouts/profile/layout';
 import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id as idLocale } from 'date-fns/locale';
 import { BookTextIcon, BriefcaseBusiness, ExternalLink, GraduationCap, MessageCircle, MonitorPlay, Play, Presentation } from 'lucide-react';
 import { formatExternalUrl } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
     id: string;
@@ -44,18 +45,21 @@ interface ProfileProps {
 }
 
 export default function Profile({ stats, recentProducts }: ProfileProps) {
+    const { t, i18n } = useTranslation(['profile', 'common']);
+    const dateLocale = i18n.language === 'en' ? enUS : idLocale;
+
     const getProductTypeLabel = (type: string): string => {
         switch (type) {
             case 'course':
-                return 'Kelas Online';
+                return t('dashboard.stats.courses', 'Kelas Online');
             case 'bootcamp':
-                return 'Bootcamp';
+                return t('dashboard.stats.bootcamps', 'Bootcamp');
             case 'webinar':
-                return 'Webinar';
+                return t('dashboard.stats.webinars', 'Webinar');
             case 'certification-program':
-                return 'Sertifikasi Program';
+                return t('dashboard.stats.certifications', 'Sertifikasi Program');
             default:
-                return 'Produk';
+                return t('dashboard.table.product', 'Produk');
         }
     };
 
@@ -76,11 +80,11 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
 
     const getProgressBadge = (progress: number) => {
         if (progress === 100) {
-            return <Badge className="border-green-300 bg-green-100 text-green-700">Selesai</Badge>;
+            return <Badge className="border-green-300 bg-green-100 text-green-700">{t('dashboard.table.statusCompleted', 'Selesai')}</Badge>;
         } else if (progress > 0) {
-            return <Badge className="border-blue-300 bg-blue-100 text-blue-700">Berlangsung</Badge>;
+            return <Badge className="border-blue-300 bg-blue-100 text-blue-700">{t('dashboard.table.statusOngoing', 'Berlangsung')}</Badge>;
         } else {
-            return <Badge className="border-gray-300 bg-gray-100 text-gray-700">Belum Dimulai</Badge>;
+            return <Badge className="border-gray-300 bg-gray-100 text-gray-700">{t('dashboard.table.statusNotStarted', 'Belum Dimulai')}</Badge>;
         }
     };
 
@@ -96,15 +100,15 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
     const formatSchedule = (product: Product): string => {
         if (product.type === 'bootcamp') {
             if (!product.start_date) return '-';
-            const startDate = format(new Date(product.start_date), 'dd MMM yyyy', { locale: id });
-            const endDate = product.end_date ? format(new Date(product.end_date), 'dd MMM yyyy', { locale: id }) : '';
+            const startDate = format(new Date(product.start_date), 'dd MMM yyyy', { locale: dateLocale });
+            const endDate = product.end_date ? format(new Date(product.end_date), 'dd MMM yyyy', { locale: dateLocale }) : '';
             return endDate ? `${startDate} - ${endDate}` : startDate;
         }
 
         if (product.type === 'webinar') {
             if (!product.start_time) return '-';
-            const startTime = format(new Date(product.start_time), 'dd MMM yyyy, HH:mm', { locale: id });
-            const endTime = product.end_time ? format(new Date(product.end_time), 'HH:mm', { locale: id }) : '';
+            const startTime = format(new Date(product.start_time), 'dd MMM yyyy, HH:mm', { locale: dateLocale });
+            const endTime = product.end_time ? format(new Date(product.end_time), 'HH:mm', { locale: dateLocale }) : '';
             return endTime ? `${startTime} - ${endTime}` : startTime;
         }
 
@@ -113,74 +117,74 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
 
     return (
         <UserLayout>
-            <Head title="Profil" />
+            <Head title={t('sidebar.title', 'Profil')} />
             <ProfileLayout>
-                <Heading title="Dashboard" description="Pantau aktivitas dan progres belajar Anda di sini." />
+                <Heading title={t('dashboard.title', 'Dashboard')} description={t('dashboard.description', 'Pantau aktivitas dan progres belajar Anda di sini.')} />
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
+                            <CardTitle className="text-sm font-medium">{t('dashboard.stats.total', 'Total Produk')}</CardTitle>
                             <GraduationCap className="text-muted-foreground h-4 w-4" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.total}</div>
-                            <p className="text-muted-foreground text-xs">Total item yang Anda ikuti</p>
+                            <p className="text-muted-foreground text-xs">{t('dashboard.stats.totalDesc', 'Total item yang Anda ikuti')}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Kelas Online</CardTitle>
+                            <CardTitle className="text-sm font-medium">{t('dashboard.stats.courses', 'Kelas Online')}</CardTitle>
                             <BookTextIcon className="text-muted-foreground h-4 w-4" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.courses}</div>
-                            <p className="text-muted-foreground text-xs">Kelas yang telah Anda beli</p>
+                            <p className="text-muted-foreground text-xs">{t('dashboard.stats.coursesDesc', 'Kelas yang telah Anda beli')}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Bootcamp</CardTitle>
+                            <CardTitle className="text-sm font-medium">{t('dashboard.stats.bootcamps', 'Bootcamp')}</CardTitle>
                             <Presentation className="text-muted-foreground h-4 w-4" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.bootcamps}</div>
-                            <p className="text-muted-foreground text-xs">Bootcamp yang Anda ikuti</p>
+                            <p className="text-muted-foreground text-xs">{t('dashboard.stats.bootcampsDesc', 'Bootcamp yang Anda ikuti')}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Webinar</CardTitle>
+                            <CardTitle className="text-sm font-medium">{t('dashboard.stats.webinars', 'Webinar')}</CardTitle>
                             <MonitorPlay className="text-muted-foreground h-4 w-4" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.webinars}</div>
-                            <p className="text-muted-foreground text-xs">Webinar yang Anda ikuti</p>
+                            <p className="text-muted-foreground text-xs">{t('dashboard.stats.webinarsDesc', 'Webinar yang Anda ikuti')}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Sertifikasi Program</CardTitle>
+                            <CardTitle className="text-sm font-medium">{t('dashboard.stats.certifications', 'Sertifikasi Program')}</CardTitle>
                             <BriefcaseBusiness className="text-muted-foreground h-4 w-4" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.certificationPrograms}</div>
-                            <p className="text-muted-foreground text-xs">Sertifikasi Program yang Anda ikuti</p>
+                            <p className="text-muted-foreground text-xs">{t('dashboard.stats.certificationsDesc', 'Program sertifikasi yang Anda ikuti')}</p>
                         </CardContent>
                     </Card>
                 </div>
 
                 <div className="mt-8">
-                    <Heading title="Produk Saya" description="Daftar produk yang telah Anda beli dan ikuti." />
+                    <Heading title={t('dashboard.myProducts', 'Produk Saya')} description={t('dashboard.myProductsDesc', 'Daftar produk yang telah Anda beli dan ikuti.')} />
                     <Card className="p-4">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Produk</TableHead>
-                                    <TableHead>Tipe</TableHead>
-                                    <TableHead>Jadwal</TableHead>
-                                    <TableHead>Status/Progress</TableHead>
-                                    <TableHead>Aksi</TableHead>
+                                    <TableHead>{t('dashboard.table.product', 'Produk')}</TableHead>
+                                    <TableHead>{t('dashboard.table.type', 'Tipe')}</TableHead>
+                                    <TableHead>{t('dashboard.table.schedule', 'Jadwal')}</TableHead>
+                                    <TableHead>{t('dashboard.table.statusProgress', 'Status/Progress')}</TableHead>
+                                    <TableHead>{t('dashboard.table.action', 'Aksi')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -201,9 +205,9 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                             <TableCell>{getProductTypeLabel(product.type)}</TableCell>
                                             <TableCell>
                                                 {product.type === 'course' ? (
-                                                    <span className="text-gray-500">Belajar Mandiri</span>
+                                                    <span className="text-gray-500">{t('dashboard.table.selfPaced', 'Belajar Mandiri')}</span>
                                                 ) : product.type === 'certification-program' ? (
-                                                    <span className="text-gray-500">Pendaftaran Sertifikasi</span>
+                                                    <span className="text-gray-500">{t('dashboard.table.certRegistration', 'Pendaftaran Sertifikasi')}</span>
                                                 ) : (
                                                     formatSchedule(product)
                                                 )}
@@ -228,7 +232,7 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                                             : 'border-indigo-300 bg-indigo-50 text-indigo-700'
                                                                     }
                                                                 >
-                                                                    {product.is_fully_paid ? 'Cicilan Lunas' : product.is_suspended ? 'Cicilan Dibekukan' : 'Cicilan Aktif'}
+                                                                    {product.is_fully_paid ? t('dashboard.table.installmentPaid', 'Cicilan Lunas') : product.is_suspended ? t('dashboard.table.installmentSuspended', 'Cicilan Dibekukan') : t('dashboard.table.installmentActive', 'Cicilan Aktif')}
                                                                 </Badge>
                                                             </div>
                                                         )}
@@ -236,7 +240,7 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                 ) : product.type === 'certification-program' ? (
                                                     <div className="flex flex-col items-start gap-1">
                                                         <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
-                                                            {product.is_scholarship ? 'Beasiswa' : 'Reguler'}
+                                                            {product.is_scholarship ? t('dashboard.table.scholarship', 'Beasiswa') : t('dashboard.table.regular', 'Reguler')}
                                                         </Badge>
                                                         {product.is_installment && (
                                                             <Badge
@@ -249,14 +253,14 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                                         : 'border-indigo-300 bg-indigo-50 text-indigo-700'
                                                                 }
                                                             >
-                                                                {product.is_fully_paid ? 'Cicilan Lunas' : product.is_suspended ? 'Cicilan Dibekukan' : 'Cicilan Aktif'}
+                                                                {product.is_fully_paid ? t('dashboard.table.installmentPaid', 'Cicilan Lunas') : product.is_suspended ? t('dashboard.table.installmentSuspended', 'Cicilan Dibekukan') : t('dashboard.table.installmentActive', 'Cicilan Aktif')}
                                                             </Badge>
                                                         )}
                                                     </div>
                                                 ) : (
                                                     <div className="flex flex-col items-start gap-1">
                                                         <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
-                                                            Terdaftar
+                                                            {t('dashboard.table.statusRegistered', 'Terdaftar')}
                                                         </Badge>
                                                         {product.is_installment && (
                                                             <Badge
@@ -269,7 +273,7 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                                         : 'border-indigo-300 bg-indigo-50 text-indigo-700'
                                                                 }
                                                             >
-                                                                {product.is_fully_paid ? 'Cicilan Lunas' : product.is_suspended ? 'Cicilan Dibekukan' : 'Cicilan Aktif'}
+                                                                {product.is_fully_paid ? t('dashboard.table.installmentPaid', 'Cicilan Lunas') : product.is_suspended ? t('dashboard.table.installmentSuspended', 'Cicilan Dibekukan') : t('dashboard.table.installmentActive', 'Cicilan Aktif')}
                                                             </Badge>
                                                         )}
                                                     </div>
@@ -279,65 +283,65 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                 <div className="flex items-center gap-2">
                                                     {product.is_installment && !product.is_fully_paid && (
                                                         <Button
-                                                            asChild
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-                                                        >
-                                                            <Link href={route('profile.installments')}>
-                                                                Cicilan
-                                                            </Link>
-                                                        </Button>
-                                                    )}
-                                                    {product.type === 'course' ? (
-                                                        <Button asChild size="sm" variant="outline">
-                                                            <Link href={route('profile.course.detail', { course: product.slug })}>
-                                                                <Play className="mr-1 h-4 w-4" />
-                                                                Belajar
-                                                            </Link>
-                                                        </Button>
-                                                    ) : (
-                                                        <>
-                                                            <Button asChild size="sm" variant="outline">
-                                                                <Link
-                                                                    href={getProductDetailUrl(product)}
-                                                                >
-                                                                    <ExternalLink className="mr-1 h-4 w-4" />
-                                                                    Detail
-                                                                </Link>
-                                                            </Button>
-                                                            {product.group_url && (
-                                                                <Button asChild size="sm" variant="default">
-                                                                    <a href={formatExternalUrl(product.group_url)} target="_blank" rel="noopener noreferrer">
-                                                                        <MessageCircle className="mr-1 h-4 w-4" />
-                                                                        Grup WA
-                                                                    </a>
-                                                                </Button>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="py-8 text-center">
-                                            <div className="text-gray-500">
-                                                <GraduationCap className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                                                <p>Belum ada produk yang dibeli.</p>
-                                                <Button asChild className="mt-4" variant="outline">
-                                                    <Link href={route('course.index')}>Jelajahi Kelas</Link>
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </Card>
-                </div>
-            </ProfileLayout>
-        </UserLayout>
-    );
-}
+                                                             asChild
+                                                             size="sm"
+                                                             variant="outline"
+                                                             className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                                         >
+                                                             <Link href={route('profile.installments')}>
+                                                                 {t('dashboard.table.btnInstallment', 'Cicilan')}
+                                                             </Link>
+                                                         </Button>
+                                                     )}
+                                                     {product.type === 'course' ? (
+                                                         <Button asChild size="sm" variant="outline">
+                                                             <Link href={route('profile.course.detail', { course: product.slug })}>
+                                                                 <Play className="mr-1 h-4 w-4" />
+                                                                 {t('dashboard.table.btnLearn', 'Belajar')}
+                                                             </Link>
+                                                         </Button>
+                                                     ) : (
+                                                         <>
+                                                             <Button asChild size="sm" variant="outline">
+                                                                 <Link
+                                                                     href={getProductDetailUrl(product)}
+                                                                 >
+                                                                     <ExternalLink className="mr-1 h-4 w-4" />
+                                                                     {t('dashboard.table.btnDetail', 'Detail')}
+                                                                 </Link>
+                                                             </Button>
+                                                             {product.group_url && (
+                                                                 <Button asChild size="sm" variant="default">
+                                                                     <a href={formatExternalUrl(product.group_url)} target="_blank" rel="noopener noreferrer">
+                                                                         <MessageCircle className="mr-1 h-4 w-4" />
+                                                                         {t('dashboard.table.btnGroup', 'Grup WA')}
+                                                                     </a>
+                                                                 </Button>
+                                                             )}
+                                                         </>
+                                                     )}
+                                                 </div>
+                                             </TableCell>
+                                         </TableRow>
+                                     ))
+                                 ) : (
+                                     <TableRow>
+                                         <TableCell colSpan={5} className="py-8 text-center">
+                                             <div className="text-gray-500">
+                                                 <GraduationCap className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+                                                 <p>{t('dashboard.table.empty', 'Belum ada produk yang dibeli.')}</p>
+                                                 <Button asChild className="mt-4" variant="outline">
+                                                     <Link href={route('course.index')}>{t('dashboard.table.browseCourses', 'Jelajahi Kelas')}</Link>
+                                                 </Button>
+                                             </div>
+                                         </TableCell>
+                                     </TableRow>
+                                 )}
+                             </TableBody>
+                         </Table>
+                     </Card>
+                 </div>
+             </ProfileLayout>
+         </UserLayout>
+     );
+ }

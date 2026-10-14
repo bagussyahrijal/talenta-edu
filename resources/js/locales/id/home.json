@@ -1,0 +1,146 @@
+{
+  "about": {
+    "badge": "Kenapa Harus Talenta Academy?",
+    "title1": "Solusi",
+    "title2": "yang dirancang dengan cermat untuk",
+    "titleHighlight": "pembelajaran",
+    "title3": "yang mudah",
+    "webDev": {
+      "title": "Web & App Development",
+      "desc": "Membangun aplikasi web dan mobile yang responsif dan efisien"
+    },
+    "dataScience": {
+      "title": "Data Science",
+      "desc": "Menganalisis data untuk mendapatkan wawasan yang berharga"
+    },
+    "graphicDesign": {
+      "title": "Graphic Design",
+      "desc": "Mendesain antarmuka yang menarik dan fungsional"
+    },
+    "accounting": {
+      "title": "Accounting, Finance, & Tax",
+      "desc": "Membantu mengelola keuangan dan laporan keuangan"
+    },
+    "title": "Mulai Karier Profesionalmu dari Sini",
+    "desc": "Kami menghadirkan pelatihan Akuntansi dan Pajak berbasis praktik, sertifikasi, dan kelas online untuk membantumu siap bersaing di dunia kerja.",
+    "knowMore": "Kenal Lebih Dekat",
+    "journeyTitle": "Perjalanan Kami",
+    "journeyDesc": "Kami telah membantu ribuan peserta meningkatkan kompetensi akuntansi dan perpajakan melalui pelatihan berbasis praktik. “Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja”",
+    "onlineTraining": "Pelatihan Online",
+    "trainedAlumni": "Alumni & Peserta Terlatih",
+    "partners": "Partner Kerjasama",
+    "satisfaction": "Kepuasan Peserta"
+  },
+  "program": {
+    "badge": "Program Kami",
+    "learnNow": "Pelajari Sekarang",
+    "course": {
+      "title": "Kelas Online",
+      "subtitle": "Pelajari berbagai skill sekali bayar, praktik, dan bersertifikat.",
+      "point1": "Belajar fleksibel via Video Materi, Project dan Studi Kasus",
+      "point2": "Praktikal & Actionable. Bertahap dari level Dasar hingga Lanjut",
+      "point3": "Grup Komunitas Diskusi Lifetime. Kelas Gratis Tiap Bulannya"
+    },
+    "bootcamp": {
+      "title": "Bootcamp",
+      "subtitle": "Intensive Live Class bersama Experts. Praktikal & Mendalam.",
+      "point1": "Kombinasi Case Study, Praktik di Tiap Sesi. Basic to Advanced",
+      "point2": "Group Mentoring Semi-Privat untuk Bangun Portfolio",
+      "point3": "Tutor Terkurasi. Memiliki Lebih dari 30.000 Alumni"
+    },
+    "webinar": {
+      "title": "Webinar",
+      "subtitle": "Pelajari berbagai topik terkini dari para ahli di bidangnya.",
+      "point1": "Belajar insightfull dengan pembicara yang expert dibidangnya",
+      "point2": "Praktikal & Actionable. Bertahap dari level Dasar hingga Lanjut",
+      "point3": "Grup Komunitas Diskusi Lifetime. Kelas Gratis Tiap Bulannya"
+    }
+  },
+  "tools": {
+    "badge": "Tools & Framework",
+    "title": "Tools up-to-date yang digunakan"
+  },
+  "latest": {
+    "badge": "Produk Terbaru",
+    "recentTraining": "Pelatihan Terbaru",
+    "title": "Kelas, Bootcamp, Webinar, Private & Bundling Terbaru dari Talenta Academy",
+    "popularTitle": "Kelas Terpopuler",
+    "popularDesc": "Tingkatkan pengetahuan dan keterampilan kamu disini",
+    "empty": "Belum ada produk yang tersedia saat ini.",
+    "allOwned": "Anda sudah memiliki akses semua produk terbaru kami. 😁🙏",
+    "thankYou": "Terima kasih telah menjadi bagian dari Talenta Academy!",
+    "save": "Hemat {{discount}}%",
+    "free": "Gratis",
+    "lifetimeAccess": "Akses Selamanya",
+    "registerBefore": "Daftar sebelum {{days}} hari lagi",
+    "registrationClosed": "Pendaftaran ditutup",
+    "registerUntil": "Daftar s/d {{date}}",
+    "viewMore": "Lihat Selengkapnya...",
+    "registeredMentors": "{{count}} mentor terdaftar",
+    "noBio": "Tidak ada bio",
+    "startsPrefix": "Mulai: ",
+    "registrationDeadlinePrefix": "Batas Pendaftaran: ",
+    "badges": {
+      "course": "Kelas Online",
+      "bootcamp": "Bootcamp",
+      "webinar": "Webinar",
+      "bundle": "Bundle",
+      "certification": "Program Sertifikasi",
+      "private": "Private",
+      "scholarship": "Beasiswa",
+      "regular": "Reguler"
+    },
+    "levels": {
+      "beginner": "Level Beginner",
+      "intermediate": "Level Intermediate",
+      "advanced": "Level Advanced"
+    }
+  },
+  "mentor": {
+    "title": "Meet Our Mentor",
+    "badge": "MENTOR",
+    "roleTax": "Mentor Perpajakan"
+  },
+  "carousel": {
+    "slide": "Slide {{number}}"
+  },
+  "testimony": {
+    "title": "Apa Kata Mereka?",
+    "subtitle": "What our costumers say about us"
+  },
+  "faq": {
+    "title": "Pertanyaan yang sering ditanyakan",
+    "description": "Belajar pajak, brevet, atau akuntansi kadang bikin bingung sendiri, apalagi kalau materinya banyak dan teknis banget! Punya pertanyaan seputar webinar, kelas online, atau sertifikasi pajak dan akuntansi?",
+    "q1": "Apa itu Talenta Academy ? ",
+    "a1": "Talenta Academy adalah lembaga pelatihan profesional yang fokus pada pengembangan kompetensi di bidang akuntansi, perpajakan, audit, dan software akuntansi, dll dengan pendekatan praktis dan aplikatif",
+    "q2": "Apa Saja Fitur dan di Talenta Academy ?",
+    "a2": "Talenta Academy menyediakan berbagai program pembelajaran seperti Kelas Online, Bootcamp, serta pelatihan berbasis Webinar. Setiap program dirancang secara interaktif dan aplikatif untuk membantu peserta mengembangkan keterampilan secara optimal dan siap diterapkan di dunia kerja.",
+    "q3": "Bagaimana alur belajar di Talenta?",
+    "a3": "Pendaftaran dapat dilakukan melalui website resmi Talenta Academy atau dengan menghubungi admin melalui WhatsApp yang tersedia di website atau DM di IG @brevetpajak_talenta.",
+    "q4": "Kemana Saya bisa mendapatkan informasi untuk bekerjasama atau jika terdapat kendala ?",
+    "a4_part1": "Untuk informasi lebih lanjut mengenai Talenta Academy, silakan menghubungi admin kami melalui WhatsApp ",
+    "a4_phone": "+6285606391730",
+    "a4_part2": ". Kami juga aktif di berbagai media sosial, jadi pastikan untuk mengikuti Talenta Academy di Instagram, TikTok, dan LinkedIn untuk mendapatkan update terbaru serta tips seputar akuntansi dan perpajakan."
+  },
+  "cta": {
+    "title": "Let's Get In Touch.",
+    "desc": "Kami hadir untuk memudahkan proses belajar online Anda. Kami siap membantu Anda.",
+    "getInTouch": "Get in Touch",
+    "exploreBootcamp": "Explore Our Bootcamp",
+    "joinedAlumni": "Bergabung dengan 1000+ alumni",
+    "registerNow": "Daftar Kelas Sekarang",
+    "descLong": "Bergabunglah dengan ribuan peserta lainnya yang telah merasakan manfaat dari kelas-kelas kami. Dapatkan akses ke materi berkualitas, mentor berpengalaman, dan komunitas yang mendukung.",
+    "exploreClass": "Eksplorasi Kelas"
+  },
+  "notification": {
+    "justPurchased": "Baru saja membeli {{type}}: "
+  },
+  "promotion": {
+    "alt": "Promosi Talenta Academy",
+    "clickForDetail": "Klik untuk detail",
+    "clickToClose": "Klik untuk tutup"
+  },
+  "galery": {
+    "title": "Galeri Talenta Academy"
+  }
+}

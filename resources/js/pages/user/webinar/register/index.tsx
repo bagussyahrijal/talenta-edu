@@ -1,19 +1,24 @@
+import { parseISO } from 'date-fns';
 import InputError from '@/components/input-error';
+import InstallmentOptions, { ActiveInstallmentData, InstallmentTermOption } from '@/components/installment-options';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import UserLayout from '@/layouts/user-layout';
 import { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { BadgeCheck, Calendar, Check, Hourglass, LoaderCircle, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
-import { FormEventHandler, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { BadgeCheck, Calendar, Check, CreditCard, Gift, Hourglass, LoaderCircle, RefreshCw, Tag, User, X } from 'lucide-react';
+import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
-import InstallmentOptions, { InstallmentTermOption, ActiveInstallmentData } from '@/components/installment-options';
+import { useTranslation } from 'react-i18next';
 
 interface Webinar {
     id: string;
@@ -23,7 +28,6 @@ interface Webinar {
     strikethrough_price: number;
     price: number;
     thumbnail?: string | null;
-    slug: string;
     description?: string | null;
     benefits?: string | null;
     group_url?: string | null;
@@ -70,9 +74,8 @@ interface PendingInvoice {
     invoice_code: string;
     status: string;
     amount: number;
-    payment_method: string;
+    payment_method?: string;
     invoice_url?: string | null;
-    // payment_channel: string;
     va_number?: string;
     qr_code_url?: string;
     bank_name?: string;
@@ -80,41 +83,14 @@ interface PendingInvoice {
     expires_at: string;
 }
 
-// interface PaymentChannel {
-//     active: boolean;
-//     code: string;
-//     fee_customer: {
-//         flat: number;
-//         percent: number;
-//     };
-//     fee_merchant: {
-//         flat: number;
-//         percent: number;
-//     };
-//     group: string;
-//     icon_url: string;
-//     maximum_amount: number;
-//     maximum_fee: number | null;
-//     minimum_amount: number;
-//     minimum_fee: number | null;
-//     name: string;
-//     total_fee: {
-//         flat: number;
-//         percent: string;
-//     };
-//     type: string;
-// }
-
 interface InvoiceData {
     type: string;
     id: string;
     discount_amount: number;
     nett_amount: number;
     total_amount: number;
-    // payment_channel?: string;
     discount_code_id?: string;
     discount_code_amount?: number;
-    points_redeemed?: number;
     referral_code?: string;
 }
 
@@ -127,6 +103,23 @@ type RegisterForm = {
     password: string;
     password_confirmation: string;
 };
+
+type PendingCheckoutData = {
+    webinarId: string;
+    productType: 'webinar';
+    termsAccepted: boolean;
+    promoCode: string;
+    discountData: DiscountData | null;
+    timestamp: number;
+    source: 'register' | 'login';
+};
+
+function parseList(items?: string | null): string[] {
+    if (!items) return [];
+    const matches = items.match(/<li>(.*?)<\/li>/g);
+    if (!matches) return [];
+    return matches.map((li) => li.replace(/<\/?li>/g, '').trim());
+}
 
 export default function RegisterWebinar({
     webinar,
@@ -145,26 +138,37 @@ export default function RegisterWebinar({
     referralInfo: ReferralInfo;
     installmentTerms?: InstallmentTermOption[];
 }) {
+    const { t, i18n } = useTranslation('user');
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
-    const isProfileComplete = isLoggedIn && auth.user?.phone_number && auth.user?.instance && auth.user?.city;
+    const isProfileComplete = isLoggedIn && !!auth.user?.phone_number && !!auth.user?.instance && !!auth.user?.city;
 
-    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment || null);
-    const [paymentMode, setPaymentMode] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
+    const [emailExists, setEmailExists] = useState(false);
+    const [checkingEmail, setCheckingEmail] = useState(false);
+    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment);
+    const isAnyTermOverdue = !initialActiveInstallment && installmentTerms.some((t: any) => {
+        if (!t.due_date) return false;
+        try {
+            const d = typeof t.due_date === 'string' ? parseISO(t.due_date) : new Date(t.due_date);
+            if (isNaN(d.getTime())) return false;
+            const endOfDay = new Date(d);
+            endOfDay.setHours(23, 59, 59, 999);
+            return new Date() > endOfDay;
+        } catch {
+            return false;
+        }
+    });
+
+    const [paymentTab, setPaymentTab] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
+
+    const [cancellingInvoice, setCancellingInvoice] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [cancellingInvoice, setCancellingInvoice] = useState(false);
     const [codeType, setCodeType] = useState<'voucher' | 'referral'>('voucher');
-    const [userPoints, setUserPoints] = useState(0);
-    const [pointsChecked, setPointsChecked] = useState(false);
-    const [pointsToUse, setPointsToUse] = useState(0);
-    const [pointsError, setPointsError] = useState('');
-
     const [promoCode, setPromoCode] = useState('');
     const [discountData, setDiscountData] = useState<DiscountData | null>(null);
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoError, setPromoError] = useState('');
-
     const [referralData, setReferralData] = useState<{ valid: boolean; referrer?: { name: string } } | null>(null);
     const [referralLoading, setReferralLoading] = useState(false);
     const [referralError, setReferralError] = useState('');
@@ -181,15 +185,17 @@ export default function RegisterWebinar({
         requirement_3_proof: false,
     });
 
-    const [emailExists, setEmailExists] = useState(false);
-    const [checkingEmail, setCheckingEmail] = useState(false);
+    const submitInFlightRef = useRef(false);
+    const pendingProcessedRef = useRef(false);
+    const pendingTimerRef = useRef<number | null>(null);
 
+    const benefitList = parseList(webinar.benefits);
     const isFree = webinar.price === 0;
-    const basePrice = webinar.price;
-    const discountAmount = discountData?.valid ? discountData.discount_amount : 0;
-    const maxPointsAllowed = basePrice - discountAmount;
 
-    const finalWebinarPrice = basePrice - discountAmount - (pointsChecked ? pointsToUse : 0);
+    const basePrice = webinar.price;
+    const discountAmount = discountData?.discount_amount || 0;
+    const finalWebinarPrice = basePrice - discountAmount;
+
     const adminFee = isFree ? 0 : 5000;
     const totalPrice = isFree ? 0 : finalWebinarPrice + adminFee;
 
@@ -203,7 +209,6 @@ export default function RegisterWebinar({
         password_confirmation: '',
     });
 
-    // Auto-check email
     useEffect(() => {
         if (!data.email || !data.email.includes('@')) {
             setEmailExists(false);
@@ -217,7 +222,6 @@ export default function RegisterWebinar({
                     email: data.email,
                     webinar_id: webinar.id,
                 });
-
                 if (response.data.exists) {
                     setEmailExists(true);
                     setData('name', response.data.name || '');
@@ -227,7 +231,7 @@ export default function RegisterWebinar({
 
                     if (response.data.active_installment) {
                         setActiveInstallment(response.data.active_installment);
-                        setPaymentMode('installment');
+                        setPaymentTab('installment');
                     } else {
                         setActiveInstallment(null);
                     }
@@ -235,8 +239,7 @@ export default function RegisterWebinar({
                     setEmailExists(false);
                     setActiveInstallment(null);
                 }
-            } catch (error) {
-                console.error('Error checking email:', error);
+            } catch {
                 setEmailExists(false);
                 setActiveInstallment(null);
             } finally {
@@ -245,7 +248,7 @@ export default function RegisterWebinar({
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [data.email, webinar.id]);
+    }, [data.email, setData, webinar.id]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -253,19 +256,6 @@ export default function RegisterWebinar({
             onFinish: () => reset('password', 'password_confirmation'),
         });
     };
-
-    // Fetch point balance on mount
-    useEffect(() => {
-        if (isLoggedIn) {
-            axios.get('/api/user/points')
-                .then((response) => {
-                    setUserPoints(response.data.point_balance || 0);
-                })
-                .catch((err) => {
-                    console.error('Failed to load points balance:', err);
-                });
-        }
-    }, [isLoggedIn]);
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -275,34 +265,6 @@ export default function RegisterWebinar({
             sessionStorage.setItem('affiliate_code', refFromUrl);
         }
     }, [referralInfo]);
-
-    const validateReferralCode = async () => {
-        if (!promoCode.trim() || isFree) return;
-
-        setReferralLoading(true);
-        setReferralError('');
-
-        try {
-            const response = await axios.post('/api/referral/validate', {
-                code: promoCode,
-                email: !isLoggedIn ? data.email : undefined,
-            });
-            const dataRes = response.data;
-
-            if (dataRes.valid) {
-                setReferralData(dataRes);
-                setReferralError('');
-            } else {
-                setReferralData(null);
-                setReferralError(dataRes.message || 'Kode referral tidak valid');
-            }
-        } catch (error: any) {
-            setReferralData(null);
-            setReferralError(error.response?.data?.message || 'Terjadi kesalahan saat memvalidasi kode referral');
-        } finally {
-            setReferralLoading(false);
-        }
-    };
 
     useEffect(() => {
         if (!promoCode.trim() || isFree) {
@@ -322,7 +284,32 @@ export default function RegisterWebinar({
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [promoCode, codeType]);
+    }, [promoCode, isFree, codeType]);
+
+    const validateReferralCode = async () => {
+        if (!promoCode.trim() || isFree) return;
+
+        setReferralLoading(true);
+        setReferralError('');
+
+        try {
+            const response = await axios.post('/api/referral/validate', { code: promoCode });
+            const dataRes = response.data;
+
+            if (dataRes.valid) {
+                setReferralData(dataRes);
+                setReferralError('');
+            } else {
+                setReferralData(null);
+                setReferralError(dataRes.message || t('webinar.register.errors.invalidReferral', 'Kode referral tidak valid'));
+            }
+        } catch (error: any) {
+            setReferralData(null);
+            setReferralError(error.response?.data?.message || t('webinar.register.errors.referralValidateError', 'Terjadi kesalahan saat memvalidasi kode referral'));
+        } finally {
+            setReferralLoading(false);
+        }
+    };
 
     const validatePromoCode = async () => {
         if (!promoCode.trim() || isFree) return;
@@ -331,7 +318,7 @@ export default function RegisterWebinar({
         setPromoError('');
 
         try {
-            const requestData: any = {
+            const payload: any = {
                 code: promoCode,
                 amount: webinar.price,
                 product_type: 'webinar',
@@ -339,42 +326,85 @@ export default function RegisterWebinar({
             };
 
             if (!isLoggedIn && emailExists && data.email) {
-                requestData.email = data.email;
+                payload.email = data.email;
             }
 
-            const response = await axios.post('/api/discount-codes/validate', requestData);
+            const response = await axios.post('/api/discount-codes/validate', payload);
 
             if (response.data.valid) {
                 setDiscountData(response.data);
                 setPromoError('');
             } else {
                 setDiscountData(null);
-                setPromoError(response.data.message || 'Kode promo tidak valid');
+                setPromoError(response.data.message || t('webinar.register.errors.invalidPromo', 'Kode promo tidak valid'));
             }
         } catch (error: any) {
             setDiscountData(null);
-            setPromoError(error.response?.data?.message || 'Terjadi kesalahan saat memvalidasi kode promo');
+            setPromoError(error.response?.data?.message || t('webinar.register.errors.promoValidateError', 'Terjadi kesalahan saat memvalidasi kode promo'));
         } finally {
             setPromoLoading(false);
         }
     };
 
     const refreshCSRFToken = async (): Promise<string> => {
+        const response = await fetch('/csrf-token', {
+            method: 'GET',
+            credentials: 'same-origin',
+        });
+        const dataRes = await response.json();
+
+        const metaTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+        if (metaTag) metaTag.content = dataRes.token;
+
+        return dataRes.token;
+    };
+
+    const createInvoicePayload = (overrideDiscount?: DiscountData | null): InvoiceData => {
+        const activeDiscount = overrideDiscount ?? discountData;
+        const originalDiscountAmount = webinar.strikethrough_price > 0 ? webinar.strikethrough_price - webinar.price : 0;
+        const promoDiscountAmount = activeDiscount?.discount_amount || 0;
+
+        const payload: InvoiceData = {
+            type: 'webinar',
+            id: webinar.id,
+            discount_amount: originalDiscountAmount + promoDiscountAmount,
+            nett_amount: webinar.price - promoDiscountAmount,
+            total_amount: webinar.price - promoDiscountAmount + 5000,
+        };
+
+        if (activeDiscount?.valid && codeType === 'voucher') {
+            payload.discount_code_id = activeDiscount.discount_code.id;
+            payload.discount_code_amount = activeDiscount.discount_amount;
+        }
+
+        if (codeType === 'referral' && referralData?.valid) {
+            payload.referral_code = promoCode;
+        }
+
+        const storedAffiliate = sessionStorage.getItem('affiliate_code') || new URLSearchParams(window.location.search).get('ref');
+        if (storedAffiliate) {
+            (payload as any).affiliate_code = storedAffiliate;
+        }
+
+        return payload;
+    };
+
+    const submitPayment = async (payload: InvoiceData): Promise<void> => {
         try {
-            const response = await fetch('/csrf-token', {
-                method: 'GET',
-                credentials: 'same-origin',
-            });
-            const data = await response.json();
+            const res = await axios.post(route('invoice.store'), payload);
 
-            const metaTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-            if (metaTag) {
-                metaTag.content = data.token;
+            if (res.data && res.data.success) {
+                if (res.data.payment_url) {
+                    sessionStorage.removeItem('pendingCheckout');
+                    window.location.href = res.data.payment_url;
+                } else {
+                    throw new Error(t('webinar.register.errors.paymentUrlError', 'Payment URL tidak diterima dari server.'));
+                }
+            } else {
+                throw new Error(res.data?.message || t('webinar.register.errors.createInvoiceFailed', 'Gagal membuat invoice.'));
             }
-
-            return data.token;
-        } catch (error) {
-            console.error('Failed to refresh CSRF token:', error);
+        } catch (error: any) {
+            console.error('Payment error:', error);
             throw error;
         }
     };
@@ -383,13 +413,15 @@ export default function RegisterWebinar({
         e.preventDefault();
 
         if (!isProfileComplete) {
-            alert('Profil Anda belum lengkap! Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu.');
-            window.location.href = route('profile.edit');
+            toast.error(t('webinar.register.incompleteProfileDesc', 'Profil Anda belum lengkap! Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu untuk mendaftar webinar.'));
+            setTimeout(() => {
+                window.location.href = route('profile.edit');
+            }, 1500);
             return;
         }
 
         if (!freeFormData.requirement_1_proof || !freeFormData.requirement_2_proof || !freeFormData.requirement_3_proof) {
-            alert('Harap upload semua bukti yang diperlukan!');
+            toast.error(t('webinar.register.errors.uploadAllProof', 'Harap upload semua bukti yang diperlukan!'));
             return;
         }
 
@@ -404,90 +436,23 @@ export default function RegisterWebinar({
 
         router.post(route('enroll.free'), formData, {
             onError: (errors) => {
-                alert(errors.message || 'Gagal mendaftar webinar gratis.');
+                toast.error(errors.message || t('webinar.register.errors.enrollFreeFailed', 'Gagal mendaftar webinar gratis.'));
             },
-            onFinish: () => {
-                setLoading(false);
-            },
+            onFinish: () => setLoading(false),
         });
-    };
-
-    const submitPayment = async (
-        overrideDiscountData?: DiscountData | null,
-        overrideCodeType?: 'voucher' | 'referral',
-        overridePromoCode?: string,
-        overrideReferralValid?: boolean,
-        overridePointsChecked?: boolean,
-        overridePointsToUse?: number,
-    ): Promise<void> => {
-        const activeDiscountData = overrideDiscountData !== undefined ? overrideDiscountData : discountData;
-        const originalDiscountAmount = webinar.strikethrough_price > 0 ? webinar.strikethrough_price - webinar.price : 0;
-        const promoDiscountAmount = activeDiscountData?.valid ? activeDiscountData.discount_amount : 0;
-        
-        const currentPointsChecked = overridePointsChecked !== undefined ? overridePointsChecked : pointsChecked;
-        const currentPointsToUse = overridePointsToUse !== undefined ? overridePointsToUse : pointsToUse;
-        const pointsDeduction = currentPointsChecked ? currentPointsToUse : 0;
-        
-        const activeFinalPrice = webinar.price - promoDiscountAmount - pointsDeduction;
-        const activeTotalPrice = isFree ? 0 : activeFinalPrice + adminFee;
-
-        const invoiceData: InvoiceData = {
-            type: 'webinar',
-            id: webinar.id,
-            discount_amount: originalDiscountAmount + promoDiscountAmount,
-            nett_amount: activeFinalPrice,
-            total_amount: activeTotalPrice,
-            points_redeemed: pointsDeduction,
-        };
-
-        const currentCodeType = overrideCodeType || codeType;
-        const currentPromoCode = overridePromoCode || promoCode;
-        const isReferralValid = overrideReferralValid !== undefined ? overrideReferralValid : referralData?.valid;
-
-        if (activeDiscountData?.valid && currentCodeType === 'voucher') {
-            invoiceData.discount_code_id = activeDiscountData.discount_code.id;
-            invoiceData.discount_code_amount = activeDiscountData.discount_amount;
-        }
-
-        if (currentCodeType === 'referral' && isReferralValid) {
-            invoiceData.referral_code = currentPromoCode;
-        }
-
-        const storedAffiliate = sessionStorage.getItem('affiliate_code');
-        if (storedAffiliate) {
-            (invoiceData as any).affiliate_code = storedAffiliate;
-        }
-
-        try {
-            const res = await axios.post(route('invoice.store'), invoiceData);
-
-            if (res.data && res.data.success) {
-                if (res.data.payment_url) {
-                    sessionStorage.removeItem('pendingCheckout');
-                    window.location.href = res.data.payment_url;
-                } else {
-                    throw new Error('Payment URL not received');
-                }
-            } else {
-                throw new Error(res.data?.message || 'Gagal membuat invoice.');
-            }
-        } catch (error) {
-            console.error('Payment error:', error);
-            throw error;
-        }
     };
 
     const ensureAuth = async (): Promise<boolean> => {
         if (isLoggedIn) return true;
 
         if (!data.email || !data.name || !data.phone_number || !data.instance || !data.city) {
-            toast.error('Lengkapi data terlebih dahulu');
+            toast.error(t('webinar.register.errors.completePersonalData', 'Lengkapi semua data diri terlebih dahulu.'));
             return false;
         }
 
         try {
             if (emailExists) {
-                const response = await axios.post(route('auto-login'), {
+                const response = await axios.post('/auto-login', {
                     email: data.email,
                     phone_number: data.phone_number,
                     instance: data.instance,
@@ -495,10 +460,10 @@ export default function RegisterWebinar({
                 });
 
                 if (!response.data.success) {
-                    throw new Error(response.data.message || 'Login gagal. Pastikan nomor telepon sesuai dengan yang terdaftar.');
+                    throw new Error(response.data.message || t('webinar.register.errors.autoLoginFailed', 'Gagal login otomatis. Pastikan nomor telepon sesuai dengan yang terdaftar.'));
                 }
             } else {
-                const response = await axios.post(route('register'), {
+                const response = await axios.post('/register', {
                     name: data.name,
                     email: data.email,
                     phone_number: data.phone_number,
@@ -510,17 +475,13 @@ export default function RegisterWebinar({
                 });
 
                 if (!(response.data?.success || response.status === 200 || response.status === 201)) {
-                    throw new Error('Registrasi gagal');
+                    throw new Error(t('webinar.register.errors.registerFailed', 'Gagal registrasi.'));
                 }
             }
             return true;
         } catch (error: any) {
             console.error('Login/Register error:', error);
-            if (error.response?.status === 419) {
-                toast.error('Sesi telah berakhir. Silakan muat ulang halaman.');
-            } else {
-                toast.error(error.response?.data?.message || error.message || 'Gagal login/registrasi');
-            }
+            toast.error(error.response?.data?.message || error.message || t('webinar.register.errors.processLoginFailed', 'Gagal memproses login/registrasi otomatis.'));
             return false;
         }
     };
@@ -528,62 +489,123 @@ export default function RegisterWebinar({
     const handleCheckout = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Jika belum login, lakukan registrasi/login dan langsung bayar
+        if (activeInstallment && !activeInstallment.is_fully_paid) {
+            toast.error(t('webinar.register.activeInstallmentAlert', 'Anda sedang memiliki program cicilan berjalan. Silakan selesaikan pembayaran melalui tab Cicilan.'));
+            setPaymentTab('installment');
+            return;
+        }
+
+        // 1. Jika belum login, lakukan registrasi / login terlebih dahulu
         if (!isLoggedIn) {
             if (!termsAccepted && !isFree) {
-                toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                toast.error(t('webinar.register.errors.termsRequired', 'Anda harus menyetujui syarat dan ketentuan!'));
                 return;
             }
 
             setLoading(true);
 
-            try {
-                const authed = await ensureAuth();
-                if (!authed) {
-                    setLoading(false);
-                    return;
-                }
+            const authed = await ensureAuth();
+            if (!authed) {
+                setLoading(false);
+                return;
+            }
 
+            try {
                 if (isFree) {
                     setShowFreeForm(true);
                     setLoading(false);
                     return;
                 }
 
-                await submitPayment();
+                // Langsung jalankan submitPayment tanpa reload!
+                await submitPayment(createInvoicePayload());
             } catch (error: any) {
                 setLoading(false);
-                return;
+                toast.error(error.response?.data?.message || error.message || t('webinar.register.errors.paymentFailed', 'Gagal memproses pembayaran.'));
             }
             return;
         }
 
-        // Validasi terms untuk pembayaran berbayar
+        // 2. Jika sudah login
         if (!termsAccepted && !isFree) {
-            toast.error('Anda harus menyetujui syarat dan ketentuan!');
-            setLoading(false);
+            toast.error(t('webinar.register.errors.termsRequired', 'Anda harus menyetujui syarat dan ketentuan!'));
             return;
         }
 
-        if (!loading) {
-            setLoading(true);
-        }
+        if (submitInFlightRef.current) return;
+        submitInFlightRef.current = true;
+        setLoading(true);
 
         if (isFree) {
             setShowFreeForm(true);
             setLoading(false);
+            submitInFlightRef.current = false;
             return;
         }
 
         try {
-            await submitPayment();
+            await submitPayment(createInvoicePayload());
         } catch (error: any) {
-            toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
+            toast.error(error.response?.data?.message || error.message || t('webinar.register.errors.paymentFailed', 'Terjadi kesalahan saat proses pembayaran.'));
             setLoading(false);
+            submitInFlightRef.current = false;
         }
     };
 
+    useEffect(() => {
+        const raw = sessionStorage.getItem('pendingCheckout');
+        if (!raw || !isLoggedIn || pendingProcessedRef.current) return;
 
+        pendingProcessedRef.current = true;
+
+        let checkoutData: PendingCheckoutData;
+        try {
+            checkoutData = JSON.parse(raw);
+        } catch {
+            sessionStorage.removeItem('pendingCheckout');
+            return;
+        }
+
+        const fiveMinutes = 5 * 60 * 1000;
+        if (Date.now() - (checkoutData.timestamp || 0) > fiveMinutes) {
+            sessionStorage.removeItem('pendingCheckout');
+            toast.error(t('webinar.register.errors.sessionExpired', 'Sesi checkout telah kadaluarsa'));
+            return;
+        }
+
+        if (checkoutData.webinarId !== webinar.id) {
+            sessionStorage.removeItem('pendingCheckout');
+            return;
+        }
+
+        if (checkoutData.source !== 'register') {
+            sessionStorage.removeItem('pendingCheckout');
+            return;
+        }
+
+        if (checkoutData.promoCode) setPromoCode(checkoutData.promoCode);
+        if (checkoutData.discountData) setDiscountData(checkoutData.discountData);
+        setTermsAccepted(!!checkoutData.termsAccepted);
+
+        pendingTimerRef.current = window.setTimeout(async () => {
+            if (submitInFlightRef.current) return;
+            submitInFlightRef.current = true;
+            setLoading(true);
+
+            try {
+                await submitPayment(createInvoicePayload(checkoutData.discountData ?? null));
+            } catch (error: any) {
+                toast.error(error.message || t('webinar.register.errors.paymentFailed', 'Terjadi kesalahan saat proses pembayaran.'));
+                sessionStorage.removeItem('pendingCheckout');
+                setLoading(false);
+                submitInFlightRef.current = false;
+            }
+        }, 1200);
+
+        return () => {
+            if (pendingTimerRef.current) clearTimeout(pendingTimerRef.current);
+        };
+    }, [isLoggedIn, webinar.id]);
 
     const validateFileSize = (file: File, maxSizeMB: number = 2): boolean => {
         const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -601,7 +623,7 @@ export default function RegisterWebinar({
             setFileErrors((prev) => ({ ...prev, [fieldName]: true }));
             const input = document.querySelector(`input[data-field="${fieldName}"]`) as HTMLInputElement;
             if (input) input.value = '';
-            toast.error('Ukuran file terlalu besar. Maksimal 2MB.');
+            toast.error(t('webinar.register.errors.fileTooLarge', 'Ukuran file terlalu besar. Maksimal 2MB.'));
             return;
         }
 
@@ -609,173 +631,215 @@ export default function RegisterWebinar({
             setFileErrors((prev) => ({ ...prev, [fieldName]: true }));
             const input = document.querySelector(`input[data-field="${fieldName}"]`) as HTMLInputElement;
             if (input) input.value = '';
-            toast.error('Hanya file gambar (JPG, PNG, GIF, dll) yang diperbolehkan.');
+            toast.error(t('webinar.register.errors.fileMustBeImage', 'Hanya file gambar (JPG, PNG, GIF, dll) yang diperbolehkan.'));
             return;
         }
 
         setFreeFormData((prev) => ({ ...prev, [fieldName]: file }));
         setFileErrors((prev) => ({ ...prev, [fieldName]: false }));
-        toast.success('File berhasil diunggah.');
+        toast.success(t('webinar.register.errors.fileUploaded', 'File berhasil diunggah.'));
     };
-
-    // const getPaymentChannelName = (code: string): string => {
-    //     const channel = channels.find((c) => c.code === code);
-    //     return channel?.name || code;
-    // };
-
-    // const getPaymentGroupIcon = (channelCode: string): string => {
-    //     const channel = channels.find((c) => c.code === channelCode);
-    //     return channel?.icon_url || '';
-    // };
 
     const formatExpiryTime = (expiresAt: string): { time: string; status: 'expired' | 'urgent' | 'normal' } => {
         const now = new Date();
         const expiry = new Date(expiresAt);
         const diff = expiry.getTime() - now.getTime();
 
-        if (diff <= 0) {
-            return { time: 'Sudah kadaluarsa', status: 'expired' };
-        }
+        if (diff <= 0) return { time: t('webinar.register.alreadyExpired', 'Sudah kadaluarsa'), status: 'expired' };
 
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-        if (hours < 1) {
-            return { time: `${minutes} menit lagi`, status: 'urgent' };
-        }
-
-        return { time: `${hours} jam ${minutes} menit lagi`, status: hours < 3 ? 'urgent' : 'normal' };
+        if (hours < 1) return { time: `${minutes} ${t('webinar.register.minutesLeft', 'menit lagi')}`, status: 'urgent' };
+        return { time: `${hours} jam ${minutes} ${t('webinar.register.minutesLeft', 'menit lagi')}`, status: hours < 3 ? 'urgent' : 'normal' };
     };
 
     const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text).then(() => {
-            toast.success('Berhasil menyalin ke clipboard!');
-        });
+        navigator.clipboard.writeText(text).then(() => toast.success(t('webinar.register.copySuccess', 'Berhasil menyalin ke clipboard!')));
     };
-
-    // if (!isLoggedIn) {
-    //     const currentUrl = window.location.href;
-    //     const loginUrl = route('login', { redirect: currentUrl });
-
-    //     return (
-    //         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-    //             <Head title="Login Required" />
-    //             <section className="flex min-h-screen items-center justify-center px-4 py-12">
-    //                 <div className="w-full max-w-md">
-    //                     <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-    //                         <div className="rounded-full bg-blue-100 p-6 dark:bg-blue-900/30">
-    //                             <User size={48} className="text-blue-600 dark:text-blue-400" />
-    //                         </div>
-    //                         <div className="text-center">
-    //                             <h2 className="mb-2 text-2xl font-bold">Login Diperlukan</h2>
-    //                             <p className="text-gray-600 dark:text-gray-400">
-    //                                 Silakan login terlebih dahulu untuk mendaftar webinar
-    //                                 {referralInfo.hasActive && '. Kode referral Anda akan tetap tersimpan'}
-    //                             </p>
-    //                         </div>
-    //                         <div className="flex w-full gap-3">
-    //                             <Button asChild className="flex-1" size="lg">
-    //                                 <a href={loginUrl}>Login</a>
-    //                             </Button>
-    //                             <Button asChild variant="outline" className="flex-1" size="lg">
-    //                                 <Link href={route('register', referralInfo.code ? { ref: referralInfo.code } : {})}>Daftar</Link>
-    //                             </Button>
-    //                         </div>
-    //                     </div>
-    //                 </div>
-    //             </section>
-    //         </div>
-    //     );
-    // }
 
     if (isLoggedIn && !isProfileComplete) {
         return (
-            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-                <Head title="Daftar Webinar" />
-                <section className="flex min-h-screen items-center justify-center px-4 py-12">
-                    <div className="w-full max-w-md">
-                        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                            <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
-                                <User size={48} className="text-orange-600 dark:text-orange-400" />
-                            </div>
-                            <div className="text-center">
-                                <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu untuk melanjutkan pendaftaran
-                                </p>
-                            </div>
-                            <Button asChild className="w-full" size="lg">
-                                <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
-                            </Button>
-                        </div>
-                    </div>
+            <UserLayout>
+                <Head title={t('webinar.register.incompleteProfileTitle', 'Lengkapi Profil')} />
+
+                <section className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-orange-700 to-red-700 px-4 py-16">
+                    <div className="bg-grid-white/[0.05] absolute inset-0 bg-[size:20px_20px]" />
+                    <div className="absolute top-0 left-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-400/30 blur-3xl" />
+                    <div className="absolute right-0 bottom-0 h-96 w-96 translate-x-1/2 translate-y-1/2 rounded-full bg-red-400/30 blur-3xl" />
+
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative mx-auto max-w-4xl text-center">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1 }}
+                            className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm"
+                        >
+                            <User className="h-4 w-4 text-white" />
+                            <span className="text-sm font-medium text-white">{t('webinar.register.incompleteProfileTitle', 'Profil Belum Lengkap')}</span>
+                        </motion.div>
+
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="mb-4 text-3xl font-bold text-white sm:text-4xl lg:text-5xl"
+                        >
+                            {webinar.title}
+                        </motion.h1>
+
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="text-lg text-orange-100"
+                        >
+                            {t('webinar.register.incompleteProfileDesc', 'Lengkapi profil Anda terlebih dahulu untuk melanjutkan')}
+                        </motion.p>
+                    </motion.div>
                 </section>
-            </div>
+
+                <section className="mx-auto my-8 w-full max-w-2xl px-4">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                        <Card className="overflow-hidden border-2">
+                            <div className="bg-gradient-to-br from-orange-50 to-red-50 p-8 dark:from-orange-950/20 dark:to-red-950/20">
+                                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg">
+                                    <User className="h-10 w-10 text-white" />
+                                </div>
+
+                                <h2 className="mb-3 text-center text-2xl font-bold">{t('webinar.register.incompleteProfileTitle', 'Lengkapi Profil Anda')}</h2>
+                                <p className="mb-6 text-center text-gray-600 dark:text-gray-400">
+                                    {t('webinar.register.incompleteProfileDesc', 'Kami memerlukan nomor telepon, instansi, dan kota domisili Anda untuk melanjutkan pendaftaran webinar ini.')}
+                                </p>
+
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                                >
+                                    <Link href={route('profile.edit', { redirect: window.location.href })}>
+                                        <User className="mr-2 h-4 w-4" />
+                                        {t('webinar.register.btnCompleteProfile', 'Lengkapi Profil Sekarang')}
+                                    </Link>
+                                </Button>
+                            </div>
+                        </Card>
+                    </motion.div>
+                </section>
+            </UserLayout>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-            <Head title="Daftar Webinar" />
+        <UserLayout>
+            <Head title={`${t('webinar.register.headTitle', 'Checkout')} - ${webinar.title}`} />
 
-            <section className="mx-auto w-full max-w-7xl px-4 py-12">
-                <div className="mb-8 px-4">
-                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                        <Link href="/webinar" className="hover:text-orange-600">
-                            Webinar
-                        </Link>
-                        <span>/</span>
-                        <Link href={`/webinar/${webinar.slug}`} className="hover:text-orange-600">
-                            {webinar.title}
-                        </Link>
-                        <span>/</span>
-                        <span className="text-gray-900 dark:text-white">Daftar</span>
+            <section className="from-primary to-primary-foreground relative overflow-hidden bg-gradient-to-br px-4 py-12">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative mx-auto max-w-7xl">
+                    <div className="mb-6 flex flex-wrap items-center gap-3">
+                        {isFree && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-green-500/20 bg-white px-3 py-1.5 text-sm font-medium text-green-600 backdrop-blur-sm"
+                            >
+                                <Gift className="h-3.5 w-3.5" />
+                                {t('webinar.register.freeBadge', 'Gratis')}
+                            </motion.div>
+                        )}
+
+                        {webinar.strikethrough_price > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-red-700 bg-red-200 px-3 py-1.5 text-sm font-medium text-red-600 backdrop-blur-sm"
+                            >
+                                <Tag className="h-3.5 w-3.5" />
+                                {t('webinar.register.discount', 'Diskon')} {Math.round(((webinar.strikethrough_price - webinar.price) / webinar.strikethrough_price) * 100)}%
+                            </motion.div>
+                        )}
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/20 px-3 py-1.5 text-sm font-medium text-white shadow-lg backdrop-blur-md"
+                        >
+                            <Calendar className="h-3.5 w-3.5" />
+                            {new Date(webinar.start_time).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long' })} -{' '}
+                            {new Date(webinar.start_time).toLocaleTimeString(i18n.language === 'en' ? 'en-US' : 'id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                        </motion.div>
                     </div>
-                    <h1 className="mt-8 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">Daftar Webinar</h1>
-                </div>
 
-                <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Product Info */}
-                    <div className={!pendingInvoice ? 'lg:col-span-2' : 'lg:col-span-3'}>
-                        <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                            <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                <div className="flex items-center gap-2 text-gray-900 dark:text-white">
-                                    <ShoppingCart className="h-5 w-5" />
-                                    <h2 className="text-lg font-semibold">Detail Pesanan</h2>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <div className="flex gap-4">
-                                    <div className="h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg">
-                                        <img
-                                            src={webinar.thumbnail ? `/storage/${webinar.thumbnail}` : '/assets/images/placeholder.png'}
-                                            alt={webinar.title}
-                                            className="h-full w-full object-cover"
-                                        />
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="mb-4 text-3xl font-bold text-black sm:text-4xl lg:text-5xl"
+                    >
+                        {webinar.title}
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mb-6 max-w-3xl text-justify text-lg text-black"
+                    >
+                        {webinar.description}
+                    </motion.p>
+                </motion.div>
+            </section>
+
+            <section className="mx-auto my-8 w-full max-w-7xl px-4">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2">
+                        <Tabs defaultValue="detail" className="w-full">
+                            <TabsList className="grid w-full grid-cols-1">
+                                <TabsTrigger value="detail" className="gap-2">
+                                    <BadgeCheck className="h-4 w-4" />
+                                    <span className="hidden sm:inline">{t('webinar.register.tabDetail', 'Detail Webinar')}</span>
+                                    <span className="sm:hidden">{t('webinar.register.tabDetailShort', 'Detail')}</span>
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="detail" className="mt-4">
+                                <Card className="p-6">
+                                    <div className="mb-6">
+                                        <h2 className="mb-2 text-2xl font-bold">{t('webinar.register.whatYouWillGet', 'Yang Akan Kamu Dapatkan')}</h2>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {t('webinar.register.whatYouWillGetDesc', 'Manfaat yang akan kamu peroleh setelah mengikuti webinar ini')}
+                                        </p>
                                     </div>
-                                    <div className="flex-1">
-                                        <span className="mb-2 inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                                            Webinar
-                                        </span>
-                                        <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{webinar.title}</h3>
-                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                            <Calendar size={16} />
-                                            <span>
-                                                {new Date(webinar.start_time).toLocaleDateString('id-ID', {
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                    year: 'numeric',
-                                                })}
-                                            </span>
-                                        </div>
+
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        {benefitList.map((benefit, idx) => (
+                                            <motion.div
+                                                key={idx}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.1 * idx }}
+                                                className="group flex items-start gap-3 rounded-lg border bg-gradient-to-br from-green-50 to-emerald-50 p-4 transition-all hover:shadow-md dark:from-green-950/20 dark:to-emerald-950/20"
+                                            >
+                                                <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition-transform group-hover:scale-110">
+                                                    <Check className="h-4 w-4" />
+                                                </div>
+                                                <p className="text-sm leading-relaxed font-medium text-gray-700 dark:text-gray-300">{benefit}</p>
+                                            </motion.div>
+                                        ))}
                                     </div>
-                                </div>
-                            </div>
-                            {!isLoggedIn && (
+                                </Card>
+                            </TabsContent>
+                        </Tabs>
+
+                        {!isLoggedIn && (
+                            <Card className="mt-6">
                                 <form className="flex flex-col gap-6 p-6 pt-0" onSubmit={submit}>
-                                    <h1 className="text-xl font-bold">Masukkan Data Diri Anda</h1>
+                                    <h1 className="text-xl font-bold">{t('webinar.register.enterPersonalData', 'Masukkan Data Diri Anda')}</h1>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
+                                        <Label htmlFor="email">{t('webinar.register.emailLabel', 'Email')}</Label>
                                         <div className="flex gap-2">
                                             <div className="relative flex-1">
                                                 <Input
@@ -805,48 +869,45 @@ export default function RegisterWebinar({
                                                 type="button"
                                                 variant="outline"
                                                 size="icon"
+                                                disabled={checkingEmail || !data.email}
                                                 onClick={async () => {
                                                     if (!data.email || !data.email.includes('@')) {
-                                                        toast.error('Masukkan email yang valid');
+                                                        toast.error(t('webinar.register.enterValidEmail', 'Masukkan email yang valid'));
                                                         return;
                                                     }
 
                                                     setCheckingEmail(true);
                                                     try {
-                                                        const response = await axios.post('/api/check-email', {
-                                                            email: data.email,
-                                                        });
-
+                                                        const response = await axios.post('/api/check-email', { email: data.email });
                                                         if (response.data.exists) {
                                                             setEmailExists(true);
                                                             setData('name', response.data.name || '');
                                                             setData('phone_number', response.data.phone_number || '');
-                                                            toast.success('Email ditemukan!');
+                                                            setData('instance', response.data.instance || '');
+                                                            setData('city', response.data.city || '');
+                                                            toast.success(t('webinar.register.emailFoundToast', 'Email ditemukan!'));
                                                         } else {
                                                             setEmailExists(false);
-                                                            toast.info('Email tidak terdaftar');
+                                                            toast.info(t('webinar.register.emailNotFoundToast', 'Email tidak terdaftar'));
                                                         }
-                                                    } catch (error) {
-                                                        console.error('Error checking email:', error);
+                                                    } catch {
                                                         setEmailExists(false);
-                                                        toast.error('Gagal mengecek email');
+                                                        toast.error(t('webinar.register.emailCheckFailed', 'Gagal mengecek email'));
                                                     } finally {
                                                         setCheckingEmail(false);
                                                     }
                                                 }}
-                                                disabled={checkingEmail || !data.email}
-                                                className="flex-shrink-0"
                                             >
                                                 <RefreshCw className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        {emailExists && <p className="text-xs text-green-600">Email ditemukan, data terisi otomatis</p>}
+                                        {emailExists && <p className="text-xs text-green-600">{t('webinar.register.emailAutoFillNotice', 'Email ditemukan, data terisi otomatis')}</p>}
                                         <InputError message={errors.email} />
                                     </div>
 
                                     <div className="grid gap-6">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="name">Nama</Label>
+                                            <Label htmlFor="name">{t('webinar.register.nameLabel', 'Nama')}</Label>
                                             <Input
                                                 id="name"
                                                 type="text"
@@ -856,13 +917,13 @@ export default function RegisterWebinar({
                                                 value={data.name}
                                                 onChange={(e) => setData('name', e.target.value)}
                                                 disabled={processing || emailExists}
-                                                placeholder="Nama lengkap Anda"
+                                                placeholder={t('webinar.register.namePlaceholder', 'Nama lengkap Anda')}
                                             />
                                             <InputError message={errors.name} className="mt-2" />
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <Label htmlFor="phone_number">No. Telepon</Label>
+                                            <Label htmlFor="phone_number">{t('webinar.register.phoneLabel', 'No. Telepon')}</Label>
                                             <Input
                                                 id="phone_number"
                                                 type="tel"
@@ -871,20 +932,19 @@ export default function RegisterWebinar({
                                                 autoComplete="tel"
                                                 value={data.phone_number}
                                                 onChange={(e) => setData('phone_number', e.target.value)}
-                                                disabled={processing || emailExists}
-                                                placeholder="08xxxxxxxxxx"
+                                                disabled={processing}
+                                                placeholder={t('webinar.register.phonePlaceholder', '08xxxxxxxxxx')}
                                             />
                                             {!emailExists && (
-                                                <p className="text-xs text-gray-500">Nomor telepon akan digunakan sebagai password anda</p>
+                                                <p className="text-xs text-gray-500">{t('webinar.register.phoneNoticeUnregistered', 'Nomor telepon akan digunakan sebagai password anda')}</p>
                                             )}
                                             {emailExists && (
-                                                <p className="text-xs text-blue-600">Pastikan nomor telepon sesuai dengan yang terdaftar</p>
+                                                <p className="text-xs text-blue-600">{t('webinar.register.phoneNoticeRegistered', 'Pastikan nomor telepon sesuai dengan yang terdaftar')}</p>
                                             )}
                                             <InputError message={errors.phone_number} />
                                         </div>
-
                                         <div className="grid gap-2 pb-2">
-                                            <Label htmlFor="instance">Instansi/Perusahaan</Label>
+                                            <Label htmlFor="instance">{t('webinar.register.instanceLabel', 'Instansi/Perusahaan')}</Label>
                                             <Input
                                                 id="instance"
                                                 type="text"
@@ -893,741 +953,632 @@ export default function RegisterWebinar({
                                                 value={data.instance}
                                                 onChange={(e) => setData('instance', e.target.value)}
                                                 disabled={processing}
-                                                placeholder="Instansi atau perusahaan Anda"
+                                                placeholder={t('webinar.register.instancePlaceholder', 'Instansi atau perusahaan Anda')}
                                                 required
                                             />
                                             <InputError message={errors.instance} />
                                         </div>
                                         <div className="grid gap-2 pb-2">
-                                            <Label htmlFor="city">Kota Domisili</Label>
+                                            <Label htmlFor="city">{t('webinar.register.cityLabel', 'Kota Domisili')}</Label>
                                             <Input
                                                 id="city"
                                                 type="text"
                                                 tabIndex={5}
-                                                autoComplete="address-level2"
                                                 value={data.city}
                                                 onChange={(e) => setData('city', e.target.value)}
                                                 disabled={processing}
-                                                placeholder="Kota domisili Anda"
+                                                placeholder={t('webinar.register.cityPlaceholder', 'Kota domisili Anda')}
                                                 required
                                             />
                                             <InputError message={errors.city} />
                                         </div>
                                     </div>
                                 </form>
-                            )}
-                        </div>
+                            </Card>
+                        )}
 
-                        {/* Payment Channels Section */}
-                        {/* {!isFree && channels.length > 0 && !pendingInvoice && !hasAccess && (
-                            <div className="mt-6 overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Metode Pembayaran</h2>
-                                </div>
-                                <div className="p-6">
-                                    <div className="grid gap-3">
-                                        {channels.map((channel) => (
-                                            <div
-                                                key={channel.code}
-                                                onClick={() => setSelectedChannel(channel)}
-                                                className={`group cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                                                    selectedChannel?.code === channel.code
-                                                        ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20'
-                                                        : 'border-gray-200 hover:border-orange-300 dark:border-gray-700 dark:hover:border-orange-600'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex flex-1 items-center gap-4">
-                                                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
-                                                            <img
-                                                                src={channel.icon_url}
-                                                                alt={channel.name}
-                                                                className="h-full w-full object-contain p-1"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <p className="font-semibold text-gray-900 dark:text-white">{channel.name}</p>
-                                                            <p className="text-xs text-gray-600 dark:text-gray-400">{channel.group}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all"
-                                                        style={{
-                                                            borderColor: selectedChannel?.code === channel.code ? '#ea580c' : '#d1d5db',
-                                                            backgroundColor: selectedChannel?.code === channel.code ? '#ea580c' : 'transparent',
-                                                        }}
-                                                    >
-                                                        {selectedChannel?.code === channel.code && <Check className="h-3 w-3 text-white" />}
-                                                    </div>
-                                                </div>
-                                                {selectedChannel?.code === channel.code && (
-                                                    <div className="mt-4 border-t border-orange-200 pt-4 dark:border-orange-900">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-semibold text-gray-600 dark:text-white">Biaya Admin</span>
-                                                            <span className="font-semibold text-orange-600">
-                                                                Rp {calculateAdminFee(channel).toLocaleString('id-ID')}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                    </motion.div>
+
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-1">
+                        <div className="sticky top-4">
+                            {hasAccess && (!activeInstallment || activeInstallment.is_fully_paid) ? (
+                                <Card className="overflow-hidden border-2 border-green-500/20">
+                                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 dark:from-green-950/20 dark:to-emerald-950/20">
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                                            <BadgeCheck className="h-8 w-8 text-white" />
+                                        </div>
+
+                                        <h2 className="mb-2 text-center text-xl font-bold">{t('webinar.register.alreadyHaveAccessTitle', 'Anda Sudah Memiliki Akses')}</h2>
+                                        <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                                            {t('webinar.register.alreadyHaveAccessDesc', 'Anda sudah terdaftar di webinar ini. Silakan masuk ke dalam grup.')}
+                                        </p>
+
+                                        <Button
+                                            asChild
+                                            size="lg"
+                                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                        >
+                                            <a href={webinar.group_url ?? ''} target="_blank" rel="noopener noreferrer">
+                                                {t('webinar.register.btnEnterGroup', 'Masuk Group Webinar')}
+                                            </a>
+                                        </Button>
                                     </div>
-                                </div>
-                            </div>
-                        )} */}
-                    </div>
+                                </Card>
+                            ) : pendingInvoice ? (
+                                <Card className="overflow-hidden border-2">
+                                    <div
+                                        className="border-b p-4"
+                                        style={{
+                                            backgroundColor: (() => {
+                                                const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
+                                                const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
+                                                return isExpired ? '#fee2e2' : 'rgba(254, 249, 195, 0.5)';
+                                            })(),
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {(() => {
+                                                const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
+                                                const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
 
-                    {/* Payment Section */}
-                    <div className={!pendingInvoice ? 'lg:col-span-1' : 'lg:col-span-3'}>
-                        {hasAccess ? (
-                            <div className="flex h-full flex-col items-center justify-center space-y-4 rounded-2xl border bg-white/95 p-6 text-center shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div className="rounded-full bg-green-100 p-4 dark:bg-green-900/30">
-                                    <BadgeCheck size={48} className="text-green-600 dark:text-green-400" />
-                                </div>
-                                <div>
-                                    <h2 className="mb-2 text-xl font-bold">Sudah Memiliki Akses</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Anda sudah terdaftar di webinar ini. Silakan masuk ke grup.
-                                    </p>
-                                </div>
-                                <Button asChild className="w-full" size="lg">
-                                    <a href={webinar.group_url ?? ''} target="_blank" rel="noopener noreferrer">
-                                        Masuk Grup Webinar
-                                    </a>
-                                </Button>
-                            </div>
-                        ) : pendingInvoice ? (
-                            <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div
-                                    className="border-b p-4 dark:bg-yellow-900/20"
-                                    style={{
-                                        backgroundColor: (() => {
-                                            const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
-                                            const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
-                                            return isExpired ? '#fee2e2' : 'rgba(254, 249, 195, 0.5)';
-                                        })(),
-                                    }}
-                                >
-                                    <div className="flex items-center gap-2">
+                                                if (isExpired) {
+                                                    return (
+                                                        <>
+                                                            <X className="h-5 w-5 text-red-600" />
+                                                            <div>
+                                                                <p className="font-semibold text-red-800">{t('webinar.register.paymentExpiredTitle', 'Pembayaran Kedaluwarsa')}</p>
+                                                            </div>
+                                                        </>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <>
+                                                        <Hourglass className="h-5 w-5 text-yellow-600" />
+                                                        <div>
+                                                            <p className="font-semibold text-yellow-900">{t('webinar.register.pendingInvoiceTitle', 'Transaksi Menunggu Pembayaran')}</p>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6 p-6">
+                                        <div className="space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('webinar.register.invoiceCodeLabel', 'Kode Invoice')}</span>
+                                                <span className="font-mono text-sm font-semibold">{pendingInvoice.invoice_code}</span>
+                                            </div>
+                                            <Separator />
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('webinar.register.totalPayment', 'Total Pembayaran')}</span>
+                                                <span className="text-lg font-bold text-orange-600">
+                                                    Rp {pendingInvoice.amount.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}
+                                                </span>
+                                            </div>
+                                        </div>
+
                                         {(() => {
                                             const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
                                             const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
+
                                             if (isExpired) {
                                                 return (
-                                                    <>
-                                                        <X className="h-5 w-5 text-red-600" />
-                                                        <h2 className="text-lg font-semibold text-red-700 dark:text-red-300">Pembayaran Gagal</h2>
-                                                    </>
+                                                    <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                                                        <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                                                            {t('webinar.register.paymentExpiredNotice', 'Waktu pembayaran telah habis. Silakan batalkan transaksi untuk membuat pesanan baru.')}
+                                                        </p>
+                                                    </div>
                                                 );
                                             }
-                                            return (
-                                                <>
-                                                    <Hourglass className="h-5 w-5 text-yellow-600" />
-                                                    <h2 className="text-lg font-semibold text-yellow-900 dark:text-yellow-200">
-                                                        Pembayaran Tertunda
-                                                    </h2>
-                                                </>
-                                            );
+
+                                            return null;
                                         })()}
-                                    </div>
-                                </div>
 
-                                <div className="space-y-6 p-6">
-                                    {/* Invoice Info */}
-                                    <div className="space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">No. Invoice</span>
-                                            <span className="font-semibold text-gray-900 dark:text-white">{pendingInvoice.invoice_code}</span>
-                                        </div>
-                                        {/* <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">Metode Pembayaran</span>
-                                            <div className="flex items-center gap-2">
-                                                <img
-                                                    src={getPaymentGroupIcon(pendingInvoice.payment_channel)}
-                                                    alt={pendingInvoice.payment_channel}
-                                                    className="h-5 w-5 object-contain"
-                                                />
-                                                <span className="font-semibold text-gray-900 dark:text-white">
-                                                    {transactionDetail?.payment_name || getPaymentChannelName(pendingInvoice.payment_channel)}
-                                                </span>
-                                            </div>
-                                        </div> */}
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">Total Pembayaran</span>
-                                            <span className="text-xl font-bold text-orange-600">
-                                                Rp {pendingInvoice.amount.toLocaleString('id-ID')}
-                                            </span>
-                                        </div>
-                                    </div>
+                                        <div className="space-y-2 pt-2">
+                                            {pendingInvoice.invoice_url && formatExpiryTime(pendingInvoice.expires_at).status !== 'expired' && (
+                                                <Button asChild className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold" size="lg">
+                                                    <a href={pendingInvoice.invoice_url}>
+                                                        {t('webinar.register.btnContinuePayment', 'Lanjutkan Pembayaran')}
+                                                    </a>
+                                                </Button>
+                                            )}
 
-                                    {(() => {
-                                        const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
-                                        const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
+                                            <div className="flex gap-2">
+                                                <Button onClick={() => window.location.reload()} variant="outline" className="flex-1" size="lg">
+                                                    {t('webinar.register.btnCheckStatus', 'Cek Status')}
+                                                </Button>
 
-                                        // Pesan expired
-                                        if (isExpired) {
-                                            return (
-                                                <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-                                                    <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-                                                        Waktu pembayaran telah habis. Jika Anda sudah membayar atau butuh bantuan, silakan hubungi
-                                                        admin melalui&nbsp;
-                                                        <a
-                                                            href="https://wa.me/6289528514480"
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="font-bold text-orange-600 underline"
-                                                        >
-                                                            WhatsApp Admin
-                                                        </a>
-                                                        .
-                                                    </p>
-                                                </div>
-                                            );
-                                        }
-
-                                        // Jika belum expired, tampilkan VA, QR, dan instruksi
-                                        return (
-                                            <>
-                                                {/* VA Number */}
-                                                {pendingInvoice.va_number && (
-                                                    <div className="space-y-3 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Nomor Virtual Account</p>
-                                                        <div className="flex items-center justify-between rounded-lg bg-white p-3 dark:bg-gray-700">
-                                                            <span className="font-mono text-lg font-bold text-gray-900 dark:text-white">
-                                                                {pendingInvoice.va_number}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => copyToClipboard(pendingInvoice.va_number!)}
-                                                                className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:cursor-pointer hover:bg-blue-700"
-                                                            >
-                                                                Salin
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* QR Code */}
-                                                {pendingInvoice.qr_code_url && (
-                                                    <div className="space-y-3 rounded-lg bg-purple-50 p-4 dark:bg-purple-900/20">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Kode QR Pembayaran</p>
-                                                        <div className="flex justify-center rounded-lg bg-white p-4 dark:bg-gray-700">
-                                                            <img
-                                                                src={pendingInvoice.qr_code_url}
-                                                                alt="QR Code"
-                                                                className="h-48 w-48 object-contain"
-                                                            />
-                                                        </div>
-                                                        <a
-                                                            href={pendingInvoice.qr_code_url}
-                                                            download
-                                                            className="block rounded-lg bg-purple-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-purple-700"
-                                                        >
-                                                            Download QR Code
-                                                        </a>
-                                                    </div>
-                                                )}
-
-                                                {/* Instructions */}
-                                                {transactionDetail?.instructions && transactionDetail.instructions.length > 0 ? (
-                                                    <div className="space-y-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Langkah Pembayaran</p>
-                                                        <div className="space-y-4">
-                                                            {transactionDetail.instructions.map((instruction, idx) => (
-                                                                <details
-                                                                    key={idx}
-                                                                    className="group rounded-lg border border-gray-200 dark:border-gray-600"
-                                                                    open={idx === 0}
-                                                                >
-                                                                    <summary className="flex cursor-pointer items-center justify-between bg-gray-100 px-4 py-3 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500">
-                                                                        <span className="font-semibold text-gray-900 dark:text-white">
-                                                                            {instruction.title}
-                                                                        </span>
-                                                                        <span className="text-gray-600 transition-transform group-open:rotate-180 dark:text-gray-300">
-                                                                            ▼
-                                                                        </span>
-                                                                    </summary>
-                                                                    <div className="space-y-3 bg-white px-4 py-4 dark:bg-gray-700">
-                                                                        <ol className="space-y-2">
-                                                                            {instruction.steps.map((step, stepIdx) => (
-                                                                                <li key={stepIdx} className="flex gap-3">
-                                                                                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-xs font-bold text-white">
-                                                                                        {stepIdx + 1}
-                                                                                    </span>
-                                                                                    <span className="flex-1 pt-0.5 text-sm text-gray-700 dark:text-gray-300">
-                                                                                        <div dangerouslySetInnerHTML={{ __html: step }} />
-                                                                                    </span>
-                                                                                </li>
-                                                                            ))}
-                                                                        </ol>
-                                                                    </div>
-                                                                </details>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : null}
-                                            </>
-                                        );
-                                    })()}
-
-                                    {/* Action Buttons for Pending Invoice */}
-                                    <div className="space-y-2 pt-2">
-                                        {pendingInvoice.invoice_url && formatExpiryTime(pendingInvoice.expires_at).status !== 'expired' && (
-                                            <Button asChild className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold shadow-md" size="lg">
-                                                <a href={pendingInvoice.invoice_url}>
-                                                    Lanjutkan Pembayaran
-                                                </a>
-                                            </Button>
-                                        )}
-
-                                        <div className="flex gap-2">
-                                            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1" size="lg">
-                                                Cek Status
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                                                size="lg"
-                                                disabled={cancellingInvoice}
-                                                onClick={async () => {
-                                                    if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
-                                                        setCancellingInvoice(true);
-                                                        try {
-                                                            await axios.post(route('invoice.cancel', pendingInvoice.id));
-                                                            toast.success('Pesanan berhasil dibatalkan.');
-                                                            window.location.reload();
-                                                        } catch (err: any) {
-                                                            toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
-                                                            setCancellingInvoice(false);
-                                                        }
-                                                    }
-                                                }}
-                                            >
-                                                {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : !showFreeForm ? (
-                            <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                        {isFree ? 'Detail Pendaftaran' : 'Ringkasan Pembayaran'}
-                                    </h2>
-                                </div>
-
-                                <div className="space-y-4 p-6">
-                                    {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
-                                    {((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && !isFree && (
-                                        <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-700">
-                                            <button
-                                                type="button"
-                                                onClick={() => setPaymentMode('full')}
-                                                disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
-                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'full' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'} ${activeInstallment && !activeInstallment.is_fully_paid ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                Bayar Lunas (Full)
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setPaymentMode('installment')}
-                                                className={`py-2 text-xs font-semibold rounded-lg transition-all ${paymentMode === 'installment' ? 'bg-white text-gray-900 shadow-xs dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'}`}
-                                            >
-                                                Cicilan ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {paymentMode === 'installment' && ((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && !isFree ? (
-                                        <InstallmentOptions
-                                            productType="webinar"
-                                            productId={webinar.id}
-                                            productPrice={webinar.price}
-                                            terms={installmentTerms}
-                                            activeInstallment={activeInstallment}
-                                            termsAccepted={termsAccepted}
-                                            onTermsAcceptedChange={setTermsAccepted}
-                                            onBeforePay={async () => {
-                                                if (!activeInstallment && !termsAccepted) {
-                                                    toast.error('Anda harus menyetujui syarat dan ketentuan!');
-                                                    return false;
-                                                }
-                                                return await ensureAuth();
-                                            }}
-                                        />
-                                    ) : (
-                                        <form onSubmit={handleCheckout} className="space-y-4">
-                                            {isFree ? (
-                                                <div className="rounded-lg bg-green-50 p-6 text-center dark:bg-green-900/20">
-                                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">WEBINAR GRATIS</p>
-                                                    <p className="mt-2 text-sm text-green-700 dark:text-green-300">
-                                                        Dapatkan akses dengan mengikuti persyaratan berikut
-                                                    </p>
-                                                    <ul className="mt-4 space-y-1 text-left text-sm text-green-700 dark:text-green-300">
-                                                        {webinar.requirement_1 && <li>• {webinar.requirement_1}</li>}
-                                                        {webinar.requirement_2 && <li>• {webinar.requirement_2}</li>}
-                                                        {webinar.requirement_3 && <li>• {webinar.requirement_3}</li>}
-                                                    </ul>
-                                                </div>
-                                            ) : (
-                                            <>
-                                                {/* Pilihan Jenis Kode */}
-                                                <div className="space-y-2">
-                                                    <Label className="text-sm font-medium">Jenis Kode</Label>
-                                                    <RadioGroup
-                                                        value={codeType}
-                                                        onValueChange={(val: 'voucher' | 'referral') => {
-                                                            setCodeType(val);
-                                                            setPromoCode('');
-                                                            setDiscountData(null);
-                                                            setReferralData(null);
-                                                            setPromoError('');
-                                                            setReferralError('');
-                                                            if (val === 'voucher') {
-                                                                setPointsChecked(false);
-                                                                setPointsToUse(0);
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
+                                                    size="lg"
+                                                    disabled={cancellingInvoice}
+                                                    onClick={async () => {
+                                                        if (confirm(t('webinar.register.confirmCancel', 'Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?'))) {
+                                                            setCancellingInvoice(true);
+                                                            try {
+                                                                await axios.post(route('invoice.cancel', pendingInvoice.id));
+                                                                toast.success(t('webinar.register.cancelSuccess', 'Pesanan berhasil dibatalkan.'));
+                                                                window.location.reload();
+                                                            } catch (err: any) {
+                                                                toast.error(err.response?.data?.message || t('webinar.register.cancelFailed', 'Gagal membatalkan pesanan.'));
+                                                                setCancellingInvoice(false);
                                                             }
-                                                        }}
-                                                        className="flex gap-4"
+                                                        }
+                                                    }}
+                                                >
+                                                    {cancellingInvoice ? t('webinar.register.cancelling', 'Membatalkan...') : t('webinar.register.btnCancelOrder', 'Batalkan Pesanan')}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+                            ) : !showFreeForm ? (
+                                <Card className="overflow-hidden border-2">
+                                    <div className="border-b bg-gray-50/80 p-6 dark:bg-gray-900/80">
+                                        <h2 className="text-xl font-bold">{isFree ? t('webinar.register.registrationDetailTitle', 'Detail Pendaftaran') : t('webinar.register.paymentDetailTitle', 'Detail Pembayaran')}</h2>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {isFree ? t('webinar.register.freeRequirements', 'Persyaratan pendaftaran gratis') : t('webinar.register.paymentSummary', 'Ringkasan pembayaran webinar')}
+                                        </p>
+                                    </div>
+
+                                    <form onSubmit={handleCheckout} className="p-6">
+                                        {isFree ? (
+                                            <div className="space-y-4 text-center">
+                                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                                                    <Gift className="h-8 w-8 text-white" />
+                                                </div>
+
+                                                <h3 className="text-lg font-bold text-green-600">{t('webinar.register.freeWebinarTitle', 'Webinar Gratis!')}</h3>
+                                                <p className="text-sm text-gray-600">
+                                                    {t('webinar.register.freeWebinarInstruction', 'Untuk mengikuti webinar gratis ini, silakan lengkapi persyaratan berikut:')}
+                                                </p>
+
+                                                <ul className="mt-4 space-y-1 text-left text-sm text-green-700 dark:text-green-300">
+                                                    {webinar.requirement_1 && <li>• {webinar.requirement_1}</li>}
+                                                    {webinar.requirement_2 && <li>• {webinar.requirement_2}</li>}
+                                                    {webinar.requirement_3 && <li>• {webinar.requirement_3}</li>}
+                                                </ul>
+
+                                                <Button
+                                                    className="mt-6 w-full"
+                                                    type="submit"
+                                                    size="lg"
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? t('webinar.register.processing', 'Memproses...') : t('webinar.register.btnUploadProof', 'Upload Bukti Follow')}
+                                                </Button>
+                                            </div>
+                                        ) : ((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) ? (
+                                            <Tabs
+                                                value={paymentTab}
+                                                onValueChange={(val) => {
+                                                    if (val === 'full' && activeInstallment && !activeInstallment.is_fully_paid) {
+                                                        toast.error(t('webinar.register.activeInstallmentFullDisabled', 'Anda memiliki cicilan aktif. Pembayaran penuh dinonaktifkan.'));
+                                                        return;
+                                                    }
+                                                    if (val === 'installment' && isAnyTermOverdue && !activeInstallment) {
+                                                toast.error(t('webinar.register.overdueInstallmentError', 'Batas waktu pembayaran cicilan telah terlewat.'));
+                                                return;
+                                            }
+                                            setPaymentTab(val as 'full' | 'installment');
+                                                }}
+                                                className="w-full space-y-4"
+                                            >
+                                                <TabsList className="grid w-full grid-cols-2 h-10">
+                                                    <TabsTrigger
+                                                        value="full"
+                                                        disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
+                                                        className="text-xs sm:text-sm"
                                                     >
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="voucher" id="code-voucher" />
-                                                            <Label htmlFor="code-voucher" className="cursor-pointer text-sm">Voucher</Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="referral" id="code-referral" />
-                                                            <Label htmlFor="code-referral" className="cursor-pointer text-sm">Referral</Label>
-                                                        </div>
-                                                    </RadioGroup>
-                                                </div>
+                                                        {t('webinar.register.tabFullPayment', 'Bayar Penuh')}
+                                                    </TabsTrigger>
+                                                    <TabsTrigger value="installment" disabled={isAnyTermOverdue && !activeInstallment} className="text-xs sm:text-sm">
+                                                        {t('webinar.register.tabInstallment', 'Cicilan')} ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
+                                                    </TabsTrigger>
+                                                </TabsList>
 
-                                                {/* Input Kode */}
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="promo-code" className="text-sm font-medium">
-                                                        {codeType === 'voucher' ? 'Kode Voucher / Promo' : 'Kode Referral'}
-                                                    </Label>
-                                                    <div className="relative">
-                                                        <Input
-                                                            id="promo-code"
-                                                            type="text"
-                                                            placeholder={codeType === 'voucher' ? 'Masukkan kode promo' : 'Masukkan kode referral'}
-                                                            value={promoCode}
-                                                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                                            className="pr-10"
-                                                        />
-                                                        {(promoLoading || referralLoading) && (
-                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
-                                                                <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-orange-600"></div>
-                                                            </div>
-                                                        )}
-                                                        {!(promoLoading || referralLoading) && promoCode && (
-                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
-                                                                {codeType === 'voucher' ? (
-                                                                    discountData?.valid ? (
-                                                                        <Check className="h-5 w-5 text-green-600" />
-                                                                    ) : promoError ? (
-                                                                        <X className="h-5 w-5 text-red-600" />
-                                                                    ) : null
-                                                                ) : (
-                                                                    referralData?.valid ? (
-                                                                        <Check className="h-5 w-5 text-green-600" />
-                                                                    ) : referralError ? (
-                                                                        <X className="h-5 w-5 text-red-600" />
-                                                                    ) : null
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {codeType === 'voucher' && promoError && (
-                                                        <p className="text-sm text-red-600">{promoError}</p>
-                                                    )}
-                                                    {codeType === 'voucher' && discountData?.valid && (
-                                                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                                                            <div className="flex items-center gap-2">
-                                                                <Check className="h-4 w-4 text-green-600" />
-                                                                <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                                                                    Promo "{discountData.discount_code.code}" diterapkan!
-                                                                </p>
-                                                            </div>
-                                                            <p className="mt-1 text-xs text-green-600 dark:text-green-300">
-                                                                {discountData.discount_code.name}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                    {codeType === 'referral' && referralError && (
-                                                        <p className="text-sm text-red-600">{referralError}</p>
-                                                    )}
-                                                    {codeType === 'referral' && referralData?.valid && (
-                                                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                                                            <div className="flex items-center gap-2">
-                                                                <Check className="h-4 w-4 text-green-600" />
-                                                                <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                                                                    Kode referral valid!
-                                                                </p>
-                                                            </div>
-                                                            <p className="mt-1 text-xs text-green-600 dark:text-green-300">
-                                                                Pembelian pertama Anda dirujuk oleh {referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Point Reward/Redeem Section */}
-                                                {isLoggedIn && userPoints > 0 && (
-                                                    <div className="space-y-4 rounded-lg border p-4">
+                                                {/* Tab Bayar Penuh */}
+                                                <TabsContent value="full" className="space-y-6 m-0">
+                                                    <div className="space-y-4">
                                                         <div className="flex items-center justify-between">
-                                                            <div className="space-y-0.5">
-                                                                <Label className="text-base font-semibold">Gunakan Reward Point</Label>
-                                                                <p className="text-muted-foreground text-xs">
-                                                                    Anda memiliki {userPoints.toLocaleString('id-ID')} poin (Rp {userPoints.toLocaleString('id-ID')})
-                                                                </p>
+                                                            <span className="font-medium">{t('webinar.register.webinarPrice', 'Harga Webinar')}</span>
+                                                            <div className="text-right">
+                                                                {webinar.strikethrough_price > 0 && (
+                                                                    <span className="text-sm text-gray-500 line-through">
+                                                                        Rp {webinar.strikethrough_price.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}
+                                                                    </span>
+                                                                )}
+                                                                <div className="font-semibold">Rp {webinar.price.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</div>
                                                             </div>
-                                                            <Switch
-                                                                checked={pointsChecked}
-                                                                disabled={codeType === 'voucher' && !!discountData?.valid}
-                                                                onCheckedChange={(checked) => {
-                                                                    setPointsChecked(checked);
-                                                                    if (checked) {
-                                                                        const autoPoints = Math.min(userPoints, maxPointsAllowed);
-                                                                        setPointsToUse(autoPoints);
-                                                                        setPointsError('');
-                                                                    } else {
-                                                                        setPointsToUse(0);
-                                                                        setPointsError('');
-                                                                    }
-                                                                }}
-                                                            />
                                                         </div>
 
-                                                        {pointsChecked && (
+                                                        {/* Promo / Referral Code Section */}
+                                                        <div className="space-y-4">
+                                                            {/* Jenis Kode */}
                                                             <div className="space-y-2">
-                                                                <Label htmlFor="points-input" className="text-sm">Jumlah poin yang digunakan</Label>
-                                                                <div className="flex items-center gap-2">
-                                                                    <Input
-                                                                        id="points-input"
-                                                                        type="number"
-                                                                        max={Math.min(userPoints, maxPointsAllowed)}
-                                                                        min={1}
-                                                                        value={pointsToUse || ''}
-                                                                        onChange={(e) => {
-                                                                            const val = parseInt(e.target.value) || 0;
-                                                                            if (val > userPoints) {
-                                                                                setPointsError('Poin melebihi saldo Anda.');
-                                                                            } else if (val > maxPointsAllowed) {
-                                                                                setPointsError(`Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`);
-                                                                            } else {
-                                                                                setPointsError('');
-                                                                            }
-                                                                            setPointsToUse(val);
-                                                                        }}
-                                                                    />
+                                                                <Label className="flex items-center gap-2 text-sm font-medium">
+                                                                    <Tag className="h-4 w-4" />
+                                                                    {t('webinar.register.codeType', 'Jenis Kode')}
+                                                                </Label>
+                                                                <RadioGroup
+                                                                    value={codeType}
+                                                                    onValueChange={(val: 'voucher' | 'referral') => {
+                                                                        setCodeType(val);
+                                                                        setPromoCode('');
+                                                                        setDiscountData(null);
+                                                                        setReferralData(null);
+                                                                        setPromoError('');
+                                                                        setReferralError('');
+                                                                    }}
+                                                                    className="flex gap-4"
+                                                                >
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <RadioGroupItem value="voucher" id="web-code-voucher" />
+                                                                        <Label htmlFor="web-code-voucher" className="cursor-pointer text-sm">{t('webinar.register.voucher', 'Voucher')}</Label>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <RadioGroupItem value="referral" id="web-code-referral" />
+                                                                        <Label htmlFor="web-code-referral" className="cursor-pointer text-sm">{t('webinar.register.referral', 'Referral')}</Label>
+                                                                    </div>
+                                                                </RadioGroup>
+                                                            </div>
+
+                                                            {/* Input Kode */}
+                                                            <div className="space-y-2">
+                                                                <Label htmlFor="promoCode" className="text-sm font-medium">
+                                                                    {codeType === 'voucher' ? t('webinar.register.voucherCode', 'Kode Voucher / Promo') : t('webinar.register.referralCode', 'Kode Referral')}
+                                                                </Label>
+                                                                <div className="flex gap-2">
+                                                                    <div className="relative flex-1">
+                                                                        <Input
+                                                                            id="promoCode"
+                                                                            placeholder={codeType === 'voucher' ? t('webinar.register.enterVoucherCode', 'Masukkan kode promo') : t('webinar.register.enterReferralCode', 'Masukkan kode referral')}
+                                                                            value={promoCode}
+                                                                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                                            className="flex-1"
+                                                                        />
+                                                                        {(promoLoading || referralLoading) && (
+                                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                                                <LoaderCircle className="h-4 w-4 animate-spin text-gray-400" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                     <Button
                                                                         type="button"
                                                                         variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => {
-                                                                            setPointsToUse(Math.min(userPoints, maxPointsAllowed));
-                                                                            setPointsError('');
+                                                                        size="icon"
+                                                                        disabled={promoLoading || referralLoading || !promoCode.trim()}
+                                                                        onClick={async () => {
+                                                                            if (!promoCode.trim()) {
+                                                                                toast.error(t('webinar.register.enterCodeFirst', {
+                                                                                    type: codeType === 'voucher' ? t('webinar.register.voucher', 'promo') : t('webinar.register.referral', 'referral'),
+                                                                                    defaultValue: `Masukkan kode ${codeType === 'voucher' ? 'promo' : 'referral'} terlebih dahulu`
+                                                                                }));
+                                                                                return;
+                                                                            }
+                                                                            if (codeType === 'voucher') await validatePromoCode();
+                                                                            else await validateReferralCode();
                                                                         }}
                                                                     >
-                                                                        Maksimal
+                                                                        <RefreshCw className="h-4 w-4" />
                                                                     </Button>
                                                                 </div>
-                                                                {pointsError && <p className="text-xs text-red-600">{pointsError}</p>}
-                                                                {codeType === 'voucher' && !!discountData?.valid && (
-                                                                    <p className="text-xs text-amber-600">Poin tidak dapat digunakan bersamaan dengan kode voucher.</p>
+                                                                {/* Voucher feedback */}
+                                                                {codeType === 'voucher' && promoError && <p className="mt-1 text-sm text-red-600">{promoError}</p>}
+                                                                {codeType === 'voucher' && discountData?.valid && (
+                                                                    <p className="mt-1 text-sm text-green-600">
+                                                                        {t('webinar.register.promoAppliedSuccess', { code: discountData.discount_code.code, defaultValue: `Kode promo "${discountData.discount_code.code}" berhasil diterapkan!` })}
+                                                                    </p>
+                                                                )}
+                                                                {/* Referral feedback */}
+                                                                {codeType === 'referral' && referralError && <p className="mt-1 text-sm text-red-600">{referralError}</p>}
+                                                                {codeType === 'referral' && referralData?.valid && (
+                                                                    <p className="mt-1 text-sm text-green-600">
+                                                                        {t('webinar.register.referralSuccess', 'Kode referral valid!')} {t('webinar.register.referralAppliedSuccess', { name: referralData.referrer?.name, defaultValue: `Dirujuk oleh ${referralData.referrer?.name}.` })}
+                                                                    </p>
                                                                 )}
                                                             </div>
+                                                        </div>
+
+                                                        {discountData?.valid && (
+                                                            <div className="flex items-center justify-between text-green-600">
+                                                                <span>{t('webinar.register.discountLabel', { code: discountData.discount_code.code, defaultValue: `Diskon (${discountData.discount_code.code})` })}</span>
+                                                                <span>-Rp {discountData.discount_amount.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</span>
+                                                            </div>
                                                         )}
-                                                    </div>
-                                                )}
 
-                                                <Separator />
-
-                                                <div className="space-y-3">
-                                                    {webinar.strikethrough_price > 0 && (
-                                                        <>
-                                                            <div className="flex items-center justify-between text-sm">
-                                                                <span className="text-gray-600 dark:text-gray-400">Harga Asli</span>
-                                                                <span className="font-medium text-gray-500 line-through dark:text-gray-400">
-                                                                    Rp {webinar.strikethrough_price.toLocaleString('id-ID')}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center justify-between text-sm">
-                                                                <span className="text-gray-600 dark:text-gray-400">Diskon</span>
-                                                                <span className="font-semibold text-red-600">
-                                                                    -Rp {(webinar.strikethrough_price - webinar.price).toLocaleString('id-ID')}
-                                                                </span>
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-gray-600 dark:text-gray-400">Harga Webinar</span>
-                                                        <span className="font-semibold text-gray-900 dark:text-white">
-                                                            Rp {webinar.price.toLocaleString('id-ID')}
-                                                        </span>
-                                                    </div>
-
-                                                    {discountData?.valid && codeType === 'voucher' && (
-                                                        <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-gray-600 dark:text-gray-400">
-                                                                Diskon Promo ({discountData.discount_code.code})
-                                                            </span>
-                                                            <span className="font-semibold text-green-600">
-                                                                -Rp {discountData.discount_amount.toLocaleString('id-ID')}
-                                                            </span>
+                                                        <div className="flex items-center justify-between text-gray-600">
+                                                            <span>{t('webinar.register.adminFee', 'Biaya Admin')}</span>
+                                                            <span>Rp {adminFee.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</span>
                                                         </div>
-                                                    )}
 
-                                                    {/* Points Discount */}
-                                                    {pointsChecked && pointsToUse > 0 && !pointsError && (
-                                                        <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-gray-600 dark:text-gray-400">Potongan Poin</span>
-                                                            <span className="font-semibold text-green-600">
-                                                                -Rp {pointsToUse.toLocaleString('id-ID')}
-                                                            </span>
+                                                        <Separator />
+
+                                                        <div className="flex items-center justify-between text-lg font-bold">
+                                                            <span>{t('webinar.register.total', 'Total')}</span>
+                                                            <span className="text-orange-600">Rp {totalPrice.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</span>
                                                         </div>
-                                                    )}
-
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-gray-600 dark:text-gray-400">Biaya Transaksi</span>
-                                                        <span className="font-medium text-gray-900 dark:text-white">
-                                                            Rp {adminFee.toLocaleString('id-ID')}
-                                                        </span>
                                                     </div>
 
-                                                    <Separator />
+                                                    <div className="flex items-start gap-3">
+                                                        <Checkbox
+                                                            id="terms"
+                                                            checked={termsAccepted}
+                                                            onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                                                        />
+                                                        <Label htmlFor="terms" className="text-sm leading-relaxed">
+                                                            {t('webinar.register.agreeTerms', 'Saya menyetujui')}{' '}
+                                                            <Link href="/terms" className="font-medium text-blue-600 hover:underline">
+                                                                {t('webinar.register.termsAndConditions', 'syarat dan ketentuan')}
+                                                            </Link>{' '}
+                                                            {t('webinar.register.termsNoticeSuffix', 'yang berlaku')}
+                                                        </Label>
+                                                    </div>
 
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
-                                                        <span className="text-2xl font-bold text-orange-600">
-                                                            Rp {totalPrice.toLocaleString('id-ID')}
-                                                        </span>
+                                                    <Button
+                                                        className="w-full"
+                                                        type="submit"
+                                                        size="lg"
+                                                        disabled={!termsAccepted || loading}
+                                                    >
+                                                        {loading ? t('webinar.register.processing', 'Memproses...') : t('webinar.register.btnPayNow', 'Lanjutkan Pembayaran')}
+                                                    </Button>
+                                                </TabsContent>
+
+                                                {/* Tab Cicilan */}
+                                                <TabsContent value="installment" className="space-y-4 m-0">
+                                                    <InstallmentOptions
+                                                        productType="webinar"
+                                                        productId={webinar.id}
+                                                        productPrice={webinar.price}
+                                                        terms={installmentTerms}
+                                                        activeInstallment={activeInstallment}
+                                                        termsAccepted={termsAccepted}
+                                                        onTermsAcceptedChange={setTermsAccepted}
+                                                        onBeforePay={async () => {
+                                                            if (!activeInstallment && !termsAccepted) {
+                                                                toast.error(t('webinar.register.errors.termsRequired', 'Anda harus menyetujui syarat dan ketentuan!'));
+                                                                return false;
+                                                            }
+                                                            return await ensureAuth();
+                                                        }}
+                                                    />
+                                                </TabsContent>
+                                            </Tabs>
+                                        ) : (
+                                            <>
+                                                <div className="space-y-6">
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-medium">{t('webinar.register.webinarPrice', 'Harga Webinar')}</span>
+                                                            <div className="text-right">
+                                                                {webinar.strikethrough_price > 0 && (
+                                                                    <span className="text-sm text-gray-500 line-through">
+                                                                        Rp {webinar.strikethrough_price.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}
+                                                                    </span>
+                                                                )}
+                                                                <div className="font-semibold">Rp {webinar.price.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Promo / Referral Code Section */}
+                                                        <div className="space-y-4">
+                                                            {/* Jenis Kode */}
+                                                            <div className="space-y-2">
+                                                                <Label className="flex items-center gap-2 text-sm font-medium">
+                                                                    <Tag className="h-4 w-4" />
+                                                                    {t('webinar.register.codeType', 'Jenis Kode')}
+                                                                </Label>
+                                                                <RadioGroup
+                                                                    value={codeType}
+                                                                    onValueChange={(val: 'voucher' | 'referral') => {
+                                                                        setCodeType(val);
+                                                                        setPromoCode('');
+                                                                        setDiscountData(null);
+                                                                        setReferralData(null);
+                                                                        setPromoError('');
+                                                                        setReferralError('');
+                                                                    }}
+                                                                    className="flex gap-4"
+                                                                >
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <RadioGroupItem value="voucher" id="web-code-voucher" />
+                                                                        <Label htmlFor="web-code-voucher" className="cursor-pointer text-sm">{t('webinar.register.voucher', 'Voucher')}</Label>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <RadioGroupItem value="referral" id="web-code-referral" />
+                                                                        <Label htmlFor="web-code-referral" className="cursor-pointer text-sm">{t('webinar.register.referral', 'Referral')}</Label>
+                                                                    </div>
+                                                                </RadioGroup>
+                                                            </div>
+
+                                                            {/* Input Kode */}
+                                                            <div className="space-y-2">
+                                                                <Label htmlFor="promoCode" className="text-sm font-medium">
+                                                                    {codeType === 'voucher' ? t('webinar.register.voucherCode', 'Kode Voucher / Promo') : t('webinar.register.referralCode', 'Kode Referral')}
+                                                                </Label>
+                                                                <div className="flex gap-2">
+                                                                    <div className="relative flex-1">
+                                                                        <Input
+                                                                            id="promoCode"
+                                                                            placeholder={codeType === 'voucher' ? t('webinar.register.enterVoucherCode', 'Masukkan kode promo') : t('webinar.register.enterReferralCode', 'Masukkan kode referral')}
+                                                                            value={promoCode}
+                                                                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                                            className="flex-1"
+                                                                        />
+                                                                        {(promoLoading || referralLoading) && (
+                                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                                                <LoaderCircle className="h-4 w-4 animate-spin text-gray-400" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="icon"
+                                                                        disabled={promoLoading || referralLoading || !promoCode.trim()}
+                                                                        onClick={async () => {
+                                                                            if (!promoCode.trim()) {
+                                                                                toast.error(t('webinar.register.enterCodeFirst', {
+                                                                                    type: codeType === 'voucher' ? t('webinar.register.voucher', 'promo') : t('webinar.register.referral', 'referral'),
+                                                                                    defaultValue: `Masukkan kode ${codeType === 'voucher' ? 'promo' : 'referral'} terlebih dahulu`
+                                                                                }));
+                                                                                return;
+                                                                            }
+                                                                            if (codeType === 'voucher') await validatePromoCode();
+                                                                            else await validateReferralCode();
+                                                                        }}
+                                                                    >
+                                                                        <RefreshCw className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                                {/* Voucher feedback */}
+                                                                {codeType === 'voucher' && promoError && <p className="mt-1 text-sm text-red-600">{promoError}</p>}
+                                                                {codeType === 'voucher' && discountData?.valid && (
+                                                                    <p className="mt-1 text-sm text-green-600">
+                                                                        {t('webinar.register.promoAppliedSuccess', { code: discountData.discount_code.code, defaultValue: `Kode promo "${discountData.discount_code.code}" berhasil diterapkan!` })}
+                                                                    </p>
+                                                                )}
+                                                                {/* Referral feedback */}
+                                                                {codeType === 'referral' && referralError && <p className="mt-1 text-sm text-red-600">{referralError}</p>}
+                                                                {codeType === 'referral' && referralData?.valid && (
+                                                                    <p className="mt-1 text-sm text-green-600">
+                                                                        {t('webinar.register.referralSuccess', 'Kode referral valid!')} {t('webinar.register.referralAppliedSuccess', { name: referralData.referrer?.name, defaultValue: `Dirujuk oleh ${referralData.referrer?.name}.` })}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {discountData?.valid && (
+                                                            <div className="flex items-center justify-between text-green-600">
+                                                                <span>{t('webinar.register.discountLabel', { code: discountData.discount_code.code, defaultValue: `Diskon (${discountData.discount_code.code})` })}</span>
+                                                                <span>-Rp {discountData.discount_amount.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</span>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex items-center justify-between text-gray-600">
+                                                            <span>{t('webinar.register.adminFee', 'Biaya Admin')}</span>
+                                                            <span>Rp {adminFee.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</span>
+                                                        </div>
+
+                                                        <Separator />
+
+                                                        <div className="flex items-center justify-between text-lg font-bold">
+                                                            <span>{t('webinar.register.total', 'Total')}</span>
+                                                            <span className="text-orange-600">Rp {totalPrice.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </>
-                                        )}
 
-                                        {!isFree && (
-                                            <>
-                                                <Separator />
-                                                <div className="flex items-start gap-3">
+                                                <div className="mt-6 flex items-start gap-3">
                                                     <Checkbox
                                                         id="terms"
                                                         checked={termsAccepted}
                                                         onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                                                        className="mt-1"
                                                     />
-                                                    <Label htmlFor="terms" className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                                                        Saya menyetujui{' '}
-                                                        <a
-                                                            href="/terms-and-conditions"
-                                                            target="_blank"
-                                                            className="font-medium text-orange-600 hover:underline"
-                                                        >
-                                                            syarat dan ketentuan
-                                                        </a>{' '}
-                                                        yang berlaku
+                                                    <Label htmlFor="terms" className="text-sm leading-relaxed">
+                                                        {t('webinar.register.agreeTerms', 'Saya menyetujui')}{' '}
+                                                        <Link href="/terms" className="font-medium text-blue-600 hover:underline">
+                                                            {t('webinar.register.termsAndConditions', 'syarat dan ketentuan')}
+                                                        </Link>{' '}
+                                                        {t('webinar.register.termsNoticeSuffix', 'yang berlaku')}
                                                     </Label>
                                                 </div>
+
+                                                <Button
+                                                    className="mt-6 w-full"
+                                                    type="submit"
+                                                    size="lg"
+                                                    disabled={!termsAccepted || loading}
+                                                >
+                                                    {loading ? t('webinar.register.processing', 'Memproses...') : t('webinar.register.btnPayNow', 'Lanjutkan Pembayaran')}
+                                                </Button>
                                             </>
                                         )}
-
-                                        <Button className="w-full" type="submit" disabled={(isFree ? false : !termsAccepted) || loading || !!activeInstallment} size="lg">
-                                            {loading ? (
-                                                <span className="flex items-center gap-2">
-                                                    <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-                                                    Memproses...
-                                                </span>
-                                            ) : isFree ? (
-                                                'Upload Bukti Follow'
-                                            ) : (
-                                                'Bayar Sekarang'
-                                            )}
-                                        </Button>
-
-                                        <p className="text-center text-xs text-gray-500 dark:text-gray-400">Pembayaran aman dan terenkripsi 🔒</p>
                                     </form>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                            <form onSubmit={handleFreeCheckout}>
-                                <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                    <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Upload Bukti Follow & Tag</h2>
+                                </Card>
+                            ) : (
+                                <Card className="overflow-hidden border-2">
+                                    <div className="border-b bg-gray-50/80 p-6 dark:bg-gray-900/80">
+                                        <h2 className="text-xl font-bold">{t('webinar.register.uploadProofTitle', 'Upload Bukti Follow')}</h2>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('webinar.register.uploadProofDesc', 'Upload bukti bahwa Anda telah memenuhi persyaratan')}</p>
                                     </div>
 
-                                    <div className="space-y-4 p-6">
-                                        {[1, 2, 3].map((index) => {
-                                            const requirementKey = `requirement_${index}`;
-                                            const proofKey = `${requirementKey}_proof` as const;
-                                            const requirementText = webinar[requirementKey as keyof Webinar] as string | null | undefined;
+                                    <form onSubmit={handleFreeCheckout} className="p-6">
+                                        <div className="space-y-4">
+                                            {[1, 2, 3].map((index) => {
+                                                const requirementKey = `requirement_${index}`;
+                                                const proofKey = `${requirementKey}_proof` as const;
+                                                const requirementText = webinar[requirementKey as keyof Webinar] as string | null | undefined;
 
-                                            return (
-                                                <div key={index}>
-                                                    <Label htmlFor={proofKey}>
-                                                        Bukti Persyaratan {index}: {requirementText || `Persyaratan ${index}`}
-                                                    </Label>
-                                                    <Input
-                                                        id={proofKey}
-                                                        data-field={proofKey}
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => handleFileChange(proofKey, e.target.files?.[0] || null)}
-                                                        className={fileErrors[proofKey] ? 'border-red-500' : ''}
-                                                        required
-                                                    />
-                                                    <p className="mt-1 text-xs text-gray-500">{requirementText} (Maks. 2MB)</p>
-                                                </div>
-                                            );
-                                        })}
+                                                return (
+                                                    <div key={index}>
+                                                        <Label htmlFor={proofKey}>
+                                                            {t('webinar.register.proofLabel', { index, requirement: requirementText || `Persyaratan ${index}`, defaultValue: `Bukti Persyaratan ${index}: ${requirementText || `Persyaratan ${index}`}` })}
+                                                        </Label>
+                                                        <Input
+                                                            id={proofKey}
+                                                            data-field={proofKey}
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => handleFileChange(proofKey, e.target.files?.[0] || null)}
+                                                            className={fileErrors[proofKey] ? 'border-red-500' : ''}
+                                                            required
+                                                        />
+                                                        <p className="mt-1 text-xs text-gray-500">{t('webinar.register.proofScreenshotNotice', { requirement: requirementText, defaultValue: `${requirementText} (Maks. 2MB)` })}</p>
+                                                    </div>
+                                                );
+                                            })}
 
-                                        <div className="flex gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    setShowFreeForm(false);
-                                                    setFileErrors({
-                                                        requirement_1_proof: false,
-                                                        requirement_2_proof: false,
-                                                        requirement_3_proof: false,
-                                                    });
-                                                    setFreeFormData({
-                                                        requirement_1_proof: null,
-                                                        requirement_2_proof: null,
-                                                        requirement_3_proof: null,
-                                                    });
-                                                }}
-                                                className="flex-1"
-                                            >
-                                                Kembali
-                                            </Button>
-                                            <Button
-                                                type="submit"
-                                                disabled={
-                                                    loading ||
-                                                    !freeFormData.requirement_1_proof ||
-                                                    !freeFormData.requirement_2_proof ||
-                                                    !freeFormData.requirement_3_proof ||
-                                                    Object.values(fileErrors).some((e) => e)
-                                                }
-                                                className="flex-1"
-                                            >
-                                                {loading ? 'Memproses...' : 'Dapatkan Akses Gratis'}
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setShowFreeForm(false);
+                                                        setFileErrors({
+                                                            requirement_1_proof: false,
+                                                            requirement_2_proof: false,
+                                                            requirement_3_proof: false,
+                                                        });
+                                                        setFreeFormData({
+                                                            requirement_1_proof: null,
+                                                            requirement_2_proof: null,
+                                                            requirement_3_proof: null,
+                                                        });
+                                                    }}
+                                                    className="flex-1"
+                                                >
+                                                    {t('webinar.register.btnBack', 'Kembali')}
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        loading ||
+                                                        !freeFormData.requirement_1_proof ||
+                                                        !freeFormData.requirement_2_proof ||
+                                                        !freeFormData.requirement_3_proof ||
+                                                        Object.values(fileErrors).some((e) => e)
+                                                    }
+                                                    className="flex-1"
+                                                >
+                                                    {loading ? t('webinar.register.processing', 'Memproses...') : t('webinar.register.btnGetFreeAccess', 'Dapatkan Akses Gratis')}
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
-                    </div>
+                                    </form>
+                                </Card>
+                            )}
+                        </div>
+                    </motion.div>
                 </div>
             </section>
+
             <Toaster position="top-center" richColors />
-        </div>
+        </UserLayout>
     );
 }

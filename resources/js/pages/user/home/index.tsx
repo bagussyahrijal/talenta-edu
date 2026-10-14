@@ -8,6 +8,7 @@ import FaqSection from './faq-section';
 import LatestProductsSection from './latest-products-section';
 import MentorSection from './mentor-section';
 import TestimonySection from './testimony-section';
+import { useTranslation } from 'react-i18next';
 
 interface Tool {
     id: string;
@@ -77,6 +78,8 @@ interface HomeProps {
 }
 
 export default function Home({ latestProducts, myProductIds, activePromotion, referralInfo }: HomeProps) {
+    const { t } = useTranslation(['home', 'common']);
+
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const refFromUrl = urlParams.get('ref');
@@ -90,7 +93,7 @@ export default function Home({ latestProducts, myProductIds, activePromotion, re
 
     return (
         <UserLayout>
-            <Head title="Beranda" />
+            <Head title={t('common:nav.home', 'Beranda')} />
 
             {activePromotion && <PromotionPopup promotion={activePromotion} suppressDuration={3} />}
 

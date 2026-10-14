@@ -1,7 +1,10 @@
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, Crown, FileText, Sparkles, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { BadgeCheck, BookOpen, Calendar, Crown, FileText, Home, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CourseItem {
     course: { title: string; slug: string; thumbnail: string };
@@ -30,126 +33,198 @@ interface InvoiceProps {
 }
 
 export default function CheckoutSuccess({ invoice }: InvoiceProps) {
+    const { t } = useTranslation('user');
     const courseItems = invoice.course_items ?? [];
     const bootcampItems = invoice.bootcamp_items ?? [];
     const webinarItems = invoice.webinar_items ?? [];
     const certificationProgramItems = invoice.certification_program_items ?? [];
 
     let title = '';
+    let subtitle = '';
     let link = '';
     let label = '';
-    let subtitle = '';
+    let thumbnail = '';
+    let icon = <Crown className="h-6 w-6" />;
 
     if (courseItems.length > 0) {
         title = courseItems[0].course.title;
+        subtitle = t('checkoutSuccess.onlineCourse');
         link = `/profile/my-courses/${courseItems[0].course.slug}`;
-        label = 'Akses Kelas Sekarang';
-        subtitle = 'Kelas';
+        label = t('checkoutSuccess.startLearning');
+        thumbnail = courseItems[0].course.thumbnail;
+        icon = <BookOpen className="h-6 w-6" />;
     } else if (bootcampItems.length > 0) {
         title = bootcampItems[0].bootcamp.title;
+        subtitle = t('checkoutSuccess.bootcamp');
         link = `/profile/my-bootcamps/${bootcampItems[0].bootcamp.slug}`;
-        label = 'Akses Bootcamp Sekarang';
-        subtitle = 'Bootcamp';
+        label = t('checkoutSuccess.accessBootcamp');
+        thumbnail = bootcampItems[0].bootcamp.thumbnail;
+        icon = <Sparkles className="h-6 w-6" />;
     } else if (webinarItems.length > 0) {
         title = webinarItems[0].webinar.title;
+        subtitle = t('checkoutSuccess.webinar');
         link = `/profile/my-webinars/${webinarItems[0].webinar.slug}`;
-        label = 'Akses Webinar Sekarang';
-        subtitle = 'Webinar';
+        label = t('checkoutSuccess.accessWebinar');
+        thumbnail = webinarItems[0].webinar.thumbnail;
+        icon = <Calendar className="h-6 w-6" />;
     } else if (certificationProgramItems.length > 0) {
-        title = `Checkout Sertifikasi Program "${certificationProgramItems[0].certification_program.title}" Berhasil!`;
+        title = t('checkoutSuccess.certificationTitle', { title: certificationProgramItems[0].certification_program.title });
+        subtitle = t('checkoutSuccess.certificationProgram', 'Sertifikasi');
         link = `/profile/my-certification-programs/${certificationProgramItems[0].certification_program.slug}`;
-        label = 'Akses Sertifikasi';
-        subtitle = 'Sertifikasi Program';
+        label = t('checkoutSuccess.accessCertification');
+        thumbnail = certificationProgramItems[0].certification_program.thumbnail;
+        icon = <Home className="h-6 w-6" />;
     } else {
-        title = 'Pembelian Anda';
+        title = t('checkoutSuccess.purchaseSuccessful');
+        subtitle = t('checkoutSuccess.thankYou');
         link = '/profile';
-        label = 'Lihat Profil';
-        subtitle = 'Produk';
+        label = t('checkoutSuccess.viewProfile');
+        icon = <Crown className="h-6 w-6" />;
     }
 
     return (
         <UserLayout>
-            <Head title="Checkout Berhasil" />
-            <section className="relative w-full min-h-screen  dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4 py-16 overflow-hidden">
-                
+            <Head title={t('checkoutSuccess.paymentSuccess')} />
 
-                <div className="relative mx-auto max-w-4xl">
+            {/* Hero Section with Gradient Background */}
+            <section className="relative overflow-hidden bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 px-4 py-20">
+                <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+                <div className="absolute left-0 top-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-400/30 blur-3xl" />
+                <div className="absolute bottom-0 right-0 h-96 w-96 translate-x-1/2 translate-y-1/2 rounded-full bg-teal-400/30 blur-3xl" />
+
+                <div className="relative mx-auto max-w-4xl text-center">
                     {/* Success Icon with Animation */}
-                    <div className="flex justify-center mb-8">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-emerald-400/20 dark:bg-emerald-500/20 rounded-full blur-2xl animate-pulse"></div>
-                            <div className="relative bg-gradient-to-br from-emerald-400 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700 rounded-full p-6 shadow-2xl shadow-emerald-500/50">
-                                <CheckCircle2 className="w-20 h-20 text-white animate-bounce" strokeWidth={2.5} />
-                            </div>
-                        </div>
-                    </div>
+                    <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: 'spring', duration: 0.8, delay: 0.2 }}
+                        className="mx-auto mb-8 flex h-32 w-32 items-center justify-center rounded-full bg-white shadow-2xl"
+                    >
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
+                        >
+                            <BadgeCheck className="h-20 w-20 text-green-600" />
+                        </motion.div>
+                    </motion.div>
 
                     {/* Success Message */}
-                    <div className="text-center mb-8 space-y-4">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-4">
-                            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <span className="text-sm font-semibold  text-emerald-700 dark:text-emerald-300">Pembayaran Berhasil</span>
-                        </div>
-                        
-                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold font-literata text-gray-900 dark:text-white mb-4">
-                            Selamat! 🎉
-                        </h1>
-                        
-                        <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 font-medium">
-                            Anda berhasil membeli {subtitle}
-                        </p>
-                        
-                        <div className=" dark:bg-gray-800 p-6  dark:border-gray-700 max-w-2xl mx-auto">
-                            <p className="text-2xl sm:text-3xl underline font-bold text-gray-900 dark:text-white">
-                                "{title}"
-                            </p>
-                        </div>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/20 px-6 py-2 backdrop-blur-sm"
+                    >
+                        <Sparkles className="h-5 w-5 text-white" />
+                        <span className="font-semibold text-white">{t('checkoutSuccess.paymentSuccess')}</span>
+                    </motion.div>
 
-                    {/* Info Box */}
-                    <div className=" rounded-2xl p-6 sm:p-8 mb-8 border border-blue-200 dark:border-blue-800">
-                        <p className="text-center text-gray-700 dark:text-gray-300 text-base sm:text-lg leading-relaxed">
-                            Terima kasih telah menyelesaikan pembayaran! 🙏
-                            <br />
-                            <span className="font-semibold text-gray-900 dark:text-white">Invoice sudah dikirimkan ke nomor WhatsApp Anda.</span>
-                            <br />
-                            Klik tombol di bawah untuk mulai mengakses konten Anda.
-                        </p>
-                    </div>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="mb-4 text-4xl font-bold text-white sm:text-5xl lg:text-6xl"
+                    >
+                        {t('checkoutSuccess.congratulations')}
+                    </motion.h1>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <Button 
-                            size="lg" 
-                            className=" shadow-lg  transition-all duration-300 text-lg px-8 py-6 rounded-xl font-semibold group w-full sm:w-auto"
-                            asChild
-                        >
-                            <Link href={link}>
-                                <Crown className="w-5 h-5" />
-                                {label}
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </Link>
-                        </Button>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="mb-2 text-xl text-green-50"
+                    >
+                        {t('checkoutSuccess.transactionProcessed')}
+                    </motion.p>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        className="text-lg text-green-100"
+                    >
+                        {t('checkoutSuccess.invoiceCanBeDownloaded')}
+                    </motion.p>
+                </div>
+            </section>
+
+            {/* Content Section */}
+            <section className="mx-auto my-12 w-full max-w-5xl px-4">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {/* Product Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7 }}
+                        className="lg:col-span-2"
+                    >
+                        <Card className="overflow-hidden border-2">
+                            <div className="border-b bg-gradient-to-r from-green-50 to-emerald-50 p-6 dark:from-green-950/20 dark:to-emerald-950/20">
+                                <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                    {icon}
+                                    {subtitle}
+                                </div>
+                                <h2 className="text-2xl font-bold">{title}</h2>
+                            </div>
+
+                            {thumbnail && (
+                                <div className=" pb-4 px-2 ">
+                                    <img 
+                                    src={thumbnail.startsWith('http') ? thumbnail : `/storage/${thumbnail}`}  
+                                    alt={title} 
+                                    className="h-64 w-full object-cover rounded-2xl" />
+                                </div>
+                            )}
+
+                            
+                        </Card>
+                    </motion.div>
+
+                    {/* Action Cards */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                        className="space-y-4 lg:col-span-1"
+                    >
+                        {/* Primary Action */}
+                        <Card className="overflow-hidden border-2 border-green-500/20">
+                            <div className=" p-6 dark:from-green-950/20 dark:to-emerald-950/20">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                                    {icon}
+                                </div>
+                                <h3 className="mb-2 text-lg font-bold">{t('checkoutSuccess.accessNow')}</h3>
+                                <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                                    {t('checkoutSuccess.startLearningDesc')}
+                                </p>
+                                <Button asChild size="lg" className="w-full  hover:scale-105 transition-transform">
+                                    <Link href={link}>{label}</Link>
+                                </Button>
+                            </div>
+                        </Card>
+
+                        {/* Download Invoice */}
+                        <Card className="overflow-hidden">
+                            <div className="p-6">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                                    <FileText className="h-6 w-6 text-white" />
+                                </div>
+                                <h3 className="mb-2 text-lg font-bold">{t('checkoutSuccess.downloadInvoiceTitle')}</h3>
+                                <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                                    {t('checkoutSuccess.saveReceiptDesc')}
+                                </p>
+                                <Button asChild variant="outline" size="lg" className="w-full border-2">
+                                    <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        {t('checkoutSuccess.downloadInvoice')}
+                                    </a>
+                                </Button>
+                            </div>
+                        </Card>
+
                         
-                        <Button 
-                            variant="outline" 
-                            size="lg"
-                            className="border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white shadow-md hover:shadow-lg transition-all duration-300 text-lg px-8 py-6 rounded-xl font-semibold w-full sm:w-auto"
-                            asChild
-                        >
-                            <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
-                                <FileText className="w-5 h-5" />
-                                Unduh Invoice
-                            </a>
-                        </Button>
-                    </div>
-
-                    {/* Additional Info */}
-                    <div className="mt-12 text-center">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Butuh bantuan? <a href="/contact" className="text-primary dark:text-emerald-400 hover:underline font-semibold">Hubungi Support</a>
-                        </p>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
         </UserLayout>

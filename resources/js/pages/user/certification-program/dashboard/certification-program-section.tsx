@@ -1,15 +1,25 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Magnetic } from '@/components/ui/magnetic';
 import { Link } from '@inertiajs/react';
-import { Calendar, Search, Users, GraduationCap } from 'lucide-react';
-import { useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
+import { Calendar, Clock, GalleryVerticalEnd, GraduationCap } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Category = {
     id: string;
     name: string;
 };
+
+interface Mentor {
+    id?: string;
+    name: string;
+    bio?: string;
+    avatar?: string | null;
+}
 
 interface Program {
     id: string;
@@ -24,9 +34,7 @@ interface Program {
     thumbnail?: string | null;
     registration_deadline?: string;
     socialization_registration_deadline?: string;
-    mentors?: Array<{
-        name: string;
-    }>;
+    mentors?: Mentor[];
 }
 
 interface MyProgramIds {
@@ -41,6 +49,8 @@ interface CertificationProgramSectionProps {
 }
 
 export default function CertificationProgramSection({ categories, programs, myProgramIds, approvedScholarshipProgramIds = [] }: CertificationProgramSectionProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(6);
@@ -58,7 +68,6 @@ export default function CertificationProgramSection({ categories, programs, myPr
     const handleMouseLeave = () => {
         isDragging.current = false;
     };
-
     const handleMouseUp = () => {
         isDragging.current = false;
     };
@@ -92,174 +101,232 @@ export default function CertificationProgramSection({ categories, programs, myPr
     };
 
     return (
-        <section className="mx-auto w-full max-w-7xl px-4 py-12" id="certification-programs">
-            <div className="mb-4 flex flex-col items-center justify-between md:flex-row">
-                <h1 className="font-literata text-primary mb-8 text-center text-5xl font-bold md:mb-0 md:text-left">Program Sertifikasi</h1>
-                <div
-                    className="bg-primary mb-2 overflow-x-auto rounded-xl p-2 md:mb-0"
-                    ref={categoryRef}
-                    onMouseDown={handleMouseDown}
-                    onMouseLeave={handleMouseLeave}
-                    onMouseUp={handleMouseUp}
-                    onMouseMove={handleMouseMove}
-                    style={{ scrollbarWidth: 'none', cursor: isDragging.current ? 'grabbing' : 'grab' }}
-                >
-                    <div className="flex w-max flex-nowrap gap-2 select-none">
+        <section className="mx-auto w-full max-w-7xl px-4 pb-20" id="certification-programs">
+            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-center text-3xl font-extrabold text-gray-900 md:text-4xl">
+                {t('certificationProgram.dashboard.catalog.title', 'Raih Sertifikasi Profesional dan Tingkatkan Karirmu')}
+            </h2>
+            <p className="mx-auto mb-8 text-center text-gray-600 dark:text-gray-400">
+                {t('certificationProgram.dashboard.catalog.subtitle', 'Pilih program sertifikasi yang sesuai dengan tujuan karirmu.')}
+            </p>
+
+            {/* Kategori */}
+            <div
+                className="mb-8 overflow-x-auto scrollbar-hide"
+                ref={categoryRef}
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                style={{ scrollbarWidth: 'none', cursor: isDragging.current ? 'grabbing' : 'grab' }}
+            >
+                <div className="flex w-max flex-nowrap gap-3 select-none">
+                    <button
+                        type="button"
+                        onClick={() => setSelectedCategory(null)}
+                        className={`rounded-full border-2 px-6 py-2 text-sm font-semibold transition-all duration-200
+                        ${selectedCategory === null
+                            ? 'border-primary bg-primary/10 text-primary shadow'
+                            : 'border-gray-300 bg-white text-gray-800 hover:border-primary/40 hover:bg-primary/5 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'}
+                        `}
+                    >
+                        {t('certificationProgram.dashboard.catalog.allCategories', 'Semua Kategori')}
+                    </button>
+                    {categories.map((category) => (
                         <button
+                            key={category.id}
                             type="button"
-                            onClick={() => setSelectedCategory(null)}
-                            className={`rounded-xl px-4 py-2 text-sm transition hover:cursor-pointer ${
-                                selectedCategory === null
-                                    ? 'to-primary text-primary border-primary bg-white'
-                                    : 'hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white hover:bg-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
-                            } `}
+                            onClick={() => setSelectedCategory(category.id)}
+                            className={`rounded-full border-2 px-6 py-2 text-sm font-semibold transition-all duration-200
+                                ${selectedCategory === category.id
+                                ? 'border-primary bg-primary/10 text-primary shadow'
+                                : 'border-gray-300 bg-white text-gray-800 hover:border-primary/40 hover:bg-primary/5 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'}
+                            `}
                         >
-                            Semua
+                            {category.name}
                         </button>
-                        {categories.map((category) => (
-                            <button
-                                key={category.id}
-                                type="button"
-                                onClick={() => setSelectedCategory(category.id)}
-                                className={`rounded-xl px-4 py-2 text-sm transition hover:cursor-pointer ${
-                                    selectedCategory === category.id
-                                        ? 'to-primary text-primary border-primary bg-white'
-                                        : 'hover:text-primary dark:hover:bg-primary/10 bg-primary border-gray-300 text-white hover:bg-white dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
-                                } `}
-                            >
-                                {category.name}
-                            </button>
-                        ))}
-                    </div>
+                    ))}
                 </div>
             </div>
-            <div className="relative mb-8 flex">
-                <span className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-500">
-                    <Search size={20} />
-                </span>
+
+            {/* Search */}
+            <div className="mb-8 flex justify-center">
                 <Input
                     type="search"
-                    placeholder="Cari program sertifikasi..."
+                    placeholder={t('certificationProgram.dashboard.catalog.searchPlaceholder', 'Cari program sertifikasi...')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="px-4 py-6 pl-10"
+                    className="max-w-md rounded-full border-2 border-primary/30 px-6 py-2 shadow-sm focus:border-primary"
                 />
             </div>
-            <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+            {/* Card Products */}
+            <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {visiblePrograms.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
-                        <img src="/assets/images/not-found.webp" alt="Program Belum Tersedia" className="w-48" />
-                        <div className="text-center text-gray-500">Belum ada program sertifikasi yang tersedia saat ini.</div>
+                        <img src="/assets/images/not-found.webp" alt={t('certificationProgram.dashboard.catalog.emptyPrograms', 'Belum ada program sertifikasi yang tersedia saat ini.')} className="w-48" />
+                        <div className="text-center text-gray-500">{t('certificationProgram.dashboard.catalog.emptyPrograms', 'Belum ada program sertifikasi yang tersedia saat ini.')}</div>
                     </div>
                 ) : (
                     visiblePrograms.map((program) => {
                         const isApprovedScholarship = program.type === 'scholarship' && approvedScholarshipProgramIds?.includes(program.id);
                         const isScholarshipNotApproved = program.type === 'scholarship' && !isApprovedScholarship;
                         const displayPrice = isScholarshipNotApproved ? 0 : (program.type === 'scholarship' ? (program.scholarship_price ?? program.price) : program.price);
-                        const hasAccess = hasProgramAccess(program.id);
-                        const mentorNames = program.mentors?.length ? program.mentors.map((mentor) => mentor.name).join(', ') : 'Talenta Edu';
                         const deadline = program.type === 'scholarship' ? program.socialization_registration_deadline : program.registration_deadline;
                         const deadlineDate = deadline ? new Date(deadline) : null;
                         
+                        let daysLeft = 0;
+                        if (deadlineDate) {
+                            const now = new Date();
+                            daysLeft = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                        }
+
+                        const hasAccess = hasProgramAccess(program.id);
                         const programUrl = hasAccess
-                            ? route('profile.certification-program.detail', program.slug)
+                            ? `/profile/my-certification-programs/${program.slug}`
                             : route('certification-programs.detail', program.slug);
 
                         return (
                             <Link
                                 key={program.id}
                                 href={programUrl}
-                                className="group hover:shadow-primary border-primary h-full rounded-xl border-1 hover:shadow-sm"
+                                className={`group relative flex flex-col overflow-hidden rounded-2xl border-2 bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl dark:bg-zinc-800/80 ${
+                                    hasAccess ? 'border-emerald-200 dark:border-emerald-900/50' : 'border-transparent hover:border-primary/40'
+                                }`}
                             >
-                                <div className="before:to-primary-2 before:via-primary relative flex h-[450px] flex-col overflow-hidden rounded-xl transition-all duration-300 before:absolute before:inset-0 before:z-[-1] before:rounded-xl before:bg-gradient-to-br before:from-white before:opacity-0 before:transition-opacity before:duration-300 hover:scale-100 hover:shadow-xl hover:before:opacity-100">
-                                    {/* Image Section */}
-                                    <div className="relative h-48 w-full flex-shrink-0 overflow-hidden">
-                                        <img
-                                            src={program.thumbnail ? `/storage/${program.thumbnail}` : '/assets/images/placeholder.png'}
-                                            alt={program.title}
-                                            className="h-full w-full object-cover transition-transform duration-300"
-                                        />
-                                        {/* Badges - Top Right */}
-                                        <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
-                                            {program.category && (
-                                                <span className="border-primary rounded-full border bg-gray-100/70 px-3 py-1 text-xs text-black dark:bg-gray-700 dark:text-black shadow-sm">
-                                                    {program.category.name}
+                                {/* Badge Type & Status */}
+                                <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
+                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold shadow ${program.type === 'scholarship' ? 'bg-purple-500 text-white' : 'bg-blue-500 text-white'}`}>
+                                        <GraduationCap size={12} />
+                                        {program.type === 'scholarship' ? t('certificationProgram.dashboard.catalog.badgeScholarship', 'Beasiswa') : t('certificationProgram.dashboard.catalog.badgeRegular', 'Reguler')}
+                                    </span>
+                                </div>
+
+                                {/* Badge Gratis/Deadline/Purchased */}
+                                <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1">
+                                    {hasAccess ? (
+                                        <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white shadow">
+                                            {t('certificationProgram.dashboard.catalog.badgeOwned', 'Sudah Dibeli')}
+                                        </span>
+                                    ) : (
+                                        <>
+                                            {displayPrice === 0 && (
+                                                <span className="rounded-full bg-green-500 px-3 py-1 text-xs font-bold text-white shadow">
+                                                    {t('certificationProgram.dashboard.catalog.free', 'Gratis')}
                                                 </span>
                                             )}
-                                            <span className={`flex items-center rounded-full px-3 py-1 text-xs font-medium shadow-sm ${program.type === 'scholarship' ? 'bg-purple-100/90 text-purple-700' : 'bg-blue-100/90 text-blue-700'}`}>
-                                                <GraduationCap size={12} className="mr-1" />
-                                                {program.type === 'scholarship' ? 'Beasiswa' : 'Reguler'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {/* Content Section */}
-                                    <div className="flex min-h-0 flex-1 flex-col justify-start p-4">
-                                        {/* Title */}
-                                        <h2 className="font-literata mb-1 line-clamp-2 text-xl font-semibold text-gray-900 group-hover:text-white dark:text-white">
-                                            {program.title}
-                                        </h2>
-                                        {/* Price */}
-                                        <div className="mb-3">
-                                            {hasAccess ? (
-                                                <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
-                                            ) : displayPrice === 0 ? (
-                                                <span className="text-xl font-bold text-green-600 dark:text-green-400">Gratis</span>
-                                            ) : (
-                                                <>
-                                                    {!isScholarshipNotApproved &&
-                                                    typeof program.strikethrough_price === 'number' &&
-                                                    program.strikethrough_price > 0 ? (
-                                                        <p className="text-sm text-red-500 line-through">
-                                                            {formatRupiah(program.strikethrough_price)}
-                                                        </p>
-                                                    ) : null}
-                                                    <p className="font-literata text-2xl font-semibold text-gray-900 group-hover:text-white dark:text-white">
-                                                        {formatRupiah(displayPrice)}
-                                                    </p>
-                                                </>
+                                            {displayPrice > 0 && daysLeft <= 7 && daysLeft > 0 && (
+                                                <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow">
+                                                    {t('certificationProgram.dashboard.catalog.daysLeft', { count: daysLeft, defaultValue: `${daysLeft} Hari Lagi` })}
+                                                </span>
                                             )}
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Thumbnail */}
+                                <div className="relative w-full overflow-hidden rounded-t-2xl">
+                                    <img
+                                        src={program.thumbnail ? `/storage/${program.thumbnail}` : '/assets/images/placeholder.png'}
+                                        alt={program.title}
+                                        className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    />
+                                    {/* Deadline Badge on Image */}
+                                    {deadlineDate && (
+                                        <div className="absolute bottom-3 right-3 flex items-center gap-2 text-xs rounded-lg bg-white/30 backdrop-blur-md px-2 py-1 text-black shadow font-semibold">
+                                            <Calendar size={12} />
+                                            <span>{format(deadlineDate, 'dd MMM yyyy', { locale: dateLocale })}</span>
                                         </div>
-                                        {/* Date/Time Info */}
-                                        {deadlineDate && (
-                                            <div className="mb-3 flex items-center gap-2 text-sm text-gray-600 group-hover:text-white dark:text-gray-400">
-                                                <Calendar size={16} />
-                                                <span>
-                                                    Daftar sebelum: {format(deadlineDate, 'dd MMM yyyy', { locale: id })}
+                                    )}
+                                </div>
+
+                                {/* Konten */}
+                                <div className="flex flex-1 flex-col justify-between px-4">
+                                    <h2 className="mb-2 mt-2 line-clamp-2 text-left text-lg font-semibold text-gray-900 dark:text-white">
+                                        {program.title}
+                                    </h2>
+                                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                                        {program.short_description || t('certificationProgram.dashboard.catalog.defaultDesc', 'Program sertifikasi profesional')}
+                                    </p>
+                                    
+                                    <div className="flex items-center justify-between mt-auto">
+                                        {displayPrice > 0 ? (
+                                            <div className="flex flex-col items-start">
+                                                {!isScholarshipNotApproved && (program.strikethrough_price ?? 0) > 0 && (
+                                                    <span className="text-xs text-red-500 line-through">
+                                                        Rp {program.strikethrough_price!.toLocaleString('id-ID')}
+                                                    </span>
+                                                )}
+                                                <span className="text-base font-bold text-primary">
+                                                    Rp {displayPrice.toLocaleString('id-ID')}
                                                 </span>
                                             </div>
+                                        ) : (
+                                            <span className="text-base font-bold text-green-600">{t('certificationProgram.dashboard.catalog.free', 'Gratis')}</span>
                                         )}
-                                        {/* <div className="mr-auto flex flex-row items-center justify-center gap-2 text-sm text-gray-600 group-hover:text-white dark:text-gray-400">
-                                            <Users size={16} />
-                                            <span>Sertifikat Tersedia</span>
-                                        </div> */}
-                                        <div>
-                                            <p className="mt-auto mb-3 line-clamp-3 text-sm text-gray-700 group-hover:text-white dark:text-gray-300">
-                                                Mentor by{' '}
-                                                <span className="text-primary font-semibold group-hover:text-white">
-                                                    {' '}
-                                                    {mentorNames}{' '}
-                                                </span>
-                                            </p>
-                                        </div>
-                                        <div className="text-primary border-primary mt-auto justify-self-end rounded-lg border-1 py-1 text-center group-hover:border-white group-hover:text-white">
-                                            Mulai Belajar
-                                        </div>
                                     </div>
+                                    <div className="px-4 mt-2 h-0.5 w-full rounded-full bg-primary/50" />
+                                    {program.mentors && program.mentors.length > 0 && (
+                                        <div className="mt-3 flex items-center gap-2">
+                                            <div className="flex -space-x-2">
+                                                {program.mentors.slice(0, 3).map((mentor, idx) => {
+                                                    const avatarSrc = mentor.avatar
+                                                        ? (mentor.avatar.startsWith('http') || mentor.avatar.startsWith('/')
+                                                            ? mentor.avatar
+                                                            : `/storage/${mentor.avatar}`)
+                                                        : null;
+                                                    return avatarSrc ? (
+                                                        <img
+                                                            key={mentor.id || idx}
+                                                            src={avatarSrc}
+                                                            alt={mentor.name}
+                                                            className="h-7 w-7 rounded-full border-2 border-white object-cover shadow dark:border-zinc-800"
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            key={mentor.id || idx}
+                                                            className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-gray-200 text-[10px] font-bold text-gray-600 shadow dark:border-zinc-800"
+                                                        >
+                                                            {mentor.name.substring(0, 2).toUpperCase()}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <span className="truncate text-xs font-medium text-gray-600 dark:text-gray-400">
+                                                {program.mentors.map((m) => m.name).join(', ')}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="mx-4 my-4 flex items-center justify-between">
+                                    <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                        {program.category.name}
+                                    </span>
+                                    {hasAccess && (
+                                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {t('certificationProgram.dashboard.catalog.accessProgram', 'Akses Program →')}
+                                        </span>
+                                    )}
                                 </div>
                             </Link>
                         );
                     })
                 )}
             </div>
+
+            {/* Tombol Lihat Lebih Banyak */}
             {visibleCount < filteredPrograms.length && (
                 <div className="mb-8 flex justify-center">
-                    <Button
-                        type="button"
-                        className="bg-primary mt-8 border border-white px-16 py-6 text-lg shadow-xl transition-all duration-300 hover:scale-105 hover:cursor-pointer hover:text-white"
-                        onClick={() => setVisibleCount((prev) => prev + 6)}
-                    >
-                        Lihat Lebih Banyak
-                    </Button>
+                    <Magnetic>
+                        <Button
+                            type="button"
+                            size="lg"
+                            className="rounded-full px-8 py-3 text-base font-bold shadow-lg"
+                            onClick={() => setVisibleCount((prev) => prev + 6)}
+                        >
+                            {t('certificationProgram.dashboard.catalog.loadMore', 'Lihat Lebih Banyak')} <GalleryVerticalEnd className="ml-2" />
+                        </Button>
+                    </Magnetic>
                 </div>
             )}
         </section>

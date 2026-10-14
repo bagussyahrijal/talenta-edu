@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, useCarousel } from '@/components/ui/carousel';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Testimonial {
     name: string;
@@ -171,6 +172,7 @@ function TestimonyCarousel() {
 }
 
 export default function TestimonySection() {
+    const { t } = useTranslation('home');
     const [carouselIndex, setCarouselIndex] = useState(0);
 
     return (
@@ -178,8 +180,8 @@ export default function TestimonySection() {
             <div className="mx-auto w-full max-w-7xl px-4">
                 {/* Header */}
                 <div className="mb-10 md:mb-16 text-center">
-                    <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-700">What our costumers say about us</p>
-                    <h2 className="text-3xl md:text-5xl font-bold font-literata text-primary">Testimonials</h2>
+                    <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-700">{t('testimony.subtitle', 'What our costumers say about us')}</p>
+                    <h2 className="text-3xl md:text-5xl font-bold font-literata text-primary">{t('testimony.title', 'Testimonials')}</h2>
                 </div>
 
                 {/* Carousel */}

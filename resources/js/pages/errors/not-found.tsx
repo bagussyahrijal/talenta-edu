@@ -1,11 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function PageNotFound() {
+    const { t } = useTranslation('common');
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-[#F5F5F0] dark:bg-gray-900 px-4 sm:px-6">
-            <Head title="Page Not Found" />
+            <Head title={t('errors.notFound.title', 'Halaman Tidak Ditemukan')} />
             
             <div className="container flex flex-col lg:flex-row justify-center items-center gap-8 lg:gap-12 py-8 lg:py-12">
                 {/* Left: Image */}
@@ -22,10 +25,10 @@ export default function PageNotFound() {
                         404
                     </h1>
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 text-gray-900 dark:text-white font-literata">
-                        Page Not Found
+                        {t('errors.notFound.title', 'Halaman Tidak Ditemukan')}
                     </h2>
                     <p className="mb-6 max-w-md text-base sm:text-lg text-gray-600 dark:text-gray-400 px-4 lg:px-0">
-                        The Page is not found.
+                        {t('errors.notFound.description', 'Maaf, halaman yang Anda cari tidak ditemukan.')}
                     </p>
                     <Button 
                         asChild 
@@ -34,7 +37,7 @@ export default function PageNotFound() {
                         className="px-6 sm:px-8 py-5 sm:py-6 rounded-full text-base sm:text-lg border-2 border-gray-900 hover:bg-gray-900 hover:text-white transition-colors dark:border-white dark:hover:bg-white dark:hover:text-gray-900"
                     >
                         <Link href="/">
-                            Back to Home
+                            {t('errors.notFound.backHome', 'Kembali ke Beranda')}
                             <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                         </Link>
                     </Button>

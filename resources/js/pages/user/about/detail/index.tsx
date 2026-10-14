@@ -42,6 +42,8 @@ interface RelatedPartnershipProduct {
     };
 }
 
+import { useTranslation } from 'react-i18next';
+
 export default function PartnershipProductDetail({
     partnershipProduct,
     relatedPartnershipProducts,
@@ -49,9 +51,11 @@ export default function PartnershipProductDetail({
     partnershipProduct: PartnershipProduct;
     relatedPartnershipProducts: RelatedPartnershipProduct[];
 }) {
+    const { t } = useTranslation('user');
+
     return (
         <UserLayout>
-            <Head title={`${partnershipProduct.title} - Sertifikasi Kerjasama`} />
+            <Head title={t('about.detail.headTitle', { title: partnershipProduct.title })} />
 
             <HeroSection partnershipProduct={partnershipProduct} />
             <ScheduleInfoSection partnershipProduct={partnershipProduct} />

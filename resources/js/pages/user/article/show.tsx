@@ -5,8 +5,10 @@ import { useInitials } from '@/hooks/use-initials';
 import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id, enUS } from 'date-fns/locale';
 import { BookText, Calendar, Clock, Eye, MonitorPlay, Presentation, Share2 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 interface Category {
     id: string;
@@ -51,6 +53,8 @@ interface ArticleShowProps {
 }
 
 export default function ArticleShow({ article, relatedArticles }: ArticleShowProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateFnsLocale = i18n.language === 'en' ? enUS : id;
     const getInitials = useInitials();
 
     const handleShare = async () => {
@@ -66,7 +70,7 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
             }
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert('Link berhasil disalin!');
+            alert(t('article.linkCopied'));
         }
     };
 
@@ -74,171 +78,196 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
         <UserLayout>
             <Head title={article.title} />
 
-            <div className="mx-auto min-h-screen max-w-7xl px-4 py-8 md:px-6">
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2">
-                        <article>
-                            {/* Header */}
-                            <div className="mb-6">
-                                <Badge className="mb-3">
-                                    {article.category.name}
-                                </Badge>
-                                <h1 className="mb-4 text-3xl font-bold italic md:text-4xl">{article.title}</h1>
-
-                                {/* Meta Info */}
-                                <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
-                                    <div className="flex items-center gap-2">
-                                        <Avatar className="h-7 w-7">
-                                            <AvatarImage src={article.user.avatar} alt={article.user.name} />
-                                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                                                {getInitials(article.user.name)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <span className="font-medium">{article.user.name}</span>
-                                    </div>
-                                    <Separator orientation="vertical" className="h-4" />
-                                    <div className="flex items-center gap-1">
-                                        <Calendar className="h-4 w-4" />
-                                        {format(new Date(article.published_at), 'dd MMMM yyyy', { locale: id })}
-                                    </div>
-                                    <Separator orientation="vertical" className="h-4" />
-                                    <div className="flex items-center gap-1">
-                                        <Clock className="h-4 w-4" />
-                                        {article.read_time} menit baca
-                                    </div>
-                                    <Separator orientation="vertical" className="h-4" />
-                                    <div className="flex items-center gap-1">
-                                        <Eye className="h-4 w-4" />
-                                        {article.views.toLocaleString()} views
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Thumbnail */}
-                            {article.thumbnail && (
-                                <div className="mb-8 overflow-hidden rounded-lg">
-                                    <img src={`/storage/${article.thumbnail}`} alt={article.title} className="h-auto w-full object-cover" />
-                                </div>
-                            )}
-
-                            {/* Excerpt */}
-                            {article.excerpt && (
-                                <div className="border-primary bg-primary/5 mb-6 rounded-lg border-l-4 p-4">
-                                    <p className="text-muted-foreground italic">{article.excerpt}</p>
-                                </div>
-                            )}
-
-                            {/* Content */}
-                            <div className="prose prose-sm prose-slate dark:prose-invert md:prose-base max-w-none">
-                                {article.content ? (
-                                    <div dangerouslySetInnerHTML={{ __html: article.content }} />
-                                ) : (
-                                    <p className="text-muted-foreground">Konten artikel tidak tersedia.</p>
-                                )}
-                            </div>
-
-                            {/* Share Button */}
-                            <div className="mt-8 flex items-center justify-between rounded-lg border p-4">
-                                <p className="font-medium">Bagikan artikel ini</p>
-                                <button
-                                    onClick={handleShare}
-                                    className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors"
-                                >
-                                    <Share2 className="h-4 w-4" />
-                                    Bagikan
-                                </button>
-                            </div>
-
-                            {/* Author Info */}
-                            <div className="mt-8 border-t p-6">
-                                <div className="flex items-start gap-4">
-                                    <Avatar className="h-16 w-16">
+            {/* Hero Section */}
+            <div className="relative mb-8">
+                {article.thumbnail && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.7 }}
+                        className="relative h-64 md:h-96 w-full overflow-hidden rounded-2xl shadow-lg"
+                    >
+                        <img
+                            src={`/storage/${article.thumbnail}`}
+                            alt={article.title}
+                            className="h-full w-full object-cover object-center"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <div className="absolute left-0 bottom-0 p-6 w-full text-white">
+                            <Badge variant="secondary" className="mb-2 bg-primary/80 text-white">
+                                {article.category.name}
+                            </Badge>
+                            <h1 className="mb-2 text-2xl md:text-4xl font-bold drop-shadow">{article.title}</h1>
+                            <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm opacity-90">
+                                <div className="flex items-center gap-2">
+                                    <Avatar className="h-7 w-7 border-2 border-white">
                                         <AvatarImage src={article.user.avatar} alt={article.user.name} />
-                                        <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                                             {getInitials(article.user.name)}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="flex-1">
-                                        <h3 className="mb-1 font-semibold">Tentang Penulis</h3>
-                                        <p className="text-lg font-medium">{article.user.name === 'Admin' ? 'Talenta Team' : article.user.name}</p>
-                                        <p className="text-muted-foreground text-sm">{article.user.bio}</p>
-                                    </div>
+                                    <span className="font-medium">{article.user.name}</span>
                                 </div>
-                            </div>
-                        </article>
-                    </div>
-
-                    {/* ✅ Sidebar - STICKY & NO CARD */}
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-20 space-y-6">
-                            {/* Related Articles */}
-                            {relatedArticles.length > 0 && (
-                                <div className="rounded-lg border bg-white p-4">
-                                    <h3 className="mb-4 font-semibold">Artikel Terkait</h3>
-                                    <div className="space-y-4">
-                                        {relatedArticles.map((related) => (
-                                            <Link
-                                                key={related.id}
-                                                href={`/article/${related.slug}`}
-                                                className="group hover:bg-muted block rounded-lg border p-3 transition-colors"
-                                            >
-                                                <div className="mb-2 flex gap-3">
-                                                    <img
-                                                        src={related.thumbnail ? `/storage/${related.thumbnail}` : '/assets/images/placeholder.png'}
-                                                        alt={related.title}
-                                                        className="h-16 w-20 flex-shrink-0 rounded object-cover"
-                                                    />
-                                                    <div className="min-w-0 flex-1">
-                                                        <h4 className="group-hover:text-primary line-clamp-2 text-sm font-medium">{related.title}</h4>
-                                                    </div>
-                                                </div>
-                                                <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="h-3 w-3" />
-                                                        {related.read_time} min
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        {format(new Date(related.published_at), 'dd MMM', { locale: id })}
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        ))}
-                                    </div>
+                                <Separator orientation="vertical" className="h-4 bg-white/40" />
+                                <div className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    {format(new Date(article.published_at), 'dd MMMM yyyy', { locale: dateFnsLocale })}
                                 </div>
-                            )}
-
-                            {/* ✅ CTA - All Products & NO CARD */}
-                            <div className="bg-primary text-primary-foreground rounded-lg p-6">
-                                <h3 className="mb-2 text-lg font-semibold">Ingin Belajar Lebih Lanjut?</h3>
-                                <p className="mb-4 text-sm opacity-90">Jelajahi produk edukasi kami untuk meningkatkan skill Anda</p>
-                                <div className="space-y-2">
-                                    <Link
-                                        href="/course"
-                                        className="group flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
-                                    >
-                                        <BookText className="h-5 w-5 transition-transform group-hover:rotate-12" />
-                                        <span>Lihat Kelas Online</span>
-                                    </Link>
-                                    <Link
-                                        href="/bootcamp"
-                                        className="group flex items-center gap-3 rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-3 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
-                                    >
-                                        <Presentation className="h-5 w-5 transition-transform group-hover:rotate-12" />
-                                        <span>Lihat Bootcamp</span>
-                                    </Link>
-                                    <Link
-                                        href="/webinar"
-                                        className="group flex items-center gap-3 rounded-lg bg-gradient-to-r from-pink-500 to-rose-600 px-4 py-3 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
-                                    >
-                                        <MonitorPlay className="h-5 w-5 transition-transform group-hover:rotate-12" />
-                                        <span>Lihat Webinar</span>
-                                    </Link>
+                                <Separator orientation="vertical" className="h-4 bg-white/40" />
+                                <div className="flex items-center gap-1">
+                                    <Clock className="h-4 w-4" />
+                                    {t('article.minRead', { count: article.read_time })}
+                                </div>
+                                <Separator orientation="vertical" className="h-4 bg-white/40" />
+                                <div className="flex items-center gap-1">
+                                    <Eye className="h-4 w-4" />
+                                    {t('article.views', { count: article.views.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID') })}
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
+                )}
+            </div>
+
+            <div className="mx-auto max-w-5xl px-2 md:px-0 grid grid-cols-1 gap-10 lg:grid-cols-3">
+                {/* Main Content */}
+                <div className="lg:col-span-2">
+                    <article>
+                        {/* Excerpt */}
+                        {article.excerpt && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.1 }}
+                                className="border-primary bg-primary/5 mb-6 rounded-lg border-l-4 p-4"
+                            >
+                                <p className="text-muted-foreground">{article.excerpt}</p>
+                            </motion.div>
+                        )}
+
+                        {/* Content */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className="prose prose-lg prose-slate dark:prose-invert max-w-none"
+                        >
+                            {article.content ? (
+                                <div dangerouslySetInnerHTML={{ __html: article.content }} />
+                            ) : (
+                                <p className="text-muted-foreground">{t('article.noContent')}</p>
+                            )}
+                        </motion.div>
+
+                        {/* Author Info */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="mt-12 flex items-center gap-4 rounded-xl bg-primary/10 p-6"
+                        >
+                            <Avatar className="h-16 w-16">
+                                <AvatarImage src={article.user.avatar} alt={article.user.name} />
+                                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                                    {getInitials(article.user.name)}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h3 className="mb-1 font-semibold">{t('article.aboutAuthor')}</h3>
+                                <p className="text-lg font-medium">{article.user.name === 'Admin' ? t('article.team') : article.user.name}</p>
+                                <p className="text-muted-foreground text-sm">{article.user.bio}</p>
+                            </div>
+                        </motion.div>
+                    </article>
+                </div>
+
+                {/* Sidebar */}
+                <div className="lg:col-span-1 flex flex-col gap-8">
+                    {/* Share Button - sticky on desktop */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="sticky top-24 z-10"
+                    >
+                        <button
+                            onClick={handleShare}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-base font-semibold shadow transition"
+                        >
+                            <Share2 className="h-5 w-5" />
+                            {t('article.shareArticle')}
+                        </button>
+                    </motion.div>
+
+                    {/* Related Articles */}
+                    {relatedArticles.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="rounded-xl border bg-white p-4 shadow-sm"
+                        >
+                            <h3 className="mb-4 font-semibold">{t('article.relatedArticles')}</h3>
+                            <div className="space-y-4">
+                                {relatedArticles.map((related) => (
+                                    <Link
+                                        key={related.id}
+                                        href={`/article/${related.slug}`}
+                                        className="group flex gap-3 rounded-lg border hover:border-primary/40 p-2 transition"
+                                    >
+                                        <img
+                                            src={related.thumbnail ? `/storage/${related.thumbnail}` : '/assets/images/placeholder.png'}
+                                            alt={related.title}
+                                            className="h-16 w-20 flex-shrink-0 rounded object-cover"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <h4 className="group-hover:text-primary line-clamp-2 text-sm font-medium">{related.title}</h4>
+                                            <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
+                                                <Clock className="h-3 w-3" />
+                                                {t('article.min', { count: related.read_time })}
+                                                <Calendar className="h-3 w-3 ml-2" />
+                                                {format(new Date(related.published_at), 'dd MMM', { locale: dateFnsLocale })}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* CTA */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        className="bg-primary text-primary-foreground rounded-xl p-6 shadow"
+                    >
+                        <h3 className="mb-2 text-lg font-semibold">{t('article.wantToLearnMore')}</h3>
+                        <p className="mb-4 text-sm opacity-90">{t('article.ctaDesc')}</p>
+                        <div className="space-y-2">
+                            <Link
+                                href="/course"
+                                className="group flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-3 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
+                            >
+                                <BookText className="h-5 w-5 transition-transform group-hover:rotate-12" />
+                                <span>{t('article.viewCourses')}</span>
+                            </Link>
+                            <Link
+                                href="/bootcamp"
+                                className="group flex items-center gap-3 rounded-lg bg-gradient-to-r from-yellow-500 to-yellow-600 px-4 py-3 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
+                            >
+                                <Presentation className="h-5 w-5 transition-transform group-hover:rotate-12" />
+                                <span>{t('article.viewBootcamps')}</span>
+                            </Link>
+                            {/* <Link
+                                href="/webinar"
+                                className="group flex items-center gap-3 rounded-lg bg-gradient-to-r from-pink-500 to-rose-600 px-4 py-3 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
+                            >
+                                <MonitorPlay className="h-5 w-5 transition-transform group-hover:rotate-12" />
+                                <span>Lihat Webinar</span>
+                            </Link> */}
+                        </div>
+                    </motion.div>
                 </div>
             </div>
         </UserLayout>

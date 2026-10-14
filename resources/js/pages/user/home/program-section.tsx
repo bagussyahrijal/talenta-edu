@@ -1,13 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 import { BadgeCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ProgramSection() {
+    const { t } = useTranslation(['home', 'common']);
+
     return (
         <section className="w-full py-8" id="program-kami">
             <div className='bg-secondary flex flex-col items-center justify-center space-y-8 p-4'>
-                <h1 className='text-5xl font-bold font-literata text-primary'>Kelas Terpopuler</h1>
-                <p>Tingkatkan pengetahuan dan keterampilan kamu disini</p>
+                <h1 className='text-5xl font-bold font-literata text-primary'>{t('latest.popularTitle', 'Kelas Terpopuler')}</h1>
+                <p>{t('latest.popularDesc', 'Tingkatkan pengetahuan dan keterampilan kamu disini')}</p>
                 <div className='grid grid-cols-2 lg:grid-cols-4'>
                     <div className="rounded-2xl overflow-hidden shadow-lg bg-white flex flex-col">
                         {/* Gambar */}
@@ -25,7 +28,7 @@ export default function ProgramSection() {
                         {/* Konten bawah */}
                         <div className="bg-gradient-to-b from-blue-200 to-blue-400 p-5 flex flex-col flex-1">
                             <span className="bg-white text-blue-600 px-4 py-1 rounded-lg text-base font-medium w-fit mb-3 shadow">
-                                webinar
+                                {t('latest.badges.webinar', 'webinar')}
                             </span>
                             <div className="flex-1">
                                 <h2 className="font-literata font-bold text-white text-xl leading-snug mb-2">

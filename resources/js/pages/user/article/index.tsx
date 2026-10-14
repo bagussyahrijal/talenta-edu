@@ -1,14 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import UserLayout from '@/layouts/user-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
-import { Calendar, Clock, Eye, TrendingUp } from 'lucide-react';
+import { id, enUS } from 'date-fns/locale';
+import { Book, BookCheckIcon, Calendar, Clock, Eye, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface Category {
     id: string;
@@ -65,6 +66,8 @@ interface ArticleIndexProps {
 }
 
 export default function ArticleIndex({ articles, categories, popularArticles, filters }: ArticleIndexProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateFnsLocale = i18n.language === 'en' ? enUS : id;
     const [selectedCategory, setSelectedCategory] = useState<string>(filters.category || '');
     const [sortBy, setSortBy] = useState<string>(filters.sort || 'latest');
 
@@ -94,127 +97,159 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
 
     return (
         <UserLayout>
-            <Head title="Artikel" />
+            <Head title={t('article.headTitle')} />
 
-            <div className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 md:px-6">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text mb-2 text-3xl font-bold italic md:text-4xl">Artikel & Blog</h1>
-                    <p className="text-muted-foreground">Baca artikel dan tips seputar pembelajaran dan teknologi</p>
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="relative mb-8 rounded-xl bg-gradient-to-b from-white to-primary-foreground px-6 py-10 text-center"
+            >
+                <div className="mx-auto flex max-w-3xl flex-col items-center gap-2">
+                    <BookCheckIcon className="h-8 w-8 text-primary mb-2" />
+                    <h1 className="mb-2 text-3xl font-bold md:text-4xl">{t('article.title')}</h1>
+                    <p className="text-muted-foreground mb-2">{t('article.subtitle')}</p>
                 </div>
+            </motion.div>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-                    {/* Sidebar Filters */}
-                    <div className="space-y-6 lg:col-span-1">
-                        {/* Sort Dropdown (Mobile) */}
-                        <div className="lg:hidden">
-                            <Select value={sortBy} onValueChange={handleSort}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Urutkan" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="latest">Terbaru</SelectItem>
-                                    <SelectItem value="popular">Paling Populer</SelectItem>
-                                </SelectContent>
-                            </Select>
+            <div className="mx-auto w-full max-w-7xl px-2 md:px-4">
+                {/* Sort & Filter */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+                >
+                    {/* Filter kategori horizontal */}
+                    <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
+                        <Button
+                            variant={selectedCategory === '' ? 'default' : 'outline'}
+                            size="sm"
+                            className="rounded-full"
+                            onClick={() => handleFilter('')}
+                        >
+                            {t('article.allCategories')}
+                        </Button>
+                        {categories.map((cat) => (
+                            <Button
+                                key={cat.id}
+                                variant={selectedCategory === cat.id ? 'default' : 'outline'}
+                                size="sm"
+                                className="rounded-full"
+                                onClick={() => handleFilter(cat.id)}
+                            >
+                                {cat.name}
+                                <span className="ml-2 text-xs text-muted-foreground">{cat.articles_count}</span>
+                            </Button>
+                        ))}
+                    </div>
+                    {/* Sort */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">{t('article.sort')}:</span>
+                        <Select value={sortBy} onValueChange={handleSort}>
+                            <SelectTrigger className="w-32">
+                                <SelectValue placeholder={t('article.sort')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="latest">{t('article.sortLatest')}</SelectItem>
+                                <SelectItem value="popular">{t('article.sortPopular')}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </motion.div>
+
+                {/* Popular Articles horizontal */}
+                {popularArticles.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="mb-8"
+                    >
+                        <div className="mb-2 flex items-center gap-2">
+                            <TrendingUp className="h-5 w-5 text-green-600" />
+                            <h3 className="font-semibold">{t('article.popularArticles')}</h3>
                         </div>
-
-                        {/* Categories Filter */}
-                        <div className="rounded-lg border bg-white p-4">
-                            <h3 className="mb-4 font-semibold">Kategori</h3>
-                            <div className="space-y-3">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox id="all" checked={!selectedCategory} onCheckedChange={() => handleFilter('')} />
-                                    <label htmlFor="all" className="flex-1 cursor-pointer text-sm font-medium">
-                                        Semua Kategori
-                                    </label>
-                                    <span className="text-muted-foreground text-xs">
-                                        {categories.reduce((sum, cat) => sum + cat.articles_count, 0)}
-                                    </span>
-                                </div>
-                                {categories.map((category) => (
-                                    <div key={category.id} className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={category.id}
-                                            checked={selectedCategory === category.id}
-                                            onCheckedChange={() => handleFilter(category.id)}
-                                        />
-                                        <label htmlFor={category.id} className="flex-1 cursor-pointer text-sm font-medium">
-                                            {category.name}
-                                        </label>
-                                        <span className="text-muted-foreground text-xs">{category.articles_count}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Popular Articles */}
-                        <div className="rounded-lg border bg-white p-4">
-                            <div className="mb-4 flex items-center gap-2">
-                                <TrendingUp className="h-4 w-4 text-green-600" />
-                                <h3 className="font-semibold">Paling Banyak Dibaca</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {popularArticles.map((article, index) => (
+                        <div className="flex gap-4 overflow-x-auto pb-2">
+                            {popularArticles.map((article, index) => (
+                                <motion.div
+                                    key={article.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
+                                >
                                     <Link
-                                        key={article.id}
                                         href={`/article/${article.slug}`}
-                                        className="group hover:bg-muted flex gap-3 rounded-lg border p-2 transition-colors"
+                                        className="group min-w-[260px] max-w-xs flex-shrink-0 rounded-lg border bg-white shadow-sm hover:shadow-md transition"
                                     >
-                                        <div className="flex-shrink-0">
-                                            <div className="bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded text-xs font-bold">
-                                                {index + 1}
-                                            </div>
+                                        <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+                                            <img
+                                                src={article.thumbnail ? `/storage/${article.thumbnail}` : '/assets/images/placeholder.png'}
+                                                alt={article.title}
+                                                className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                            />
                                         </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="group-hover:text-primary line-clamp-2 text-sm font-medium">{article.title}</p>
-                                            <div className="text-muted-foreground mt-1 flex items-center gap-1 text-xs">
-                                                <Eye className="h-3 w-3" />
-                                                {article.views.toLocaleString()} views
+                                        <div className="p-3">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded text-xs font-bold">
+                                                    {index + 1}
+                                                </div>
+                                                <span className="text-xs text-muted-foreground">{t('article.views', { count: article.views.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID') })}</span>
                                             </div>
+                                            <p className="group-hover:text-primary line-clamp-2 text-sm font-medium">{article.title}</p>
                                         </div>
                                     </Link>
-                                ))}
-                            </div>
+                                </motion.div>
+                            ))}
                         </div>
-                    </div>
+                    </motion.div>
+                )}
 
-                    {/* Articles Grid */}
-                    <div className="lg:col-span-3">
-                        {/* Sort Options (Desktop) */}
-                        <div className="mb-6 hidden items-center justify-between lg:flex">
-                            <p className="text-muted-foreground text-sm">
-                                Menampilkan {articles.data.length} dari {articles.data.length} artikel
-                            </p>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm">Urutkan:</span>
-                                <Button variant={sortBy === 'latest' ? 'default' : 'outline'} size="sm" onClick={() => handleSort('latest')}>
-                                    Terbaru
-                                </Button>
-                                <Button variant={sortBy === 'popular' ? 'default' : 'outline'} size="sm" onClick={() => handleSort('popular')}>
-                                    Populer
-                                </Button>
-                            </div>
-                        </div>
-
-                        {articles.data.length > 0 ? (
-                            <>
-                                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                                    {articles.data.map((article) => (
-                                        <Link key={article.id} href={`/article/${article.slug}`} className="group">
-                                            <div className="h-full overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md">
+                {/* Articles Grid */}
+                <div className='mb-8'>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        className="mb-2 flex items-center gap-2"
+                    >
+                        <Book className="h-4 w-4 text-green-600" />
+                        <h3 className="font-semibold">{t('article.latestArticles')}</h3>
+                    </motion.div>
+                    {articles.data.length > 0 ? (
+                        <>
+                            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                                {articles.data.map((article, index) => (
+                                    <motion.div
+                                        key={article.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
+                                    >
+                                        <Link href={`/article/${article.slug}`} className="group">
+                                            <div className="h-full overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-lg">
                                                 <div className="aspect-video overflow-hidden">
                                                     <img
-                                                        src={article.thumbnail ? `/storage/${article.thumbnail}` : '/assets/images/placeholder.png'}
+                                                        src={
+                                                            article.thumbnail
+                                                                ? `/storage/${article.thumbnail}`
+                                                                : '/assets/images/placeholder.png'
+                                                        }
                                                         alt={article.title}
                                                         className="h-full w-full object-cover transition-transform group-hover:scale-105"
                                                     />
                                                 </div>
                                                 <CardContent className="p-4">
-                                                    <Badge className="mb-2 text-xs">
-                                                        {article.category.name}
-                                                    </Badge>
-                                                    <h3 className="group-hover:text-primary mb-2 line-clamp-2 font-semibold">{article.title}</h3>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            {article.category.name}
+                                                        </Badge>
+                                                        <span className="text-xs text-muted-foreground">• {article.user.name}</span>
+                                                    </div>
+                                                    <h3 className="group-hover:text-primary mb-2 line-clamp-2 font-semibold">
+                                                        {article.title}
+                                                    </h3>
                                                     {article.excerpt && (
                                                         <p className="text-muted-foreground mb-3 line-clamp-2 text-sm">{article.excerpt}</p>
                                                     )}
@@ -222,7 +257,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                                         <div className="flex items-center gap-3">
                                                             <div className="flex items-center gap-1">
                                                                 <Clock className="h-3 w-3" />
-                                                                {article.read_time} min
+                                                                {t('article.min', { count: article.read_time })}
                                                             </div>
                                                             <div className="flex items-center gap-1">
                                                                 <Eye className="h-3 w-3" />
@@ -231,38 +266,48 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <Calendar className="h-3 w-3" />
-                                                            {format(new Date(article.published_at), 'dd MMM yyyy', { locale: id })}
+                                                            {format(new Date(article.published_at), 'dd MMM yyyy', { locale: dateFnsLocale })}
                                                         </div>
                                                     </div>
                                                 </CardContent>
                                             </div>
                                         </Link>
-                                    ))}
-                                </div>
-
-                                {/* Pagination */}
-                                {articles.last_page > 1 && (
-                                    <div className="mt-8 flex justify-center gap-2">
-                                        {articles.links.map((link, index) => (
-                                            <Button
-                                                key={index}
-                                                variant={link.active ? 'default' : 'outline'}
-                                                size="sm"
-                                                disabled={!link.url}
-                                                onClick={() => link.url && router.visit(link.url)}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed">
-                                <p className="text-muted-foreground mb-2 text-lg font-medium">Artikel tidak ditemukan</p>
-                                <p className="text-muted-foreground text-sm">Coba ubah filter atau kategori</p>
+                                    </motion.div>
+                                ))}
                             </div>
-                        )}
-                    </div>
+
+                            {/* Pagination */}
+                            {articles.last_page > 1 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.5 }}
+                                    className="mt-8 flex justify-center gap-2"
+                                >
+                                    {articles.links.map((link, index) => (
+                                        <Button
+                                            key={index}
+                                            variant={link.active ? 'default' : 'outline'}
+                                            size="sm"
+                                            disabled={!link.url}
+                                            onClick={() => link.url && router.visit(link.url)}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
+                                </motion.div>
+                            )}
+                        </>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5, delay: 0.4 }}
+                            className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed"
+                        >
+                            <p className="text-muted-foreground mb-2 text-lg font-medium">{t('article.notFound')}</p>
+                            <p className="text-muted-foreground text-sm">{t('article.notFoundHint')}</p>
+                        </motion.div>
+                    )}
                 </div>
             </div>
         </UserLayout>

@@ -1,20 +1,17 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BadgeCheck, BookOpen, Calendar, ChartBar, Clock, FileText, MessageCircle, Monitor, User } from 'lucide-react';
+import { BadgeCheck, InfinityIcon, Presentation, Smartphone, TvMinimalPlay, Sparkles, AlertCircle, Check, Percent } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 interface Course {
     title: string;
     thumbnail?: string | null;
     strikethrough_price: number;
-    short_description?: string | null;
-    user?: { id: string; name: string; bio: string | null };
     price: number;
     registration_url: string;
-    level: 'beginner' | 'intermediate' | 'advanced';
-    created_at: string;
     modules?: {
         title: string;
         description?: string | null;
@@ -28,6 +25,7 @@ interface Course {
 }
 
 export default function RegisterSection({ course }: { course: Course }) {
+    const { t } = useTranslation('user');
     const { auth } = usePage<SharedData>().props;
     const totalLessons = course.modules?.reduce((total, module) => total + (module.lessons?.length || 0), 0) || 0;
 
@@ -40,164 +38,207 @@ export default function RegisterSection({ course }: { course: Course }) {
 
     if (!isLoggedIn) {
         registrationUrl = course.registration_url;
-        buttonText = 'Login untuk Mendaftar';
-        warningMessage = 'Anda harus login terlebih dahulu!';
+        buttonText = t('course.detail.loginToRegister');
+        warningMessage = t('course.detail.loginFirstWarning');
     } else if (!isProfileComplete) {
         registrationUrl = route('profile.edit', { redirect: window.location.href });
-        buttonText = 'Lengkapi Profil untuk Mendaftar';
-        warningMessage = 'Profil Anda belum lengkap!';
+        buttonText = t('course.detail.completeProfileToRegister');
+        warningMessage = t('course.detail.incompleteProfileWarning');
     } else {
         registrationUrl = course.registration_url;
-        buttonText = 'Beli Sekarang';
+        buttonText = t('course.detail.joinNow');
         warningMessage = null;
     }
 
+    const discount = course.strikethrough_price > 0 
+        ? Math.round(((course.strikethrough_price - course.price) / course.strikethrough_price) * 100)
+        : 0;
+
     return (
-        <section className="mx-auto mt-4 md:mt-8 mb-8 sm:mb-12 w-full max-w-7xl px-4 sm:px-6 lg:px-8" id="register">
-            <Badge className='border-green-400 bg-white text-green-400 px-2 py-1 text-xs sm:text-sm'>Kelas Online</Badge>
-            <div className="mt-4 sm:mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-                {/* Left Column - Course Details */}
-                <div className="flex flex-col gap-4 sm:gap-6">
-                    <div>
-                        <h1 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold font-literata text-gray-900 dark:text-gray-100 leading-tight">{course.title}</h1>
+        <section className="relative mx-auto mt-16 w-full max-w-6xl overflow-hidden px-4 pb-16" id="register">
+            {/* Background Decoration */}
+            
+
+            <div className="relative z-10">
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="mb-12 text-center"
+                >
+                    <div className="mb-4 flex items-center justify-center gap-2">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        <span className="rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
+                            {t('course.detail.limitedOffer')}
+                        </span>
                     </div>
-                    <div>
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">{course.short_description}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-4 sm:gap-6">
-                        <div className="flex items-center gap-2">
-                            <ChartBar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                            <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 capitalize">{course.level}</p>
+                    <h2 className="dark:text-primary-foreground mb-4 text-2xl font-extrabold text-gray-900 md:text-3xl">
+                        {t('course.detail.startLearningTitle')}
+                    </h2>
+                    <p className="text-md text-gray-600 dark:text-gray-400">
+                        {t('course.detail.startLearningSubtitle')}
+                    </p>
+                </motion.div>
+
+                {/* Main Content */}
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    {/* Left Column - Pricing Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="lg:sticky lg:top-24 lg:self-start"
+                    >
+                        <div className="overflow-hidden rounded-2xl border-2 border-primary/30 bg-white shadow-lg dark:bg-zinc-900 dark:border-primary/50">
+                            {/* Discount Badge */}
+                            {discount > 0 && (
+                                <div className="bg-gradient-to-r from-red-500 to-pink-500 px-6 py-3 text-center">
+                                    <div className="flex items-center justify-center gap-2 text-white">
+                                        <Percent className="h-5 w-5" />
+                                        <span className="text-lg font-bold">{t('course.detail.savePromo', { discount })}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="p-8">
+                                {/* Price */}
+                                <div className="mb-6 text-center">
+                                    <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                                        {t('course.detail.investmentTitle')}
+                                    </p>
+                                    {course.price > 0 ? (
+                                        <>
+                                            {course.strikethrough_price > 0 && (
+                                                 <span className="block text-xl text-red-500 line-through">
+                                                     Rp {course.strikethrough_price.toLocaleString('id-ID')}
+                                                 </span>
+                                            )}
+                                            <span className="block text-4xl font-extrabold text-primary">
+                                                Rp {course.price.toLocaleString('id-ID')}
+                                            </span>
+                                            <span className="mt-2 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+                                                {t('course.detail.payOnce')}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <span className="block text-5xl font-extrabold text-green-600">
+                                            {t('course.detail.freeBadge')}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <Separator className="my-6" />
+
+                                {/* Quick Info */}
+                                <div className="mb-6 space-y-3">
+                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-zinc-800">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">{t('course.detail.totalMaterial')}</span>
+                                        <span className="font-bold text-gray-900 dark:text-white">{t('course.detail.totalLessonsCount', { count: totalLessons })}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-zinc-800">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">{t('course.detail.access')}</span>
+                                        <span className="font-bold text-gray-900 dark:text-white">{t('course.detail.forever')}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-zinc-800">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">{t('course.detail.consultation')}</span>
+                                        <span className="font-bold text-green-600">{t('course.detail.free')}</span>
+                                    </div>
+                                </div>
+
+                                {/* Warning Message */}
+                                {warningMessage && (
+                                    <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                                        <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                                        <span>{warningMessage}</span>
+                                    </div>
+                                )}
+
+                                {/* CTA Button */}
+                                <Button className="w-full py-4 text-md font-bold shadow-lg" size="lg" asChild>
+                                    <Link href={registrationUrl}>
+                                        <Sparkles className="mr-2 h-5 w-5" />
+                                        {buttonText}
+                                    </Link>
+                                </Button>
+
+                                {/* Trust Badges */}
+                                <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                    <div className="flex items-center gap-1">
+                                        <BadgeCheck className="h-4 w-4 text-green-600" />
+                                        <span>{t('course.detail.trusted')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <BadgeCheck className="h-4 w-4 text-green-600" />
+                                        <span>{t('course.detail.safe')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <BadgeCheck className="h-4 w-4 text-green-600" />
+                                        <span>{t('course.detail.quality')}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                            <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
-                            {new Date(course.created_at).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                            })}
+
+                        {/* Money Back Guarantee */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.4 }}
+                            className="mt-4 text-center"
+                        >
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {t('course.detail.safePayment')}
                             </p>
+                        </motion.div>
+                    </motion.div>
+
+                    {/* Right Column - Thumbnail & Benefits */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="space-y-6"
+                    >
+                        {/* Thumbnail Card */}
+                        <div className="overflow-hidden rounded-2xl border-2 shadow-xl dark:border-zinc-700">
+                            <img
+                                src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
+                                alt={course.title}
+                                className="aspect-video w-full object-cover"
+                            />
                         </div>
-                    </div>
-                    
-                    {/* Course Image */}
-                    <img
-                        src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
-                        alt={course.title}
-                        className="w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg sm:rounded-xl object-cover border border-primary/50"
-                    />
 
-                    {/* Instructor Section - Hidden on mobile, shown on tablet+ */}
-                    <div className="hidden sm:block">
-                        {course.user?.name === 'Admin' ? (
-                            <div className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4">
-                                <div className="rounded-full bg-gray-200 p-2">
-                                    <User className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
-                                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <Link
-                                href={`/mentor/${course.user?.id}`}
-                                className="flex items-center gap-3 sm:gap-4 rounded-lg border border-gray-200 bg-white p-3 sm:p-4 shadow-md transition hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
-                            >
-                                <div className="rounded-full bg-gray-200 p-2">
-                                    <User className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
-                                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
-                                </div>
-                            </Link>
-                        )}
-                    </div>
-                </div>
-
-                {/* Right Column - Price Card */}
-                <div className="flex flex-col">
-                    <div className="lg:sticky lg:top-4 rounded-xl sm:rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-                        {course.strikethrough_price > 0 && (
-                            <span className="block text-xs sm:text-sm text-gray-500 font-literata line-through mb-1">
-                                Rp {course.strikethrough_price.toLocaleString('id-ID')}
-                            </span>
-                        )}
-                        {course.price > 0 ? (
-                            <h3 className="mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl font-bold font-literata text-gray-900 dark:text-gray-100">
-                                Rp {course.price.toLocaleString('id-ID')}
+                        {/* Benefits List */}
+                        <div className="rounded-2xl border-2 p-6 shadow-lg dark:border-zinc-700">
+                            <h3 className="mb-4 flex items-center gap-2 text-lg font-bold">
+                                <Check className="h-6 w-6 text-green-600" />
+                                {t('course.detail.whatYouGet')}
                             </h3>
-                        ) : (
-                            <h3 className="mb-4 sm:mb-6 text-2xl sm:text-3xl md:text-4xl font-bold font-literata text-gray-900 dark:text-gray-100">GRATIS</h3>
-                        )}
-
-                        {warningMessage && (
-                            <div className="mb-3 sm:mb-4 p-2 sm:p-3 text-center bg-red-50 dark:bg-red-900/20 rounded-lg">
-                                <p className="text-xs sm:text-sm text-red-600 dark:text-red-400">{warningMessage}</p>
-                            </div>
-                        )}
-
-                        <Button className="mb-4 sm:mb-6 w-full rounded-lg text-sm sm:text-base py-5 sm:py-6" asChild>
-                            <Link href={registrationUrl}>{buttonText}</Link>
-                        </Button>
-
-                        <div className="space-y-2 sm:space-y-3">
-                            <div className="flex items-start gap-2 sm:gap-3">
-                                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
-                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{totalLessons} modul pembelajaran</span>
-                            </div>
-                            <div className="flex items-start gap-2 sm:gap-3">
-                                <BadgeCheck className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
-                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">akses selamanya</span>
-                            </div>
-                            <div className="flex items-start gap-2 sm:gap-3">
-                                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
-                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">grup diskusi aktif</span>
-                            </div>
-                            <div className="flex items-start gap-2 sm:gap-3">
-                                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
-                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">E-modul</span>
-                            </div>
-                            <div className="flex items-start gap-2 sm:gap-3">
-                                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
-                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">E-Sertifikat</span>
-                            </div>
-                            <div className="flex items-start gap-2 sm:gap-3">
-                                <Monitor className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-gray-600" />
-                                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">dapat diakses di komputer, laptop dan mobile</span>
-                            </div>
+                            <ul className="space-y-3">
+                                {[
+                                    { icon: InfinityIcon, text: t('course.detail.benefit1'), color: 'text-blue-600' },
+                                    { icon: TvMinimalPlay, text: t('course.detail.benefit2', { count: totalLessons }), color: 'text-purple-600' },
+                                    { icon: Presentation, text: t('course.detail.benefit3'), color: 'text-green-600' },
+                                    { icon: Smartphone, text: t('course.detail.benefit4'), color: 'text-orange-600' },
+                                    { icon: BadgeCheck, text: t('course.detail.benefit5'), color: 'text-pink-600' },
+                                ].map((item, index) => (
+                                    <motion.li
+                                        key={index}
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+                                        className="flex items-center gap-3 rounded-lg bg-white p-3 shadow-sm dark:bg-zinc-800"
+                                    >
+                                        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-700`}>
+                                            <item.icon className={`h-5 w-5 ${item.color}`} />
+                                        </div>
+                                        <span className="font-medium text-gray-900 dark:text-white">{item.text}</span>
+                                    </motion.li>
+                                ))}
+                            </ul>
                         </div>
-                    </div>
-                    
-                    {/* Instructor Section for Mobile - Shown only on mobile */}
-                    <div className="block sm:hidden mt-6">
-                        {course.user?.name === 'Admin' ? (
-                            <div className="flex items-center gap-3 py-3">
-                                <div className="rounded-full bg-gray-200 p-2">
-                                    <User className="h-10 w-10 text-gray-500" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <Link
-                                href={`/mentor/${course.user?.id}`}
-                                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-md transition active:shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
-                            >
-                                <div className="rounded-full bg-gray-200 p-2">
-                                    <User className="h-10 w-10 text-gray-500" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{course.user?.name}</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">{course.user?.bio}</p>
-                                </div>
-                            </Link>
-                        )}
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </section>

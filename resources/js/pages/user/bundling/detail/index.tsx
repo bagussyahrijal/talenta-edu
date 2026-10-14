@@ -1,5 +1,6 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import BenefitsSection from './benefits-section';
 import BundleItemsSection from './bundle-items-section';
 import HeroSection from './hero-section';
@@ -71,23 +72,32 @@ export default function BundleDetail({
     hasOwnedItems,
     ownedItems,
 }: BundleDetailProps) {
-    return (
-        <UserLayout>
-            <Head title={`${bundle.title} - Paket Bundling`} />
+    const { t } = useTranslation('user');
 
-            {/* <HeroSection bundle={bundle} discountPercentage={discountPercentage} /> */}
+    return (
+        <div className="relative min-h-screen bg-gradient-to-br from-primary/10 via-white to-secondary/10">
+            {/* Global Decorative Background */}
+            <div className="pointer-events-none absolute -top-32 -left-32 z-0 h-[500px] w-[500px] rounded-full bg-primary/20 blur-3xl" />
+            <div className="pointer-events-none absolute -top-32 -right-0 z-0 h-[500px] w-[500px] rounded-full bg-secondary/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-0  -left-32 z-0 h-[500px] w-[500px] rounded-full bg-primary/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-0 -right-0 z-0 h-[500px] w-[500px] rounded-full bg-secondary/20 blur-3xl" />
+          
+        <UserLayout>
+            <Head title={t('bundling.detail.headTitle', { title: bundle.title, defaultValue: `${bundle.title} - Paket Bundling` })} />
+
+            <HeroSection bundle={bundle} discountPercentage={discountPercentage} />
+            <BundleItemsSection bundle={bundle} groupedItems={groupedItems} totalOriginalPrice={totalOriginalPrice} />
+            <BenefitsSection bundle={bundle} />
             <RegisterSection
                 bundle={bundle}
-                bundleItems={bundle.bundle_items}
                 totalOriginalPrice={totalOriginalPrice}
                 discountAmount={discountAmount}
                 discountPercentage={discountPercentage}
                 hasOwnedItems={hasOwnedItems}
                 ownedItems={ownedItems}
             />
-            {/* <BundleItemsSection bundle={bundle} groupedItems={groupedItems} totalOriginalPrice={totalOriginalPrice} /> */}
-            {/* <BenefitsSection bundle={bundle} /> */}
             <RelatedBundles relatedBundles={relatedBundles} />
         </UserLayout>
+        </div>
     );
 }

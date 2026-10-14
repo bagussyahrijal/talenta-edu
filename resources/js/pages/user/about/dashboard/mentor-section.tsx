@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface Mentor {
     id: number;
     name: string;
@@ -52,6 +54,8 @@ const mentorsData: Mentor[] = [
 ];
 
 const MentorCard = ({ mentor }: { mentor: Mentor }) => {
+    const { t } = useTranslation('user');
+
     return (
         <section className="relative h-[428px] w-[300px] overflow-hidden rounded-[20px] bg-secondary/50 shadow-xl ">
 
@@ -59,7 +63,7 @@ const MentorCard = ({ mentor }: { mentor: Mentor }) => {
             <div className="absolute left-0 top-0 h-full w-[90px] rounded-[20px_0px_0px_20px] bg-[#1976d3]">
                 <div className="absolute left-1/2 top-1/3 flex -translate-x-1/2 -translate-y-1/2 -rotate-90 items-center justify-center">
                     <span className=" whitespace-nowrap font-literata font-bold text-5xl uppercase leading-none  text-primary" style={{ WebkitTextStroke: '0.5px white' }}>
-                        MENTOR
+                        {t('about.dashboard.mentorTitle')}
                     </span>
                 </div>
             </div>

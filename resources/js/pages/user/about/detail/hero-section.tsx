@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface PartnershipProduct {
     title: string;
@@ -12,7 +13,9 @@ interface PartnershipProduct {
 }
 
 export default function HeroSection({ partnershipProduct }: { partnershipProduct: PartnershipProduct }) {
+    const { t, i18n } = useTranslation('user');
     const deadlineDate = new Date(partnershipProduct.registration_deadline);
+    const dateLocale = i18n.language === 'en' ? enUS : id;
 
     return (
         <section className="to-background from-background via-tertiary dark:via-background dark:to-background relative bg-gradient-to-b py-20 text-gray-900 dark:text-white">
@@ -36,18 +39,20 @@ export default function HeroSection({ partnershipProduct }: { partnershipProduct
                     )}
 
                     <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-                        ⏰ Daftar sebelum: {format(deadlineDate, 'dd MMMM yyyy, HH:mm', { locale: id })} WIB
+                        {t('about.detail.registerBefore', {
+                            date: format(deadlineDate, 'dd MMMM yyyy, HH:mm', { locale: dateLocale }),
+                        })}
                     </div>
 
                     <div className="flex flex-wrap gap-4">
                         <a href="#register">
-                            <Button>Daftar Sekarang</Button>
+                            <Button>{t('about.detail.btnRegisterNow')}</Button>
                         </a>
                         <a href="https://wa.me/+6285606391730" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">Hubungi Kami</Button>
+                            <Button variant="outline">{t('about.detail.btnContactUs')}</Button>
                         </a>
                         <a href="https://ppppmi.id" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">Terafiliasi dengan P4MI</Button>
+                            <Button variant="outline">{t('about.detail.affiliatedWith')}</Button>
                         </a>
                     </div>
                 </div>

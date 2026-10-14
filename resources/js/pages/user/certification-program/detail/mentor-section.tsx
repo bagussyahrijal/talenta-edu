@@ -1,7 +1,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
 import { Link } from '@inertiajs/react';
-import { Star } from 'lucide-react';
+import { ArrowRight, Award, Sparkles, Star } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 interface Mentor {
     id: string;
@@ -11,53 +13,106 @@ interface Mentor {
 }
 
 interface CertificationProgram {
-    mentors?: Mentor[];
+    mentors: Mentor[];
 }
 
 export default function MentorSection({ program }: { program: CertificationProgram }) {
+    const { t } = useTranslation('user');
     const getInitials = useInitials();
-    const mentors = program.mentors || [];
+    const mentors = program.mentors ?? [];
+
+    const getAvatarSrc = (avatar?: string | null) => {
+        if (!avatar) {
+            return null;
+        }
+
+        if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('/')) {
+            return avatar;
+        }
+
+        return `/storage/${avatar}`;
+    };
 
     if (mentors.length === 0) {
         return null;
     }
 
     return (
-        <section className="mx-auto mt-16 mb-8 sm:mb-12 w-full max-w-5xl px-4" id="mentors">
-            <h2 className="dark:text-primary-foreground font-literata mb-4 text-center text-3xl font-bold text-gray-900 md:text-4xl">
-                Mentor Program
-            </h2>
-            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">Mentor profesional yang akan membimbing Anda selama program sertifikasi</p>
-            <div className="grid gap-4 md:grid-cols-2">
-                {mentors.map((mentor) => (
-                    <Link
-                        key={mentor.id}
-                        href={`/mentor/${mentor.id}`}
-                        className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-md transition-shadow duration-200 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
-                    >
-                        <div className="flex w-full items-start gap-4">
-                            <Avatar className="ring-primary/20 h-12 w-12 shrink-0 ring-4 md:h-16 md:w-16">
-                                <AvatarImage src={mentor.avatar ? `/storage/${mentor.avatar}` : undefined} alt={mentor.name} />
-                                <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold md:text-3xl">
-                                    {getInitials(mentor.name)}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div className="w-full min-w-0">
-                                <div className="flex items-center justify-between gap-3">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{mentor.name}</h3>
-                                </div>
-                                <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">{mentor.bio || 'Mentor profesional Talenta Edu'}</p>
-                                <div className="flex items-center gap-2">
-                                    <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                    <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                    <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                    <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                    <Star size={18} className="text-yellow-500" fill="currentColor" />
+        <section className="relative mx-auto w-full max-w-7xl px-4 pt-6 pb-12">
+            <div className="relative z-10">
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="mb-8 text-center"
+                >
+                    <div className="mb-3 flex items-center justify-center gap-2">
+                        <Sparkles className="text-primary h-5 w-5" />
+                        <span className="bg-primary/10 text-primary rounded-full px-4 py-1 text-sm font-semibold">
+                            {mentors.length === 1
+                                ? t('certificationProgram.detail.mentors.badgeSingle', 'Mentor Profesional')
+                                : t('certificationProgram.detail.mentors.badgeMultiple', 'Para Mentor Profesional')}
+                        </span>
+                    </div>
+                    <h2 className="text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
+                        {mentors.length === 1
+                            ? t('certificationProgram.detail.mentors.titleSingle', 'Belajar dari Ahlinya')
+                            : t('certificationProgram.detail.mentors.titleMultiple', 'Belajar dari Para Ahli')}
+                    </h2>
+                </motion.div>
+
+                {/* Mentor Card */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
+                >
+                    {mentors.map((mentor) => (
+                        <Link
+                            key={mentor.id}
+                            href={`/mentor/${mentor.id}`}
+                            className="group hover:border-primary/40 relative block overflow-hidden rounded-2xl border-2 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+                        >
+                            <div className="p-6 md:p-8">
+                                <div className="flex flex-col items-center gap-6 text-center">
+                                    <div className="relative flex-shrink-0">
+                                        <Avatar className="h-24 w-24 border-4 border-white shadow-lg md:h-28 md:w-28 dark:border-zinc-800">
+                                            <AvatarImage src={getAvatarSrc(mentor.avatar) ?? undefined} alt={mentor.name} />
+                                            <AvatarFallback className="from-primary to-secondary bg-gradient-to-br text-3xl font-bold text-white">
+                                                {getInitials(mentor.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-green-500 shadow-lg dark:border-zinc-900">
+                                            <Award className="h-4 w-4 text-white" />
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full">
+                                        <h3 className="mb-2 text-xl font-bold text-gray-900 md:text-2xl dark:text-white">{mentor.name}</h3>
+
+                                        <div className="mb-3 flex items-center justify-center gap-1">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star key={i} size={16} className="text-yellow-500" fill="currentColor" />
+                                            ))}
+                                            <span className="ml-2 text-sm font-semibold text-gray-600 dark:text-gray-400">5.0</span>
+                                        </div>
+
+                                        <p className="mb-4 line-clamp-3 min-h-[3.75rem] text-sm text-gray-600 md:text-base dark:text-gray-400">
+                                            {mentor.bio ?? t('certificationProgram.detail.mentors.defaultBio', 'Mentor profesional Talenta Academy.')}
+                                        </p>
+
+                                        <div className="text-primary inline-flex items-center gap-2 text-sm font-semibold transition-all group-hover:gap-3 cursor-pointer">
+                                            <span>{t('certificationProgram.detail.mentors.viewProfile', 'Lihat Profile Lengkap')}</span>
+                                            <ArrowRight className="h-4 w-4" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </Link>
-                ))}
+                        </Link>
+                    ))}
+                </motion.div>
             </div>
         </section>
     );

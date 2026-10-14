@@ -2,6 +2,7 @@ import { Cursor } from '@/components/ui/cursor';
 import { Tilt } from '@/components/ui/tilt';
 import { Link } from '@inertiajs/react';
 import { SVGProps, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const MouseIcon = (props: SVGProps<SVGSVGElement>) => {
     return (
@@ -53,37 +54,40 @@ const AnimatedCounter = ({ end, duration = 2000, suffix = '' }: { end: number; d
         requestAnimationFrame(animate);
     }, [end, duration]);
 
+    const { i18n } = useTranslation('home');
+
     return (
         <h1 className='font-literata text-5xl font-bold'>
-            {count.toLocaleString('id-ID')}{suffix}
+            {count.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}{suffix}
         </h1>
     );
 };
 
 export default function AboutSection() {
+    const { t } = useTranslation('home');
+
     return (
         <section className="relative mx-auto w-full max-w-7xl px-4 py-8">
             <div className="mx-auto text-center w-full max-w-4xl space-y-8">
-                <h1 className='text-5xl font-bold font-literata text-primary'>Perjalanan Kami</h1>
-                <p className=''>Kami telah membantu ribuan peserta meningkatkan kompetensi akuntansi dan perpajakan melalui pelatihan berbasis praktik.
-                    “Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja”</p>
+                <h1 className='text-5xl font-bold font-literata text-primary'>{t('about.journeyTitle', 'Perjalanan Kami')}</h1>
+                <p className=''>{t('about.journeyDesc', 'Kami telah membantu ribuan peserta meningkatkan kompetensi akuntansi dan perpajakan melalui pelatihan berbasis praktik. “Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja”')}</p>
 
-                <div className="grid grid-cols-2  lg:grid-cols-4 pt-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 pt-8">
                     <div className='flex flex-col items-center justify-center gap-1'>
                         <AnimatedCounter end={30} suffix="+" />
-                        <p>Pelatihan Online</p>
+                        <p>{t('about.onlineTraining', 'Pelatihan Online')}</p>
                     </div>
                     <div className='flex flex-col items-center justify-center gap-1'>
                         <AnimatedCounter end={15992} suffix="+" />
-                        <p>Alumni & Peserta Terlatih</p>
+                        <p>{t('about.trainedAlumni', 'Alumni & Peserta Terlatih')}</p>
                     </div>
                     <div className='flex flex-col items-center justify-center gap-1'>
                         <AnimatedCounter end={15} suffix="+" />
-                        <p>Partner Kerjasama</p>
+                        <p>{t('about.partners', 'Partner Kerjasama')}</p>
                     </div>
                     <div className='flex flex-col items-center justify-center gap-1'>
                         <AnimatedCounter end={98} suffix="%" />
-                        <p>Kepuasan Peserta</p>
+                        <p>{t('about.satisfaction', 'Kepuasan Peserta')}</p>
                     </div>
                 </div>
             </div>

@@ -1,23 +1,114 @@
+import { Wrench, Sparkles, CheckCircle } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
+
 interface Webinar {
     tools?: { name: string; description?: string | null; icon: string | null }[];
 }
 
 export default function ToolsSection({ webinar }: { webinar: Webinar }) {
+    const { t } = useTranslation('user');
+
     return (
-        <section className="mx-auto mt-2 w-full max-w-5xl px-4 sm:mt-8" id="tools">
-            <h2 className="text-primary border-primary bg-background mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                Tools yang Digunakan
-            </h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                {webinar.tools?.map((tool) => (
-                    <div
-                        key={tool.name}
-                        className="flex flex-col items-center justify-center gap-2 rounded-lg bg-white px-6 py-4 shadow-md dark:bg-zinc-800"
-                    >
-                        <img src={tool.icon ? `/storage/${tool.icon}` : '/assets/images/placeholder.png'} alt={tool.name} className="w-16" />
-                        <h3 className="text-lg font-semibold md:text-xl">{tool.name}</h3>
+        <section className="relative mx-auto w-full max-w-7xl px-4 pt-6 pb-12" id="tools">
+            {/* Background Decoration */}
+            <div className="pointer-events-none absolute inset-0">
+                <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl" />
+                <div className="absolute bottom-20 right-10 h-64 w-64 rounded-full bg-orange-500/10 blur-3xl" />
+            </div>
+
+            <div className="relative z-10">
+                {/* Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="mb-12 text-center"
+                >
+                    <div className="mb-4 flex items-center justify-center gap-2">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        <span className="rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
+                            {t('webinar.detail.toolsBadge')}
+                        </span>
                     </div>
-                ))}
+                    <h2 className="mb-4 text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
+                        {t('webinar.detail.toolsTitle')}
+                    </h2>
+                    <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400">
+                        {t('webinar.detail.toolsSubtitle')}
+                    </p>
+                </motion.div>
+
+                {/* Tools Grid */}
+                {webinar.tools && webinar.tools.length > 0 ? (
+                    <>
+                        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                            {webinar.tools.map((tool, idx) => (
+                                <motion.div
+                                    key={tool.name}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.5, delay: idx * 0.05 }}
+                                    className="group relative overflow-hidden rounded-2xl border-2 bg-white dark:bg-zinc-900 dark:border-zinc-700 p-6 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-primary/40"
+                                >
+                                    {/* Decorative gradient */}
+                                    <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
+
+                                    {/* Content */}
+                                    <div className="relative flex flex-col items-center text-center">
+                                        {/* Icon Container */}
+                                        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-800 dark:to-zinc-700 p-3 shadow-md transition-transform group-hover:scale-110">
+                                            <img
+                                                src={tool.icon ? `/storage/${tool.icon}` : '/assets/images/placeholder.png'}
+                                                alt={tool.name}
+                                                className="h-full w-full object-contain"
+                                            />
+                                        </div>
+
+                                        {/* Tool Name */}
+                                        <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                                            {tool.name}
+                                        </h3>
+
+                                        {/* Description */}
+                                        {tool.description && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                                {tool.description}
+                                            </p>
+                                        )}
+
+                                        {/* Check Badge */}
+                                        <div className="mt-4 flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                                            <CheckCircle className="h-4 w-4" />
+                                            <span className="font-medium">{t('webinar.detail.industryStandard')}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Corner Badge */}
+                                    <div className="absolute top-3 right-3">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                                            <Wrench className="h-3 w-3 text-primary" />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        
+                    </>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6 }}
+                        className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-gray-300 dark:border-zinc-700 py-16"
+                    >
+                        <Wrench className="h-16 w-16 text-gray-400" />
+                        <p className="text-center text-gray-500 dark:text-gray-400">
+                            {t('webinar.detail.toolsEmpty')}
+                        </p>
+                    </motion.div>
+                )}
             </div>
         </section>
     );

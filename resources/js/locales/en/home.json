@@ -1,0 +1,146 @@
+{
+  "about": {
+    "badge": "Why Choose Talenta Academy?",
+    "title1": "Solutions",
+    "title2": "carefully designed for",
+    "titleHighlight": "learning",
+    "title3": "made simple",
+    "webDev": {
+      "title": "Web & App Development",
+      "desc": "Build responsive and high-performance web and mobile applications"
+    },
+    "dataScience": {
+      "title": "Data Science",
+      "desc": "Analyze data to gain valuable and actionable insights"
+    },
+    "graphicDesign": {
+      "title": "Graphic Design",
+      "desc": "Design attractive, engaging, and functional user interfaces"
+    },
+    "accounting": {
+      "title": "Accounting, Finance, & Tax",
+      "desc": "Manage finances and prepare reliable financial statements"
+    },
+    "title": "Start Your Professional Career From Here",
+    "desc": "We provide practical, certification-based, and online training in Accounting and Tax to prepare you for the professional world.",
+    "knowMore": "Get to Know Us",
+    "journeyTitle": "Our Journey",
+    "journeyDesc": "We have helped thousands of participants improve their accounting and tax competencies through practice-based training. “Producing Accounting & Tax Talents Ready for the Professional World”",
+    "onlineTraining": "Online Trainings",
+    "trainedAlumni": "Trained Alumni & Participants",
+    "partners": "Partnerships",
+    "satisfaction": "Participant Satisfaction"
+  },
+  "program": {
+    "badge": "Our Programs",
+    "learnNow": "Learn Now",
+    "course": {
+      "title": "Online Courses",
+      "subtitle": "Master in-demand skills with one-time payment, hands-on practice, and certificates.",
+      "point1": "Flexible learning via video lessons, projects, and case studies",
+      "point2": "Practical & actionable. Structured from Beginner to Advanced levels",
+      "point3": "Lifetime community discussion groups. Free classes every month"
+    },
+    "bootcamp": {
+      "title": "Bootcamp",
+      "subtitle": "Intensive live classes with experts. Practical & comprehensive.",
+      "point1": "Hands-on case studies and real practice in every session. Basic to advanced",
+      "point2": "Semi-private group mentoring to build your job-ready portfolio",
+      "point3": "Curated expert mentors with over 30,000 satisfied alumni"
+    },
+    "webinar": {
+      "title": "Webinar",
+      "subtitle": "Explore current topics taught by industry experts.",
+      "point1": "Gain insightful learning from seasoned domain experts",
+      "point2": "Practical & Actionable. Step-by-step from Basic to Advanced",
+      "point3": "Lifetime discussion community. Free classes every month"
+    }
+  },
+  "tools": {
+    "badge": "Tools & Frameworks",
+    "title": "Up-to-date tools & frameworks used"
+  },
+  "latest": {
+    "badge": "Latest Products",
+    "recentTraining": "Latest Training",
+    "title": "Latest Courses, Bootcamps, Webinars, Private & Bundles from Talenta Academy",
+    "popularTitle": "Most Popular Classes",
+    "popularDesc": "Upgrade your knowledge and skills here",
+    "empty": "No products are currently available.",
+    "allOwned": "You already have access to all our latest products! 😁🙏",
+    "thankYou": "Thank you for being part of Talenta Academy!",
+    "save": "Save {{discount}}%",
+    "free": "Free",
+    "lifetimeAccess": "Lifetime Access",
+    "registerBefore": "Register within {{days}} days",
+    "registrationClosed": "Registration closed",
+    "registerUntil": "Register until {{date}}",
+    "viewMore": "View More...",
+    "registeredMentors": "{{count}} registered mentors",
+    "noBio": "No bio available",
+    "startsPrefix": "Starts: ",
+    "registrationDeadlinePrefix": "Registration Deadline: ",
+    "badges": {
+      "course": "Online Course",
+      "bootcamp": "Bootcamp",
+      "webinar": "Webinar",
+      "bundle": "Bundle",
+      "certification": "Certification Program",
+      "private": "Private",
+      "scholarship": "Scholarship",
+      "regular": "Regular"
+    },
+    "levels": {
+      "beginner": "Beginner Level",
+      "intermediate": "Intermediate Level",
+      "advanced": "Advanced Level"
+    }
+  },
+  "mentor": {
+    "title": "Meet Our Mentor",
+    "badge": "MENTOR",
+    "roleTax": "Tax Mentor"
+  },
+  "carousel": {
+    "slide": "Slide {{number}}"
+  },
+  "testimony": {
+    "title": "What They Say",
+    "subtitle": "What our customers say about us"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "description": "Learning tax, brevet, or accounting can be confusing, especially with so much technical material! Have questions about webinars, online classes, or tax and accounting certification?",
+    "q1": "What is Talenta Academy?",
+    "a1": "Talenta Academy is a professional training institution focused on developing competencies in accounting, taxation, auditing, and accounting software, etc. with a practical and applicable approach.",
+    "q2": "What are the features and programs at Talenta Academy?",
+    "a2": "Talenta Academy provides various learning programs such as Online Classes, Bootcamps, and Webinar-based training. Each program is designed interactively and applicably to help participants develop optimal skills ready for the professional workforce.",
+    "q3": "What is the learning process at Talenta?",
+    "a3": "Registration can be completed through the official Talenta Academy website or by contacting our admin via WhatsApp available on the website or DM on IG @brevetpajak_talenta.",
+    "q4": "Where can I get information for partnerships or if I encounter issues?",
+    "a4_part1": "For more information regarding Talenta Academy, please contact our admin via WhatsApp at ",
+    "a4_phone": "+6285606391730",
+    "a4_part2": ". We are also active across social media, so make sure to follow Talenta Academy on Instagram, TikTok, and LinkedIn for latest updates and tips on accounting and taxation."
+  },
+  "cta": {
+    "title": "Let's Get In Touch.",
+    "desc": "We are here to ease your online learning journey. We are ready to assist you.",
+    "getInTouch": "Get in Touch",
+    "exploreBootcamp": "Explore Our Bootcamp",
+    "joinedAlumni": "Join 1,000+ alumni",
+    "registerNow": "Register for Classes Now",
+    "descLong": "Join thousands of other participants who have benefited from our courses. Get access to high quality materials, experienced mentors, and a supportive community.",
+    "exploreClass": "Explore Courses"
+  },
+  "notification": {
+    "justPurchased": "Just purchased {{type}}: "
+  },
+  "promotion": {
+    "alt": "Talenta Academy Promotion",
+    "clickForDetail": "Click for details",
+    "clickToClose": "Click to close"
+  },
+  "galery": {
+    "title": "Talenta Academy Gallery"
+  }
+}

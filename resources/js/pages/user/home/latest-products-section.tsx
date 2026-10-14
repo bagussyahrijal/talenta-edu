@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Category {
     id: string;
@@ -40,6 +41,8 @@ interface LatestProductsProps {
 }
 
 export default function LatestProductsSection({ latestProducts, myProductIds }: LatestProductsProps) {
+    const { t, i18n } = useTranslation(['home', 'user']);
+
     const safeMyProductIds = {
         courses: myProductIds?.courses || [],
         bootcamps: myProductIds?.bootcamps || [],
@@ -70,15 +73,15 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
     const getTypeLabel = (type: string) => {
         switch (type) {
             case 'course':
-                return 'kelas online';
+                return t('latest.badges.course', 'kelas online');
             case 'bootcamp':
-                return 'bootcamp';
+                return t('latest.badges.bootcamp', 'bootcamp');
             case 'webinar':
-                return 'webinar';
+                return t('latest.badges.webinar', 'webinar');
             case 'bundle':
-                return 'bundle';
+                return t('latest.badges.bundle', 'bundle');
             case 'certification-program':
-                return 'program sertifikasi';
+                return t('latest.badges.certification', 'program sertifikasi');
             default:
                 return type;
         }
@@ -125,15 +128,15 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
     return (
         <section className="mx-auto w-full py-8">
             <div className="bg-secondary flex flex-col items-center justify-center space-y-8 px-4 py-14">
-                <h1 className="font-literata text-primary text-center text-5xl font-bold">Kelas Terpopuler</h1>
-                <p className="text-center">Tingkatkan pengetahuan dan keterampilan kamu disini</p>
+                <h1 className="font-literata text-primary text-center text-5xl font-bold">{t('latest.popularTitle', 'Kelas Terpopuler')}</h1>
+                <p className="text-center">{t('latest.popularDesc', 'Tingkatkan pengetahuan dan keterampilan kamu disini')}</p>
                 <div className="grid w-full max-w-7xl gap-5 pb-4 sm:grid-cols-2 lg:grid-cols-3">
                     {(() => {
                         if (safeLatestProducts.length === 0) {
                             return (
                                 <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
-                                    <img src="/assets/images/not-found.webp" alt="Produk Belum Tersedia" className="w-48" />
-                                    <div className="text-center text-gray-500">Belum ada produk yang tersedia saat ini.</div>
+                                    <img src="/assets/images/not-found.webp" alt={t('latest.empty', 'Produk Belum Tersedia')} className="w-48" />
+                                    <div className="text-center text-gray-500">{t('latest.empty', 'Belum ada produk yang tersedia saat ini.')}</div>
                                 </div>
                             );
                         }
@@ -141,8 +144,8 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                         if (availableProducts.length === 0) {
                             return (
                                 <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
-                                    <div className="text-center text-lg font-semibold">Anda sudah memiliki akses semua produk terbaru kami. 😁🙏</div>
-                                    <p className="text-center text-gray-500">Terima kasih telah menjadi bagian dari Talenta!</p>
+                                    <div className="text-center text-lg font-semibold">{t('latest.allOwned', 'Anda sudah memiliki akses semua produk terbaru kami. 😁🙏')}</div>
+                                    <p className="text-center text-gray-500">{t('latest.thankYou', 'Terima kasih telah menjadi bagian dari Talenta Academy!')}</p>
                                 </div>
                             );
                         }
@@ -193,9 +196,9 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                             <div className="mb-3">
                                                 <p className="text-xl font-bold text-gray-900 group-hover:text-white dark:text-white">
                                                     {product.price === 0 ? (
-                                                        <span className="text-green-600 dark:text-green-400">Gratis</span>
+                                                        <span className="text-green-600 dark:text-green-400">{t('latest.free', 'Gratis')}</span>
                                                     ) : (
-                                                        `Rp ${product.price.toLocaleString('id-ID')}`
+                                                        `Rp ${product.price.toLocaleString(i18n.language === 'en' ? 'en-US' : 'id-ID')}`
                                                     )}
                                                 </p>
                                             </div>
@@ -203,7 +206,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                             {product.type === 'certification-program' && certDeadline && (
                                                 <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                                                     <Calendar className="h-3 w-3" />
-                                                    <span>Daftar s/d {new Date(certDeadline).toLocaleDateString('id-ID')}</span>
+                                                    <span>{t('latest.registerUntil', { date: new Date(certDeadline).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'id-ID'), defaultValue: `Daftar s/d ${new Date(certDeadline).toLocaleDateString('id-ID')}` })}</span>
                                                 </div>
                                             )}
 
@@ -213,7 +216,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                 <span>
                                                     {product.type === 'bootcamp' && product.start_date && (
                                                         <>
-                                                            {new Date(product.start_date).toLocaleDateString('id-ID', {
+                                                            {new Date(product.start_date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'id-ID', {
                                                                 day: 'numeric',
                                                                 month: 'long',
                                                                 year: 'numeric',
@@ -222,14 +225,14 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                     )}
                                                     {product.type === 'webinar' && product.start_time && (
                                                         <>
-                                                            {new Date(product.start_time).toLocaleDateString('id-ID', {
+                                                            {new Date(product.start_time).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'id-ID', {
                                                                 day: 'numeric',
                                                                 month: 'long',
                                                                 year: 'numeric',
                                                             })}
                                                         </>
                                                     )}
-                                                    {product.type === 'course' && 'Akses Selamanya'}
+                                                    {product.type === 'course' && t('latest.lifetimeAccess', 'Akses Selamanya')}
                                                 </span>
                                             </div>
                                         </div>

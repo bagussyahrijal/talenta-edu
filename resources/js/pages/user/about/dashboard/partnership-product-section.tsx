@@ -4,9 +4,10 @@ import { Magnetic } from '@/components/ui/magnetic';
 import { Spotlight } from '@/components/ui/spotlight';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id, enUS } from 'date-fns/locale';
 import { Calendar, GalleryVerticalEnd } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Category = {
     id: string;
@@ -33,6 +34,7 @@ interface PartnershipProductProps {
 }
 
 export default function PartnershipProductSection({ categories, partnershipProducts }: PartnershipProductProps) {
+    const { t, i18n } = useTranslation('user');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(6);
@@ -40,6 +42,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
     const isDragging = useRef(false);
     const startX = useRef(0);
     const scrollLeft = useRef(0);
+    const dateLocale = i18n.language === 'en' ? enUS : id;
 
     const handleMouseDown = (e: React.MouseEvent) => {
         isDragging.current = true;
@@ -72,7 +75,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
     const visibleProducts = filteredProducts.slice(0, visibleCount);
 
     const formatRupiah = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
+        return new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : 'id-ID', {
             style: 'currency',
             currency: 'IDR',
             minimumFractionDigits: 0,
@@ -82,11 +85,11 @@ export default function PartnershipProductSection({ categories, partnershipProdu
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-12" id="partnership-products">
             <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Raih Sertifikasi Profesional dan Tingkatkan Karirmu
+                {t('certificationProgram.dashboard.catalog.title')}
             </h2>
-            <p className="mx-auto mb-8 text-center text-gray-600 dark:text-gray-400">Pilih program sertifikasi yang sesuai dengan tujuan karirmu.</p>
+            <p className="mx-auto mb-8 text-center text-gray-600 dark:text-gray-400">{t('certificationProgram.dashboard.catalog.subtitle')}</p>
             <div className="mb-4 flex">
-                <Input type="search" placeholder="Cari program sertifikasi..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input type="search" placeholder={t('certificationProgram.dashboard.catalog.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div
                 className="mb-4 overflow-x-auto"
@@ -107,7 +110,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
                                 : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                         } `}
                     >
-                        Semua Kategori
+                        {t('certificationProgram.dashboard.catalog.allCategories')}
                     </button>
                     {categories.map((category) => (
                         <button
@@ -129,7 +132,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
                 {visibleProducts.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
                         <img src="/assets/images/not-found.webp" alt="Program Belum Tersedia" className="w-48" />
-                        <div className="text-center text-gray-500">Belum ada program sertifikasi yang tersedia saat ini.</div>
+                        <div className="text-center text-gray-500">{t('certificationProgram.dashboard.catalog.emptyPrograms')}</div>
                     </div>
                 ) : (
                     visibleProducts.map((product) => {
@@ -153,7 +156,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
                                             <h2 className="mb-2 line-clamp-2 text-lg font-semibold">{product.title}</h2>
 
                                             {product.price === 0 ? (
-                                                <p className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                <p className="mb-2 text-lg font-semibold text-green-600 dark:text-green-400">{t('about.detail.free')}</p>
                                             ) : (
                                                 <div className="mb-2">
                                                     {product.strikethrough_price > 0 && (
@@ -170,8 +173,8 @@ export default function PartnershipProductSection({ categories, partnershipProdu
                                             <div className="flex items-center gap-2 text-sm">
                                                 <Calendar size="16" className="text-red-500" />
                                                 <p className="text-gray-600 dark:text-gray-400">
-                                                    Daftar sebelum:{' '}
-                                                    <span className="font-medium">{format(deadlineDate, 'dd MMM yyyy', { locale: id })}</span>
+                                                    {t('about.detail.deadline')}{' '}
+                                                    <span className="font-medium">{format(deadlineDate, 'dd MMM yyyy', { locale: dateLocale })}</span>
                                                 </p>
                                             </div>
                                         </div>
@@ -186,7 +189,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
                 <div className="mb-8 flex justify-center">
                     <Magnetic>
                         <Button type="button" className="mt-8 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
+                            {t('bootcamp.catalog.loadMore')} <GalleryVerticalEnd />
                         </Button>
                     </Magnetic>
                 </div>

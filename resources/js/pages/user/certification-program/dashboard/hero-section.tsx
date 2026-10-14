@@ -1,102 +1,197 @@
-import { CheckCircle2 } from 'lucide-react';
-
-const advantageSection = [
-    {
-        title: 'Sertifikat Resmi dari Ahli Industri.',
-        description: 'Dapatkan sertifikat yang diakui industri dari mentor dan lembaga profesional terpercaya.',
-    },
-    {
-        title: 'Kurikulum Terupdate.',
-        description: 'Konten pembelajaran selalu diperbarui mengikuti perkembangan teknologi dan tren industri terkini.',
-    },
-    {
-        title: 'Bimbingan Praktisi Berpengalaman.',
-        description: 'Materi disampaikan langsung oleh praktisi yang ahli di bidangnya sehingga relevan dengan dunia kerja.',
-    },
-    {
-        title: 'Fleksibel & Terjangkau.',
-        description: 'Jadwal yang fleksibel dengan harga terjangkau, termasuk opsi beasiswa untuk pengembangan karirmu.',
-    }
-];
+import { Button } from '@/components/ui/button';
+import { motion } from 'motion/react';
+import { Award, Sparkles, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function HeroSection() {
+    const { t } = useTranslation('user');
+
     return (
-        <>
-            {/* Hero Section */}
-            <section className="relative mx-auto max-w-7xl px-4 py-6 sm:py-8 md:py-12">
-                <div className="relative overflow-hidden rounded-xl p-4 sm:p-6 md:p-16 h-[250px] sm:h-[350px] md:h-[450px] flex items-center justify-center" style={{
-                    background: 'linear-gradient(to right, #1976D3 10%, #1976D3 50%, #a0a0a0 95%)'
-                }}>
-                    <div className="relative z-10 text-white">
-                        <h1 className="mb-3 sm:mb-4 md:mb-6 text-xl sm:text-3xl md:text-5xl font-bold leading-tight font-literata">
-                            Program Sertifikasi
-                        </h1>
-                        <p className="w-full sm:w-3/4 md:w-1/2 text-[10px] sm:text-xs md:text-base">
-                            Program Sertifikasi Talenta Academy dirancang bersama para ahli industri untuk meningkatkan skill dan kompetensi Anda. Dapatkan pengalaman belajar intensif, dukungan materi terstruktur, dan raih sertifikat profesional untuk membuka peluang karir yang lebih luas.
-                        </p>
-                    </div>
-
-                    {/* Background Image */}
-                    <div className="absolute right-0 top-0 h-full w-full">
-                        <img
-                            src="assets/images/hero-bootcamp.png"
-                            alt="Program Sertifikasi"
-                            className="h-full w-full object-cover"
-                            style={{
-                                maskImage: 'linear-gradient(to right, transparent 0%, black 100%)',
-                                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 100%)'
+        <section className=" dark:via-background dark:to-background relative overflow-hidden bg-gradient-to-b py-24 text-gray-900 dark:text-white">
+            <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-3">
+                {/* Animated Certificate Illustration */}
+                <motion.div
+                    initial={{ opacity: 0, x: -40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.7, delay: 0.2 }}
+                    className="col-span-1 hidden lg:flex items-center justify-center"
+                >
+                    <div className="relative h-[500px] w-full">
+                        {/* Certificate 1 */}
+                        <motion.div
+                            initial={{ y: 50, rotate: 0, opacity: 0 }}
+                            animate={{ y: 0, rotate: -3, opacity: 1 }}
+                            transition={{
+                                duration: 0.8,
+                                delay: 0.3,
+                                ease: 'easeOut',
                             }}
-                        />
+                            className="absolute top-8 left-4 z-10 w-80 rounded-2xl border-4 border-primary/30 bg-white p-6 shadow-2xl dark:bg-zinc-900"
+                        >
+                            <div className="mb-4 flex items-center justify-center">
+                                <Award className="h-12 w-12 text-primary" />
+                            </div>
+                            <div className="mb-2 h-2 w-3/4 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                            <div className="mb-4 h-2 w-1/2 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                            <div className="mb-2 h-8 w-full rounded bg-primary/20"></div>
+                            <div className="mt-4 flex items-center justify-between">
+                                <div className="h-2 w-1/4 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                            </div>
+                        </motion.div>
+
+                        {/* Certificate 2 */}
+                        <motion.div
+                            initial={{ y: 50, rotate: 0, opacity: 0 }}
+                            animate={{ y: 0, rotate: 2, opacity: 1 }}
+                            transition={{
+                                duration: 0.8,
+                                delay: 0.5,
+                                ease: 'easeOut',
+                            }}
+                            className="absolute top-24 left-8 z-20 w-80 rounded-2xl border-4 border-secondary/30 bg-white p-6 shadow-2xl dark:bg-zinc-900"
+                        >
+                            <div className="mb-4 flex items-center justify-center">
+                                <Sparkles className="h-12 w-12 text-secondary" />
+                            </div>
+                            <div className="mb-2 h-2 w-2/3 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                            <div className="mb-4 h-2 w-1/3 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                            <div className="mb-2 h-8 w-full rounded bg-secondary/20"></div>
+                            <div className="mt-4 flex items-center justify-between">
+                                <div className="h-2 w-1/3 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                            </div>
+                        </motion.div>
+
+                        {/* Certificate 3 */}
+                        <motion.div
+                            initial={{ y: 50, rotate: 0, opacity: 0 }}
+                            animate={{ y: 0, rotate: -2, opacity: 1 }}
+                            transition={{
+                                duration: 0.8,
+                                delay: 0.7,
+                                ease: 'easeOut',
+                            }}
+                            className="absolute top-40 left-12 z-30 w-80 rounded-2xl border-4 border-green-500/30 bg-white p-6 shadow-2xl dark:bg-zinc-900"
+                        >
+                            <div className="mb-4 flex items-center justify-center">
+                                <Award className="h-12 w-12 text-green-600" />
+                            </div>
+                            <div className="mb-2 h-2 w-3/5 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                            <div className="mb-4 h-2 w-2/5 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                            <div className="mb-2 h-8 w-full rounded bg-green-500/20"></div>
+                            <div className="mt-4 flex items-center justify-between">
+                                <div className="h-2 w-1/4 rounded bg-gray-200 dark:bg-zinc-700"></div>
+                                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
-            </section>
+                </motion.div>
 
-            {/* Advantages Section */}
-            <section className="relative mx-auto max-w-7xl px-4 md:py-12">
-                <div className="grid gap-12 lg:grid-cols-3 items-center">
-                    {/* Left Content */}
-                    <div className="lg:col-span-2 flex flex-col justify-center h-full gap-8">
-                        <h2 className="md:mb-8 text-2xl sm:text-3xl md:text-4xl font-bold text-primary font-literata w-full sm:w-2/3">
-                            Raih Sertifikasi Profesional & Tingkatkan Karirmu
-                        </h2>
+                {/* Content */}
+                <div className="col-span-2">
+                    <motion.span
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-100 to-yellow-100 border border-secondary px-4 py-1.5 text-sm font-semibold text-secondary shadow-sm"
+                    >
+                        <Award className="h-4 w-4" />
+                        {t('certificationProgram.dashboard.hero.badge', 'Program Sertifikasi')}
+                    </motion.span>
 
-                        <div className="grid gap-6 sm:grid-cols-2">
-                            {advantageSection.map((item) => (
-                                <div key={item.title} className="flex gap-3">
-                                    <div className="flex-shrink-0">
-                                        <div className="flex h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-blue-500">
-                                            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 className="mb-2 font-semibold text-gray-900 dark:text-white text-base sm:text-lg md:text-xl">
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                                            {item.description}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, delay: 0.3 }}
+                        className="mb-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl"
+                    >
+                        <span className="text-primary">{t('certificationProgram.dashboard.hero.titlePart1', 'Dapatkan Sertifikasi')}</span>{' '}
+                        {t('certificationProgram.dashboard.hero.and', 'dan')} <br />
+                        <span className="text-secondary">{t('certificationProgram.dashboard.hero.titlePart2', 'Tingkatkan Kredibilitas')}</span>{' '}
+                        {t('certificationProgram.dashboard.hero.titlePart3', 'Profesional Anda')}
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                        className="mb-8 max-w-2xl text-lg text-gray-700 dark:text-gray-300"
+                    >
+                        {t(
+                            'certificationProgram.dashboard.hero.description',
+                            'Program sertifikasi yang dirancang bersama pakar industri terkemuka untuk meningkatkan kompetensi dan membuka peluang karir lebih luas.'
+                        )}
+                    </motion.p>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.5 }}
+                        className="flex flex-wrap gap-4"
+                    >
+                        <a href="#certification-programs">
+                            <Button size="lg" className="px-8 text-base font-bold shadow-lg">
+                                <Award className="mr-2 h-5 w-5" />
+                                {t('certificationProgram.dashboard.hero.btnViewPrograms', 'Lihat Program Sertifikasi')}
+                            </Button>
+                        </a>
+                        <a href="https://wa.me/+6281252683108" target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="lg" className="border-primary px-8 text-base font-bold text-primary hover:bg-primary/10">
+                                {t('certificationProgram.dashboard.hero.btnFreeConsultation', 'Konsultasi Gratis')}
+                            </Button>
+                        </a>
+                    </motion.div>
+
+                    {/* Stats/Benefits */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.6 }}
+                        className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3"
+                    >
+                        <div className="flex items-center gap-3 rounded-xl border bg-white/70 p-4 shadow-sm backdrop-blur-md dark:bg-zinc-900/60">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <Award className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    {t('certificationProgram.dashboard.hero.statPartner', 'Partner')}
+                                </p>
+                                <p className="text-lg font-bold">
+                                    {t('certificationProgram.dashboard.hero.statPartnerVal', 'Terpercaya')}
+                                </p>
+                            </div>
                         </div>
-                    </div>
-
-                    {/* Right Image */}
-                    <div className="relative flex justify-center lg:justify-end cols-span-1">
-                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-primary rounded-tr-[60px] rounded-bl-[60px] sm:rounded-tr-[90px] sm:rounded-bl-[90px] md:rounded-tr-[125px] md:rounded-bl-[125px] h-[180px] w-[180px] sm:h-[280px] sm:w-[280px] md:h-[380px] md:w-[380px]" style={{
-                            boxShadow: 'inset 0 5px 15px rgba(0, 0, 0, 0.3), inset 0 -5px 15px rgba(0, 0, 0, 0.3)'
-                        }}></div>
-                        <div className="relative">
-                            {/* Main image */}
-                            <img
-                                src="assets/images/hero-bootcamp-2.png"
-                                alt="Professional woman"
-                                className="relative z-10 h-[200px] w-full max-w-xs sm:h-[300px] sm:max-w-sm md:h-[400px] md:max-w-md rounded-3xl object-cover"
-                            />
+                        <div className="flex items-center gap-3 rounded-xl border bg-white/70 p-4 shadow-sm backdrop-blur-md dark:bg-zinc-900/60">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                                <Sparkles className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    {t('certificationProgram.dashboard.hero.statCert', 'Sertifikat')}
+                                </p>
+                                <p className="text-lg font-bold">
+                                    {t('certificationProgram.dashboard.hero.statCertVal', 'Profesional')}
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                        <div className="flex items-center gap-3 rounded-xl border bg-white/70 p-4 shadow-sm backdrop-blur-md dark:bg-zinc-900/60">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                <Award className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    {t('certificationProgram.dashboard.hero.statCareer', 'Peluang Karir')}
+                                </p>
+                                <p className="text-lg font-bold">
+                                    {t('certificationProgram.dashboard.hero.statCareerVal', 'Lebih Luas')}
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
-            </section>
-        </>
+            </div>
+        </section>
     );
 }

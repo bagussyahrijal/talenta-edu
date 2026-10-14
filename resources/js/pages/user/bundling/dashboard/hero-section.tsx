@@ -1,101 +1,112 @@
 import { Button } from '@/components/ui/button';
+import { Check, Package, Sparkles, Layers, Infinity, Percent } from 'lucide-react';
 import { motion } from 'motion/react';
-import { CheckCircle2 } from 'lucide-react';
-
-const advantageSection = [
-    {
-        title: 'Hemat Hingga 70%',
-        description: 'Dapatkan harga spesial untuk akses ke banyak program sekaligus dalam satu paket bundling.',
-    },
-    {
-        title: 'Akses Banyak Program',
-        description: 'Satu kali beli, langsung dapat akses ke beberapa program pilihan sesuai kebutuhanmu.',
-    },
-    {
-        title: 'Sertifikat & Akses Selamanya',
-        description: 'Setiap program dalam bundling memberikan sertifikat dan akses materi tanpa batas waktu.',
-    },
-    {
-        title: 'Fleksibel & Praktis',
-        description: 'Belajar bisa diatur sesuai waktu luangmu, tanpa batasan waktu dan tempat.',
-    }
-];
+import { useTranslation } from 'react-i18next';
 
 export default function HeroSection() {
-    return (
-        <>
-            {/* Hero Section */}
-            <section className="relative mx-auto max-w-7xl px-4 py-6 sm:py-8 md:py-12">
-                <div className="relative overflow-hidden rounded-xl p-4 sm:p-6 md:p-16 h-[250px] sm:h-[350px] md:h-[450px] flex items-center justify-center" style={{
-                    background: 'linear-gradient(to right, #1976D3 10%, #1976D3 50%, #a0a0a0 95%)'
-                }}>
-                    <div className="relative z-10 text-white">
-                        <h1 className="mb-3 sm:mb-4 md:mb-6 text-xl sm:text-3xl md:text-5xl font-bold leading-tight font-literata">
-                            Bundling Program
-                        </h1>
-                        <p className="w-full sm:w-3/4 md:w-1/2 text-[10px] sm:text-xs md:text-base">
-                            Paket Bundling Talenta Academy adalah solusi hemat untuk upgrade skill. Dapatkan akses ke banyak program sekaligus, sertifikat, dan akses materi selamanya hanya dengan satu kali pembelian. Pilih bundling yang sesuai kebutuhanmu dan mulai belajar lebih banyak dengan harga lebih hemat!
-                        </p>
-                    </div>
-                    {/* Background Image */}
-                    <div className="absolute right-0 top-0 h-full w-full">
-                        <img
-                            src="/assets/images/hero-bootcamp.png"
-                            alt="Bundling"
-                            className="h-full w-full object-cover"
-                            style={{
-                                maskImage: 'linear-gradient(to right, transparent 0%, black 100%)',
-                                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 100%)'
-                            }}
-                        />
-                    </div>
-                </div>
-            </section>
+    const { t } = useTranslation('user');
 
-            {/* Advantages Section */}
-            <section className="relative mx-auto max-w-7xl px-4 md:py-12">
-                <div className="grid gap-12 lg:grid-cols-3 items-center">
-                    {/* Left Content */}
-                    <div className="lg:col-span-2 flex flex-col justify-center h-full gap-8">
-                        <h2 className="md:mb-8 text-2xl sm:text-3xl md:text-4xl font-bold text-primary font-literata w-full sm:w-2/3">
-                            Keunggulan Paket Bundling Talenta Academy
-                        </h2>
-                        <div className="grid gap-6 sm:grid-cols-2">
-                            {advantageSection.map((item) => (
-                                <div key={item.title} className="flex gap-3">
-                                    <div className="flex-shrink-0">
-                                        <div className="flex h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 items-center justify-center rounded-full bg-blue-500">
-                                            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 className="mb-2 font-semibold text-gray-900 dark:text-white text-base sm:text-lg md:text-xl">
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-400">
-                                            {item.description}
-                                        </p>
-                                    </div>
+    const benefits = [
+        t('bundling.dashboard.hero.benefit1', 'Hemat hingga 70% dari harga normal'),
+        t('bundling.dashboard.hero.benefit2', 'Akses ke beberapa program sekaligus'),
+        t('bundling.dashboard.hero.benefit3', 'Sertifikat untuk semua program'),
+        t('bundling.dashboard.hero.benefit4', 'Pembelajaran fleksibel'),
+    ];
+
+    return (
+        <section className="relative overflow-hidden py-24 text-black dark:text-white">
+            <div className="relative z-10 mx-auto max-w-7xl px-4">
+                <div className="mx-auto max-w-4xl text-center">
+                    {/* Badge headline */}
+                    <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary shadow-sm">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        {t('bundling.dashboard.hero.badge', 'Penawaran Spesial Paket Bundling')}
+                    </span>
+
+                    {/* Headline */}
+                    <h1 className="mb-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+                        <span className="text-primary">{t('bundling.dashboard.hero.titlePart1', 'Belajar Lebih Banyak')}</span>,<br />
+                        <span className="text-secondary">{t('bundling.dashboard.hero.titlePart2', 'Bayar Lebih Hemat!')}</span> 🎉
+                    </h1>
+
+                    {/* Description */}
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="mx-auto mb-10 max-w-2xl text-lg text-gray-700 dark:text-gray-300"
+                    >
+                        {t('bundling.dashboard.hero.desc', 'Dapatkan akses ke beberapa program pembelajaran sekaligus dengan harga spesial. Tingkatkan skill-mu dengan paket bundling yang dirancang khusus untuk percepatan karirmu!')}
+                    </motion.p>
+
+                    {/* Benefits Grid */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+                    >
+                        {benefits.map((benefit, index) => (
+                            <motion.div
+                                key={benefit}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
+                                className="flex items-center gap-3 rounded-2xl border-2 border-primary/10 bg-white/70 p-5 shadow-md backdrop-blur-md dark:bg-zinc-900/60"
+                            >
+                                <div className="bg-primary/10 text-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full">
+                                    <Check size={16} />
                                 </div>
-                            ))}
+                                <p className="text-left text-base font-medium text-gray-800 dark:text-gray-200">{benefit}</p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+
+                    {/* CTA Buttons */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.5 }}
+                        className="flex flex-wrap justify-center gap-4"
+                    >
+                        <a href="#bundles">
+                            <Button size="lg" className="gap-2 px-8 text-base font-bold shadow-lg">
+                                <Layers size={20} />
+                                {t('bundling.dashboard.hero.btnViewBundles', 'Lihat Paket Bundling')}
+                            </Button>
+                        </a>
+                        <a href="https://wa.me/+6281252683108" target="_blank" rel="noopener noreferrer">
+                            <Button size="lg" variant="outline" className="gap-2 px-8 text-base font-bold border-primary text-primary hover:bg-primary/10">
+                                {t('bundling.dashboard.hero.btnFreeConsultation', 'Konsultasi Gratis')}
+                            </Button>
+                        </a>
+                    </motion.div>
+
+                    {/* Stats */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.6 }}
+                        className="mt-16 flex flex-wrap justify-center gap-8 text-center"
+                    >
+                        <div className="flex flex-col items-center rounded-2xl bg-primary/10 px-8 py-6 shadow">
+                            <Percent className="mb-2 h-8 w-8 text-primary" />
+                            <p className="text-3xl font-bold text-primary">70%</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{t('bundling.dashboard.hero.statSave', 'Hemat Lebih Banyak')}</p>
                         </div>
-                    </div>
-                    {/* Right Image */}
-                    <div className="relative flex justify-center lg:justify-end cols-span-1">
-                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-primary rounded-tr-[60px] rounded-bl-[60px] sm:rounded-tr-[90px] sm:rounded-bl-[90px] md:rounded-tr-[125px] md:rounded-bl-[125px] h-[180px] w-[180px] sm:h-[280px] sm:w-[280px] md:h-[380px] md:w-[380px]" style={{
-                            boxShadow: 'inset 0 5px 15px rgba(0, 0, 0, 0.3), inset 0 -5px 15px rgba(0, 0, 0, 0.3)'
-                        }}></div>
-                        <div className="relative">
-                            {/* Main image */}
-                            <img
-                                src="/assets/images/hero-bundle.png"
-                                alt="Bundling Illustration"
-                                className="relative z-10 h-[200px] w-full max-w-xs sm:h-[300px] sm:max-w-sm md:h-[400px] md:max-w-md rounded-3xl object-cover"
-                            />
+                        <div className="flex flex-col items-center rounded-2xl bg-secondary/10 px-8 py-6 shadow">
+                            <Layers className="mb-2 h-8 w-8 text-secondary" />
+                            <p className="text-3xl font-bold text-secondary">2+</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{t('bundling.dashboard.hero.statPrograms', 'Program dalam 1 Paket')}</p>
                         </div>
-                    </div>
+                        <div className="flex flex-col items-center rounded-2xl bg-green-100/40 px-8 py-6 shadow">
+                            <Infinity className="mb-2 h-8 w-8 text-green-600" />
+                            <p className="text-3xl font-bold text-green-600">100%</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{t('bundling.dashboard.hero.statLifetime', 'Akses Selamanya')}</p>
+                        </div>
+                    </motion.div>
                 </div>
-            </section>
-        </>
+            </div>
+        </section>
     );
-}
+}   

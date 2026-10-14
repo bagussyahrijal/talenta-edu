@@ -4,17 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Beranda', href: '/' },
-    { title: 'Alumni', href: '/alumni' },
-];
-
-const tabs = [
-    { key: 'all', label: 'Semua' },
-    { key: 'pajak', label: 'Pajak' },
-    { key: 'akuntansi', label: 'Akuntansi' },
-];
+import { useTranslation } from 'react-i18next';
 
 const alumniData = [
     { no: '001', nama: 'Mariah Carey', batch: '83', program: 'Brevet Pajak', kategori: 'pajak' },
@@ -35,14 +25,25 @@ const alumniData = [
     { no: '004', nama: 'Alif Zaidan', batch: '83', program: 'Brevet Pajak', kategori: 'pajak' },
     { no: '005', nama: 'Siti Aminah', batch: '83', program: 'Brevet Pajak', kategori: 'pajak' },
     { no: '006', nama: 'Tebe Hebat', batch: '83', program: 'Brevet Pajak', kategori: 'akuntansi' },
-    // ...tambahkan data lain sesuai kebutuhan
 ];
 
 export default function AlumniIndex() {
+    const { t } = useTranslation('user');
     const [activeTab, setActiveTab] = useState('all');
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: t('alumniPage.home'), href: '/' },
+        { title: t('alumniPage.title'), href: '/alumni' },
+    ];
+
+    const tabs = [
+        { key: 'all', label: t('alumniPage.tabAll') },
+        { key: 'pajak', label: t('alumniPage.tabTax') },
+        { key: 'akuntansi', label: t('alumniPage.tabAccounting') },
+    ];
 
     // Filter data sesuai tab dan search
     const filteredData = alumniData.filter((item) => {
@@ -58,10 +59,10 @@ export default function AlumniIndex() {
 
     return (
         <UserLayout>
-            <Head title="Alumni" />
+            <Head title={t('alumniPage.title')} />
             <div className="container mx-auto px-4 py-8 text-primary">
                 <div className="mb-8 mx-auto text-center">
-                    <h1 className="text-4xl font-bold mb-2 font-literata text-primary">Alumni</h1>
+                    <h1 className="text-4xl font-bold mb-2 font-literata text-primary">{t('alumniPage.title')}</h1>
                     <div className="mb-16 flex justify-center">
                         <Breadcrumbs breadcrumbs={breadcrumbs} />
                     </div>
@@ -93,7 +94,7 @@ export default function AlumniIndex() {
                         <input
                             type="text"
                             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-base"
-                            placeholder="Search"
+                            placeholder={t('alumniPage.searchPlaceholder')}
                             value={search}
                             onChange={e => { setSearch(e.target.value); setPage(1); }}
                         />
@@ -105,10 +106,10 @@ export default function AlumniIndex() {
                     <table className="w-full text-center">
                         <thead>
                             <tr className="bg-white text-primary border-b">
-                                <th className="py-3 px-2 font-medium">No</th>
-                                <th className="py-3 px-2 font-medium underline text-primary cursor-pointer">Nama Peserta <span className="inline-block align-middle">⇅</span></th>
-                                <th className="py-3 px-2 font-medium underline text-primary cursor-pointer">Batch <span className="inline-block align-middle">⇅</span></th>
-                                <th className="py-3 px-2 font-medium underline text-primary cursor-pointer">Program Yang Diikuti <span className="inline-block align-middle">⇅</span></th>
+                                <th className="py-3 px-2 font-medium">{t('alumniPage.tableNo')}</th>
+                                <th className="py-3 px-2 font-medium underline text-primary cursor-pointer">{t('alumniPage.tableName')} <span className="inline-block align-middle">⇅</span></th>
+                                <th className="py-3 px-2 font-medium underline text-primary cursor-pointer">{t('alumniPage.tableBatch')} <span className="inline-block align-middle">⇅</span></th>
+                                <th className="py-3 px-2 font-medium underline text-primary cursor-pointer">{t('alumniPage.tableProgram')} <span className="inline-block align-middle">⇅</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -121,7 +122,7 @@ export default function AlumniIndex() {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={4} className="py-6 text-muted-foreground">Data tidak ditemukan</td>
+                                    <td colSpan={4} className="py-6 text-muted-foreground">{t('alumniPage.notFound')}</td>
                                 </tr>
                             )}
                         </tbody>
@@ -131,7 +132,7 @@ export default function AlumniIndex() {
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-6">
                     <div className="text-muted-foreground text-sm">
-                        {`1-${Math.min(perPage, totalItems)} of ${totalItems} items`}
+                        {t('alumniPage.itemsRange', { count: Math.min(perPage, totalItems), total: totalItems })}
                     </div>
                     <div className="flex items-center gap-2">
                         <button
@@ -172,7 +173,7 @@ export default function AlumniIndex() {
                                 <option key={n} value={n}>{n}</option>
                             ))}
                         </select>
-                        <span className="text-muted-foreground text-sm">Items per Page</span>
+                        <span className="text-muted-foreground text-sm">{t('alumniPage.itemsPerPage')}</span>
                     </div>
                 </div>
             </div>

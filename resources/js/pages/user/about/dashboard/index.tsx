@@ -1,5 +1,6 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import HeroSection from './hero-section';
 import LegalitasSection from './legalitas-section';
 import MentorSection from './mentor-section';
@@ -29,9 +30,11 @@ interface PartnershipProductPageProps {
 }
 
 export default function PartnershipProductPage({ categories, partnershipProducts }: PartnershipProductPageProps) {
+    const { t } = useTranslation('user');
+
     return (
         <UserLayout>
-            <Head title="Sertifikasi Kerjasama" />
+            <Head title={t('about.dashboard.headTitle')} />
 
             <HeroSection />
             <LegalitasSection />

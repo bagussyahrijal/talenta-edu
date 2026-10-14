@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BadgeCheck, FileText, Info, GraduationCap } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useTranslation } from 'react-i18next';
 
 interface CertificationProgram {
     description?: string | null;
@@ -11,14 +12,15 @@ interface CertificationProgram {
 }
 
 export default function AboutSection({ program }: { program: CertificationProgram }) {
+    const { t } = useTranslation('user');
     const tabs = [
-        { key: 'description', label: 'Tentang Program' },
-        { key: 'benefits', label: 'Manfaat' },
-        { key: 'terms_conditions', label: 'Syarat & Ketentuan' },
+        { key: 'description', label: t('certificationProgram.detail.tabs.aboutProgram', 'Tentang Program') },
+        { key: 'benefits', label: t('certificationProgram.detail.tabs.benefits', 'Manfaat') },
+        { key: 'terms_conditions', label: t('certificationProgram.detail.tabs.termsConditions', 'Syarat & Ketentuan') },
     ];
 
     if (program.type === 'scholarship') {
-        tabs.push({ key: 'scholarship_flow', label: 'Alur Beasiswa' });
+        tabs.push({ key: 'scholarship_flow', label: t('certificationProgram.detail.tabs.scholarshipFlow', 'Alur Beasiswa') });
     }
 
     const [activeTab, setActiveTab] = useState(tabs[0].key);
@@ -51,13 +53,13 @@ export default function AboutSection({ program }: { program: CertificationProgra
                     <>
                         <div className="flex items-center gap-2 mb-3 sm:mb-4">
                             <Info className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary" />
-                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">Tentang Program</p>
+                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">{t('certificationProgram.detail.tabs.aboutProgram', 'Tentang Program')}</p>
                         </div>
                         <p className="mb-6 sm:mb-8 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                            Gambaran lengkap tentang program ini dan apa yang akan Anda pelajari.
+                            {t('certificationProgram.detail.tabs.aboutProgramDesc', 'Gambaran lengkap tentang program ini dan apa yang akan Anda pelajari.')}
                         </p>
                         <div className="prose prose-sm sm:prose-base max-w-none">
-                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.description || 'Tidak ada deskripsi tersedia.' }} />
+                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.description || t('certificationProgram.detail.tabs.noDesc', 'Tidak ada deskripsi tersedia.') }} />
                         </div>
                     </>
                 )}
@@ -66,13 +68,13 @@ export default function AboutSection({ program }: { program: CertificationProgra
                     <>
                         <div className="flex items-center gap-2 mb-3 sm:mb-4">
                             <BadgeCheck className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary" />
-                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">Manfaat Program</p>
+                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">{t('certificationProgram.detail.tabs.benefits', 'Manfaat Program')}</p>
                         </div>
                         <p className="mb-6 sm:mb-8 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                            Berbagai manfaat dan keuntungan yang akan Anda dapatkan setelah mengikuti program ini.
+                            {t('certificationProgram.detail.tabs.benefitsDesc', 'Berbagai manfaat dan keuntungan yang akan Anda dapatkan setelah mengikuti program ini.')}
                         </p>
                         <div className="prose prose-sm sm:prose-base max-w-none">
-                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.benefits || 'Tidak ada manfaat tersedia.' }} />
+                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.benefits || t('certificationProgram.detail.tabs.noBenefits', 'Tidak ada manfaat tersedia.') }} />
                         </div>
                     </>
                 )}
@@ -81,13 +83,13 @@ export default function AboutSection({ program }: { program: CertificationProgra
                     <>
                         <div className="flex items-center gap-2 mb-3 sm:mb-4">
                             <FileText className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary" />
-                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">Syarat & Ketentuan</p>
+                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">{t('certificationProgram.detail.tabs.termsConditions', 'Syarat & Ketentuan')}</p>
                         </div>
                         <p className="mb-6 sm:mb-8 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                            Persyaratan yang perlu Anda penuhi sebelum mengikuti program ini.
+                            {t('certificationProgram.detail.tabs.termsConditionsDesc', 'Persyaratan yang perlu Anda penuhi sebelum mengikuti program ini.')}
                         </p>
                         <div className="prose prose-sm sm:prose-base max-w-none">
-                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.terms_conditions || 'Tidak ada syarat dan ketentuan khusus.' }} />
+                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.terms_conditions || t('certificationProgram.detail.tabs.noTerms', 'Tidak ada syarat dan ketentuan khusus.') }} />
                         </div>
                     </>
                 )}
@@ -96,13 +98,13 @@ export default function AboutSection({ program }: { program: CertificationProgra
                     <>
                         <div className="flex items-center gap-2 mb-3 sm:mb-4">
                             <GraduationCap className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary" />
-                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">Alur Beasiswa</p>
+                            <p className="font-literata font-medium text-xl sm:text-2xl md:text-3xl">{t('certificationProgram.detail.tabs.scholarshipFlow', 'Alur Beasiswa')}</p>
                         </div>
                         <p className="mb-6 sm:mb-8 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                            Tahapan alur proses pendaftaran beasiswa untuk program ini.
+                            {t('certificationProgram.detail.tabs.scholarshipFlowDesc', 'Tahapan alur proses pendaftaran beasiswa untuk program ini.')}
                         </p>
                         <div className="prose prose-sm sm:prose-base max-w-none">
-                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.scholarship_flow || 'Tidak ada informasi alur beasiswa.' }} />
+                            <div className="text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed" dangerouslySetInnerHTML={{ __html: program.scholarship_flow || t('certificationProgram.detail.tabs.noScholarshipFlow', 'Tidak ada informasi alur beasiswa.') }} />
                         </div>
                     </>
                 )}

@@ -1,8 +1,10 @@
 import { Carousel, CarouselContent, CarouselIndicator, CarouselItem, CarouselNavigation } from '@/components/ui/carousel';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function CarouselSection() {
+    const { t } = useTranslation('home');
     const [index, setIndex] = useState(0);
     const TOTAL_ITEMS = 4;
 
@@ -21,7 +23,7 @@ export default function CarouselSection() {
                         <a href="#program-kami">
                             <img
                                 src="/assets/images/carousel-1.webp"
-                                alt="Slide 1"
+                                alt={t('carousel.slide', { number: 1, defaultValue: 'Slide 1' })}
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
                             />
@@ -31,7 +33,7 @@ export default function CarouselSection() {
                         <a href="#program-kami">
                             <img
                                 src="/assets/images/carousel-1.webp"
-                                alt="Slide 1"
+                                alt={t('carousel.slide', { number: 2, defaultValue: 'Slide 2' })}
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
                             />
@@ -41,7 +43,7 @@ export default function CarouselSection() {
                         <a href="#program-kami">
                             <img
                                 src="/assets/images/carousel-1.webp"
-                                alt="Slide 1"
+                                alt={t('carousel.slide', { number: 3, defaultValue: 'Slide 3' })}
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
                             />
@@ -51,7 +53,7 @@ export default function CarouselSection() {
                         <a href="#program-kami">
                             <img
                                 src="/assets/images/carousel-1.webp"
-                                alt="Slide 1"
+                                alt={t('carousel.slide', { number: 4, defaultValue: 'Slide 4' })}
                                 loading="lazy"
                                 className="mx-auto w-full max-w-7xl rounded-xl object-cover shadow-lg"
                             />

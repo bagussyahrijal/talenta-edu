@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface Mentor {
     id: number;
     name: string;
@@ -33,13 +35,15 @@ const mentorsData: Mentor[] = [
 ];
 
 const MentorCard = ({ mentor }: { mentor: Mentor }) => {
+    const { t } = useTranslation('home');
+
     return (
         <section className="relative mx-auto h-[370px] w-full max-w-xs overflow-hidden rounded-[20px] sm:max-w-sm md:max-w-md lg:w-[300px] shadow-lg">
             {/* Blue Side Bar with "MENTOR" text */}
             <div className="absolute left-0 top-0 h-full w-[70px] rounded-[20px_0px_0px_20px] bg-[#1976d3] sm:w-[90px]">
                 <div className="absolute left-1/2 top-1/3 flex -translate-x-1/2 -translate-y-1/2 -rotate-90 items-center justify-center">
                     <span className="whitespace-nowrap font-literata font-bold text-3xl uppercase leading-none text-primary sm:text-5xl" style={{ WebkitTextStroke: '0.5px white' }}>
-                        MENTOR
+                        {t('mentor.badge', 'MENTOR')}
                     </span>
                 </div>
             </div>
@@ -62,20 +66,22 @@ const MentorCard = ({ mentor }: { mentor: Mentor }) => {
             </h3>
             {/* Mentor Role */}
             <p className="absolute bottom-[16px] left-0 w-full px-4 text-left font-normal text-xs text-white/90 sm:bottom-[20px] sm:px-6 sm:text-[14px]">
-                {mentor.role}
+                {mentor.role === 'Mentor Perpajakan' ? t('mentor.roleTax', mentor.role) : mentor.role}
             </p>
         </section>
     );
 };
 
 export default function MentorSection() {
+    const { t } = useTranslation('home');
+
     return (
         <section className="relative w-full bg-secondary px-4 py-10 sm:px-8 sm:py-16 md:px-16">
             <div className="mx-auto w-full max-w-7xl">
                 {/* Header */}
                 <div className="mb-10 text-center sm:mb-16">
                     <h2 className="text-3xl font-bold font-literata text-primary sm:text-5xl">
-                        Meet Our Mentor
+                        {t('mentor.title', 'Meet Our Mentor')}
                     </h2>
                 </div>
                 {/* Mentor Cards Grid */}

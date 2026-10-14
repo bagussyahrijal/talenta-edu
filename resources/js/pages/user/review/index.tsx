@@ -3,17 +3,7 @@ import { Head } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { useState } from 'react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Beranda', href: '/' },
-    { title: 'Review', href: '/review' },
-];
-
-const tabs = [
-    { key: 'all', label: 'Semua' },
-    { key: 'pajak', label: 'Pajak' },
-    { key: 'akuntansi', label: 'Akuntansi' },
-];
+import { useTranslation } from 'react-i18next';
 
 const reviewData = [
     {
@@ -88,7 +78,6 @@ const reviewData = [
         text: 'Lorem ipsum dolor sit amet consectetur adipiscing elit ut massa mi. Aliquam in hendrerit urna. Pellentesque ut amet sapien.Lorem ipsum dolor sit amet consectetur adipiscing elit ut massa mi. Aliquam in hendrerit urna. Pellentesque ut amet sapien.',
         kategori: 'akuntansi',
     },
-    
 ];
 
 interface ReviewCardProps {
@@ -123,7 +112,6 @@ function renderReviewLayout(reviews: typeof reviewData) {
     const col3: typeof reviewData = [];
     
     reviews.forEach((review, index) => {
-        // Simple round-robin: 0->col1, 1->col2, 2->col3, 3->col1, dst
         const colIndex = index % 3;
         
         if (colIndex === 0) {
@@ -162,7 +150,19 @@ function renderReviewLayout(reviews: typeof reviewData) {
 }
 
 export default function ReviewIndex() {
+    const { t } = useTranslation('user');
     const [activeTab, setActiveTab] = useState('all');
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: t('reviewPage.home'), href: '/' },
+        { title: t('reviewPage.title'), href: '/review' },
+    ];
+
+    const tabs = [
+        { key: 'all', label: t('reviewPage.tabAll') },
+        { key: 'pajak', label: t('reviewPage.tabTax') },
+        { key: 'akuntansi', label: t('reviewPage.tabAccounting') },
+    ];
 
     // Filter reviews sesuai tab
     const filteredReviews =
@@ -172,10 +172,10 @@ export default function ReviewIndex() {
 
     return (
         <UserLayout>
-            <Head title="Review" />
+            <Head title={t('reviewPage.title')} />
             <div className="container mx-auto px-4 py-8 text-primary">
                 <div className="mb-8 mx-auto text-center">
-                    <h1 className="text-4xl font-bold mb-2 font-literata text-primary">Review</h1>
+                    <h1 className="text-4xl font-bold mb-2 font-literata text-primary">{t('reviewPage.title')}</h1>
                     <div className="mb-16 flex justify-center">
                         <Breadcrumbs breadcrumbs={breadcrumbs} />
                     </div>
@@ -204,7 +204,7 @@ export default function ReviewIndex() {
                     renderReviewLayout(filteredReviews)
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-muted-foreground">Belum ada review tersedia</p>
+                      <p className="text-muted-foreground">{t('reviewPage.empty')}</p>
                     </div>
                   )}
                 </div>

@@ -3,18 +3,7 @@ import { Head } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { useState } from 'react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Beranda', href: '/' },
-    { title: 'Galeri', href: '/galeri' },
-];
-
-const tabs = [
-    { key: 'all', label: 'Semua' },
-    { key: 'sma', label: 'SMA/SMK' },
-    { key: 'universitas', label: 'Universitas' },
-    { key: 'institusi', label: 'Institusi' },
-];
+import { useTranslation } from 'react-i18next';
 
 const gambar = [
   { key: 'galeri-1', src: '/assets/images/carousel-1.png', alt: 'Galeri 1', info: 'SMAN 1 Malang', kategori: 'sma' },
@@ -22,7 +11,6 @@ const gambar = [
   { key: 'galeri-3', src: '/assets/images/carousel-1.png', alt: 'Galeri 3', info: 'Polinema', kategori: 'universitas' },
   { key: 'galeri-4', src: '/assets/images/carousel-1.png', alt: 'Galeri 4', info: 'Dinas Pendidikan', kategori: 'institusi' },
   { key: 'galeri-5', src: '/assets/images/carousel-1.png', alt: 'Galeri 5', info: 'SMKN 2 Batu', kategori: 'sma' },
-  // ...tambahkan gambar lain jika perlu
 ];
 
 function renderGalleryLayout(images: typeof gambar) {
@@ -85,7 +73,20 @@ function renderGalleryLayout(images: typeof gambar) {
 }
 
 export default function GalleryIndex() {
+    const { t } = useTranslation('user');
     const [activeTab, setActiveTab] = useState('all');
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: t('galleryPage.home'), href: '/' },
+        { title: t('galleryPage.title'), href: '/galeri' },
+    ];
+
+    const tabs = [
+        { key: 'all', label: t('galleryPage.tabAll') },
+        { key: 'sma', label: t('galleryPage.tabSma') },
+        { key: 'universitas', label: t('galleryPage.tabUniversity') },
+        { key: 'institusi', label: t('galleryPage.tabInstitution') },
+    ];
 
     // Filter gambar sesuai tab
     const filteredGambar =
@@ -95,10 +96,10 @@ export default function GalleryIndex() {
 
     return (
         <UserLayout>
-            <Head title="Galeri" />
+            <Head title={t('galleryPage.title')} />
             <div className="container mx-auto px-4 py-8 text-primary">
                 <div className="mb-8 mx-auto text-center">
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 font-literata">Galeri</h1>
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 font-literata">{t('galleryPage.title')}</h1>
                     <div className="mb-8 sm:mb-12 lg:mb-16 flex justify-center">
                         <Breadcrumbs breadcrumbs={breadcrumbs} />
                     </div>
@@ -127,7 +128,7 @@ export default function GalleryIndex() {
                     renderGalleryLayout(filteredGambar)
                   ) : (
                     <div className="text-center py-12 col-span-full">
-                      <p className="text-muted-foreground">Belum ada galeri tersedia</p>
+                      <p className="text-muted-foreground">{t('galleryPage.empty')}</p>
                     </div>
                   )}
                 </div>
