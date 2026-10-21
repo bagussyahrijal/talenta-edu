@@ -8,18 +8,27 @@ export default function FeatureSection() {
 
     const items = [
         {
-            title: t('course.feature.item1Title'),
-            subtitle: t('course.feature.item1Desc'),
+            title: t('course.feature.item1Title', 'Belajar Fleksibel & Bersertifikat.'),
+            subtitle: t(
+                'course.feature.item1Desc',
+                'Disusun bertahap dari level dasar hingga lanjutan oleh praktisi industri dari berbagai company. Dapatkan e-certificate di tiap materi.',
+            ),
             image: '/assets/images/feature-course-1.webp',
         },
         {
-            title: t('course.feature.item2Title'),
-            subtitle: t('course.feature.item2Desc'),
+            title: t('course.feature.item2Title', 'Kombinasi Strategi Praktek & Portofolio.'),
+            subtitle: t(
+                'course.feature.item2Desc',
+                'Belajar sambil praktek dengan ragam case study, worksheet, dan framework. Didasarkan pada kebutuhan industri dan profesi.',
+            ),
             image: '/assets/images/feature-course-2.webp',
         },
         {
-            title: t('course.feature.item3Title'),
-            subtitle: t('course.feature.item3Desc'),
+            title: t('course.feature.item3Title', 'Gabung Komunitas Secara Lifetime.'),
+            subtitle: t(
+                'course.feature.item3Desc',
+                'Bangun network profesional , saling sharing ilmu dalam praktik, sambil berbagai info loker maupun freelance.',
+            ),
             image: '/assets/images/feature-course-3.webp',
         },
     ];
@@ -34,9 +43,11 @@ export default function FeatureSection() {
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4">
-            
-            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-2xl text-center text-3xl font-bold text-gray-900 md:text-4xl">
-                {t('course.feature.title')}
+            <p className="text-primary border-primary bg-background mx-auto mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
+                {t('course.feature.badge', 'Kelas Online Talenta')}
+            </p>
+            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-2xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
+                {t('course.feature.title', 'Solusi #1 Upgrade Skill Profesional')}
             </h2>
             <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
                 <div className="my-12 space-y-2">

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useInitials } from '@/hooks/use-initials';
@@ -7,58 +8,60 @@ import { Link, usePage } from '@inertiajs/react';
 import { Banknote, BookText, BriefcaseBusiness, CalendarClock, LayoutDashboard, MonitorPlay, Presentation, Settings, Gift } from 'lucide-react';
 import { type PropsWithChildren } from 'react';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/profile/dashboard',
-        icon: LayoutDashboard,
-    },
-    {
-        title: 'Kelas Online',
-        href: '/profile/my-courses',
-        icon: BookText,
-    },
-    {
-        title: 'Bootcamp',
-        href: '/profile/my-bootcamps',
-        icon: Presentation,
-    },
-    {
-        title: 'Webinar',
-        href: '/profile/my-webinars',
-        icon: MonitorPlay,
-    },
-    {
-        title: 'Sertifikasi',
-        href: '/profile/my-certification-programs',
-        icon: BriefcaseBusiness,
-    },
-    {
-        title: 'Transaksi',
-        href: '/profile/transactions',
-        icon: Banknote,
-    },
-    {
-        title: 'Cicilan Saya',
-        href: '/profile/installments',
-        icon: CalendarClock,
-    },
-    {
-        title: 'Referral & Poin',
-        href: '/profile/referral',
-        icon: Gift,
-    },
-    {
-        title: 'Pengaturan Akun',
-        href: '/settings/profile',
-        icon: Settings,
-    },
-];
-
 export default function ProfileLayout({ children }: PropsWithChildren) {
+    const { t } = useTranslation('profile');
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
+
+    const sidebarNavItems: NavItem[] = [
+        {
+            title: t('sidebar.dashboard', 'Dashboard'),
+            href: '/profile/dashboard',
+            icon: LayoutDashboard,
+        },
+        {
+            title: t('sidebar.courses', 'Kelas Online'),
+            href: '/profile/my-courses',
+            icon: BookText,
+        },
+        {
+            title: t('sidebar.bootcamps', 'Bootcamp'),
+            href: '/profile/my-bootcamps',
+            icon: Presentation,
+        },
+        {
+            title: t('sidebar.webinars', 'Webinar'),
+            href: '/profile/my-webinars',
+            icon: MonitorPlay,
+        },
+        {
+            title: t('sidebar.certifications', 'Sertifikasi'),
+            href: '/profile/my-certification-programs',
+            icon: BriefcaseBusiness,
+        },
+        {
+            title: t('sidebar.transactions', 'Transaksi'),
+            href: '/profile/transactions',
+            icon: Banknote,
+        },
+        {
+            title: t('sidebar.installments', 'Cicilan Saya'),
+            href: '/profile/installments',
+            icon: CalendarClock,
+        },
+        {
+            title: t('sidebar.referral', 'Referral & Poin'),
+            href: '/profile/referral',
+            icon: Gift,
+        },
+        {
+            title: t('sidebar.settings', 'Pengaturan Akun'),
+            href: '/settings/profile',
+            icon: Settings,
+        },
+    ];
+
 
     if (typeof window === 'undefined') {
         return null;
@@ -79,7 +82,7 @@ export default function ProfileLayout({ children }: PropsWithChildren) {
                                 </AvatarFallback>
                             </Avatar>
                             <h1 className="text-xl font-bold italic">{auth.user.name}</h1>
-                            <p className="text-muted-foreground text-sm">Lifetime Learner</p>
+                            <p className="text-muted-foreground text-sm">{t('sidebar.tagline', 'Lifetime Learner')}</p>
                         </div>
                         <nav className="flex flex-col space-y-1 space-x-0">
                             {sidebarNavItems.map((item, index) => (

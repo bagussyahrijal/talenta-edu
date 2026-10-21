@@ -23,6 +23,7 @@ interface RelatedProductProps {
 
 export default function RelatedProduct({ relatedWebinars, myWebinarIds }: RelatedProductProps) {
     const { t, i18n } = useTranslation('user');
+    const locale = i18n.language === 'en' ? 'en-US' : 'id-ID';
 
     if (!relatedWebinars || relatedWebinars.length === 0) {
         return null;
@@ -30,8 +31,12 @@ export default function RelatedProduct({ relatedWebinars, myWebinarIds }: Relate
 
     return (
         <section className="mx-auto mt-16 w-full max-w-7xl px-4" id="related">
-            <h2 className="dark:text-primary-foreground mb-4 text-center text-3xl font-bold text-gray-900 italic md:text-4xl">{t('webinar.detail.similarTitle')}</h2>
-            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">{t('webinar.detail.similarSubtitle')}</p>
+            <h2 className="dark:text-primary-foreground mb-4 text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
+                {t('webinar.detail.similarTitle', 'Webinar Serupa')}
+            </h2>
+            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">
+                {t('webinar.detail.similarSubtitle', 'Webinar lain yang mungkin menarik untuk Anda')}
+            </p>
 
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {relatedWebinars.map((webinar) => {
@@ -59,9 +64,9 @@ export default function RelatedProduct({ relatedWebinars, myWebinarIds }: Relate
                                 </div>
                                 <div className="w-full p-4 text-left">
                                     {hasAccess ? (
-                                        <p className="text-primary text-sm font-medium">{t('webinar.detail.owned')}</p>
+                                        <p className="text-primary text-sm font-medium">{t('webinar.detail.owned', 'Anda sudah memiliki akses')}</p>
                                     ) : webinar.price === 0 ? (
-                                        <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('webinar.detail.freeLower')}</p>
+                                        <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('webinar.detail.freeLower', 'Gratis')}</p>
                                     ) : (
                                         <div className="">
                                             {webinar.strikethrough_price > 0 && (
@@ -78,7 +83,7 @@ export default function RelatedProduct({ relatedWebinars, myWebinarIds }: Relate
                                         <div className="flex items-center gap-2">
                                             <Calendar size="18" />
                                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {new Date(webinar.start_time).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'id-ID', {
+                                                {new Date(webinar.start_time).toLocaleDateString(locale, {
                                                     day: 'numeric',
                                                     month: 'long',
                                                     year: 'numeric',

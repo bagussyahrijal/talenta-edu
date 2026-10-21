@@ -8,18 +8,18 @@ export default function FeatureSection() {
 
     const items = [
         {
-            title: t('bootcamp.feature.item1Title'),
-            subtitle: t('bootcamp.feature.item1Desc'),
+            title: t('bootcamp.feature.item1Title', 'Belajar Fleksibel & Bersertifikat.'),
+            subtitle: t('bootcamp.feature.item1Desc', 'Kuasai dengan kurikulum up-to-date yang sesuai kebutuhan industri. Fleksibel untuk profesional yang ingin upskill tanpa mengganggu jam kerja.'),
             image: '/assets/images/feature-bootcamp-1.webp',
         },
         {
-            title: t('bootcamp.feature.item2Title'),
-            subtitle: t('bootcamp.feature.item2Desc'),
+            title: t('bootcamp.feature.item2Title', 'Fokus Bantu Kembangkan Skill dan Portfolio.'),
+            subtitle: t('bootcamp.feature.item2Desc', 'Belajar sambil praktek dengan ragam case study, worksheet, dan framework. Didasarkan pada kebutuhan industri dan profesi'),
             image: '/assets/images/feature-bootcamp-2.webp',
         },
         {
-            title: t('bootcamp.feature.item3Title'),
-            subtitle: t('bootcamp.feature.item3Desc'),
+            title: t('bootcamp.feature.item3Title', 'Peluang Karir Menjanjikan.'),
+            subtitle: t('bootcamp.feature.item3Desc', 'Membuka peluang karir yang menjanjikan di industri teknologi dan mendapat proyek-proyek menarik.'),
             image: '/assets/images/feature-bootcamp-3.webp',
         },
     ];
@@ -34,9 +34,11 @@ export default function FeatureSection() {
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4">
-            
-            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-2xl text-center text-3xl font-bold text-gray-900 md:text-4xl">
-                {t('bootcamp.feature.title')}
+            <p className="text-primary border-primary bg-background mx-auto mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
+                {t('bootcamp.feature.badge', 'Bootcamp Talenta')}
+            </p>
+            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-2xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
+                {t('bootcamp.feature.title', 'Solusi #1 Mengembangkan Portofolio Diri')}
             </h2>
             <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
                 <div className="my-12 space-y-2">

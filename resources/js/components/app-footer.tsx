@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from '@inertiajs/react';
 import { Instagram } from 'lucide-react';
 
 export default function AppFooter() {
+    const { t } = useTranslation('common');
     return (
         <footer className="from-background to-primary w-full bg-gradient-to-b py-8 sm:py-12">
             <div className="relative mx-auto max-w-7xl rounded-2xl bg-white p-4 sm:p-8">
@@ -11,9 +13,9 @@ export default function AppFooter() {
                         <div className="mb-6 flex items-center gap-2">
                             <img src="/assets/images/logo-primary-2.png" alt="Talenta Logo" className="h-10 sm:h-12" />
                         </div>
-                        <p className="mb-6 text-sm leading-relaxed text-gray-700">Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja</p>
+                        <p className="mb-6 text-sm leading-relaxed text-gray-700">{t('footer.tagline', 'Mencetak Talenta Akuntansi & Pajak yang Siap Dunia Kerja')}</p>
                         <div>
-                            <h5 className="mb-2 font-semibold text-gray-900">Talenta Academy</h5>
+                            <h5 className="mb-2 font-semibold text-gray-900">{t('footer.company', 'Talenta Academy')}</h5>
                             <p className="text-sm text-gray-700">
                                 Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo
                                 <br />
@@ -25,83 +27,83 @@ export default function AppFooter() {
                     <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:col-span-4">
                         {/* Column 2: Company Links */}
                         <div>
-                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">Menu</h4>
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">{t('footer.menu', 'Menu')}</h4>
                             <ul className="space-y-2 sm:space-y-3">
                                 <li>
                                     <Link href="/" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Beranda
+                                        {t('nav.home', 'Beranda')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/program" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Program & Layanan
+                                        {t('nav.programsAndServices', 'Program & Layanan')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/galeri" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Publikasi
+                                        {t('nav.publications', 'Publikasi')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/about" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        About Us
+                                        {t('footer.links.about', t('nav.about', 'Tentang Kami'))}
                                     </Link>
                                 </li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">Layanan</h4>
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">{t('footer.services', 'Layanan')}</h4>
                             <ul className="space-y-2 sm:space-y-3">
                                 <li>
                                     <Link href="/bootcamp" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Bootcamp
+                                        {t('nav.bootcamp', 'Bootcamp')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/webinar" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Webinar
+                                        {t('nav.webinar', 'Webinar')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/course" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Kelas Online
+                                        {t('nav.course', 'Kelas Online')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Bundling Class
+                                        {t('footer.links.bundle', 'Bundling Class')}
                                     </Link>
                                 </li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">Lainnya</h4>
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:mb-6 sm:text-lg">{t('footer.others', 'Lainnya')}</h4>
                             <ul className="space-y-2 sm:space-y-3">
                                 <li>
                                     <Link href="/terms-and-conditions" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Syarat & Ketentuan
+                                        {t('footer.links.terms', 'Syarat & Ketentuan')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/privacy-policy" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Kebijakan Privasi
+                                        {t('footer.links.privacy', 'Kebijakan Privasi')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/publication" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        Artikel & Blog
+                                        {t('footer.links.article', 'Artikel & Blog')}
                                     </Link>
                                 </li>
                                 <li>
                                     <Link href="/about" className="text-sm text-gray-700 hover:text-gray-900 hover:underline">
-                                        About Us
+                                        {t('footer.links.about', t('nav.about', 'Tentang Kami'))}
                                     </Link>
                                 </li>
                             </ul>
                         </div>
                         {/* Social Media on mobile/tablet */}
                         <div className="sm:col-span-2 sm:mt-8 md:col-span-3 lg:hidden">
-                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:text-lg">Media Sosial</h4>
+                            <h4 className="mb-4 text-base font-bold text-gray-900 sm:text-lg">{t('footer.social', 'Media Sosial')}</h4>
                             <div className="flex items-center gap-4">
                                 <a
                                     href="https://www.instagram.com/brevetpajak_talenta/"
@@ -136,7 +138,7 @@ export default function AppFooter() {
                     </div>
                     {/* Social Media on desktop */}
                     <div className="mt-4 hidden lg:col-span-2 lg:block">
-                        <h4 className="mb-4 text-lg font-bold text-gray-900">Media Sosial</h4>
+                        <h4 className="mb-4 text-lg font-bold text-gray-900">{t('footer.social', 'Media Sosial')}</h4>
                         <div className="flex items-center gap-4">
                             <a
                                 href="https://www.instagram.com/brevetpajak_talenta/"
@@ -175,7 +177,7 @@ export default function AppFooter() {
 
                 {/* Copyright */}
                 <div className="text-center">
-                    <p className="text-xs font-medium text-gray-900 sm:text-sm">Copyright © Talentaacademy, All rights reserved.</p>
+                    <p className="text-xs font-medium text-gray-900 sm:text-sm">{t('footer.copyright', 'Copyright © Talentaacademy, All rights reserved.')}</p>
                 </div>
             </div>
         </footer>

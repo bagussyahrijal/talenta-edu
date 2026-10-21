@@ -10,7 +10,8 @@
     "transactions": "Transactions",
     "installments": "My Installments",
     "referral": "Referral & Points",
-    "settings": "Account Settings"
+    "settings": "Account Settings",
+    "privates": "Private Class"
   },
   "dashboard": {
     "title": "Dashboard",

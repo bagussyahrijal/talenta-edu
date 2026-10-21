@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from './language-switcher';
 'use client';
 
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -25,21 +27,23 @@ import { useEffect, useState } from 'react';
 import { SearchCommand } from './search-command';
 
 const layananMenu = [
-    { href: '/course', title: 'Kelas Online', description: 'Belajar dengan video pembelajaran terstruktur dan materi lengkap', icon: BookText },
+    { href: '/course', titleKey: 'nav.course', defaultTitle: 'Kelas Online', descKey: 'nav.courseDesc', defaultDesc: 'Belajar dengan video pembelajaran terstruktur dan materi lengkap', icon: BookText },
     {
         href: '/bootcamp',
-        title: 'Bootcamp',
-        description: 'Program intensif dengan mentor profesional dan project-based learning',
+        titleKey: 'nav.bootcamp',
+        defaultTitle: 'Bootcamp',
+        descKey: 'nav.bootcampDesc',
+        defaultDesc: 'Program intensif dengan mentor profesional dan project-based learning',
         icon: Presentation,
     },
-    { href: '/webinar', title: 'Webinar', description: 'Seminar online dengan topik terkini dan expert speaker', icon: MonitorPlay },
-    { href: '/bundle', title: 'Bundling', description: 'Paket bundling dengan harga spesial dan materi lengkap', icon: Album },
+    { href: '/webinar', titleKey: 'nav.webinar', defaultTitle: 'Webinar', descKey: 'nav.webinarDesc', defaultDesc: 'Seminar online dengan topik terkini dan expert speaker', icon: MonitorPlay },
+    { href: '/bundle', titleKey: 'nav.bundling', defaultTitle: 'Bundling', descKey: 'nav.bundlingDesc', defaultDesc: 'Paket bundling dengan harga spesial dan materi lengkap', icon: Album },
 ];
 
 const publikasiMenu = [
-    { href: '/galeri', title: 'Galeri', description: 'Kumpulan foto kegiatan dan event', icon: FileText },
-    { href: '/alumni', title: 'Alumni', description: 'Kisah sukses alumni setelah mengikuti program kami', icon: User },
-    { href: '/review', title: 'Review', description: 'Testimoni dari peserta tentang pengalaman mereka', icon: User },
+    { href: '/galeri', titleKey: 'nav.gallery', defaultTitle: 'Galeri', descKey: 'nav.galleryDesc', defaultDesc: 'Kumpulan foto kegiatan dan event', icon: FileText },
+    { href: '/alumni', titleKey: 'nav.alumni', defaultTitle: 'Alumni', descKey: 'nav.alumniDesc', defaultDesc: 'Kisah sukses alumni setelah mengikuti program kami', icon: User },
+    { href: '/review', titleKey: 'nav.review', defaultTitle: 'Review', descKey: 'nav.reviewDesc', defaultDesc: 'Testimoni dari peserta tentang pengalaman mereka', icon: User },
 ];
 
 const activeItemStyles = 'text-primary bg-primary/10 dark:text-white dark:bg-primary/50';
@@ -84,6 +88,7 @@ function ListItem({
 }
 
 export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
+    const { t } = useTranslation('common');
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
@@ -110,8 +115,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
             <div className="border-sidebar-border/80 bg-background fixed top-0 right-0 left-0 z-40 border-b shadow-xs">
                 <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                     <Link href="/" prefetch className="flex items-center space-x-2">
-                        <img src="/assets/images/logo-primary.png" alt="Talenta" className="block w-10 fill-current dark:hidden" />
-                        <img src="/assets/images/logo-secondary.png" alt="Talenta" className="hidden w-10 fill-current dark:block" />
+                        <img src="/assets/images/logo-primary.png" alt="Talenta" className="block w-10 fill-current" />
                     </Link>
 
                     <div className="ml-auto hidden h-full items-center space-x-6 lg:flex">
@@ -127,7 +131,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 isHomepage && activeItemStyles,
                                             )}
                                         >
-                                            Beranda
+                                            {t('nav.home', 'Beranda')}
                                         </Link>
                                     </NavigationMenuLink>
                                     {isHomepage && (
@@ -140,22 +144,22 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <NavigationMenuTrigger
                                         className={cn('hover:bg-primary/5 dark:hover:bg-primary/40 h-9 px-3', isServicesActive && activeItemStyles)}
                                     >
-                                        Program & Layanan
+                                        {t('nav.programsAndServices', 'Program & Layanan')}
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[600px] gap-3 p-4 md:grid-cols-[.75fr_1fr]">
                                             {/* 3 Produk Utama */}
-                                            <ListItem href="/course" title="Kelas Online">
-                                                Belajar dengan video pembelajaran terstruktur dan materi lengkap
+                                            <ListItem href="/course" title={t('nav.course', 'Kelas Online')}>
+                                                {t('nav.courseDesc', 'Belajar dengan video pembelajaran terstruktur dan materi lengkap')}
                                             </ListItem>
-                                            <ListItem href="/bootcamp" title="Bootcamp">
-                                                Program intensif dengan mentor profesional dan project-based learning
+                                            <ListItem href="/bootcamp" title={t('nav.bootcamp', 'Bootcamp')}>
+                                                {t('nav.bootcampDesc', 'Program intensif dengan mentor profesional dan project-based learning')}
                                             </ListItem>
-                                            <ListItem href="/webinar" title="Webinar">
-                                                Seminar online dengan topik terkini dan expert speaker
+                                            <ListItem href="/webinar" title={t('nav.webinar', 'Webinar')}>
+                                                {t('nav.webinarDesc', 'Seminar online dengan topik terkini dan expert speaker')}
                                             </ListItem>
-                                            <ListItem href="/bundle" title="Bundling">
-                                                Seminar online dengan topik terkini dan expert speaker
+                                            <ListItem href="/bundle" title={t('nav.bundling', 'Bundling')}>
+                                                {t('nav.bundlingDesc', 'Paket bundling dengan harga spesial dan materi lengkap')}
                                             </ListItem>
                                         </ul>
                                     </NavigationMenuContent>
@@ -167,18 +171,18 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 {/* Publikasi */}
                                 <NavigationMenuItem className="relative flex h-full items-center">
                                     <NavigationMenuTrigger className={cn('hover:bg-primary/5 dark:hover:bg-primary/40 h-9 px-3')}>
-                                        Publikasi
+                                        {t('nav.publications', 'Publikasi')}
                                     </NavigationMenuTrigger>
                                     <NavigationMenuContent>
                                         <ul className="grid w-[600px] gap-3 p-4 md:grid-cols-[.75fr_1fr]">
-                                            <ListItem href="/galeri" title="Galeri">
-                                                Kumpulan foto kegiatan dan event
+                                            <ListItem href="/galeri" title={t('nav.gallery', 'Galeri')}>
+                                                {t('nav.galleryDesc', 'Kumpulan foto kegiatan dan event')}
                                             </ListItem>
-                                            <ListItem href="/alumni" title="Alumni">
-                                                Kisah sukses alumni setelah mengikuti program kami
+                                            <ListItem href="/alumni" title={t('nav.alumni', 'Alumni')}>
+                                                {t('nav.alumniDesc', 'Kisah sukses alumni setelah mengikuti program kami')}
                                             </ListItem>
-                                            <ListItem href="/review" title="Review">
-                                                Testimoni dari peserta tentang pengalaman mereka
+                                            <ListItem href="/review" title={t('nav.review', 'Review')}>
+                                                {t('nav.reviewDesc', 'Testimoni dari peserta tentang pengalaman mereka')}
                                             </ListItem>
                                         </ul>
                                     </NavigationMenuContent>
@@ -194,7 +198,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 page.url.startsWith('/about') && activeItemStyles,
                                             )}
                                         >
-                                            Tentang Kami
+                                            {t('nav.about', 'Tentang Kami')}
                                         </Link>
                                     </NavigationMenuLink>
                                     {page.url.startsWith('/about') && (
@@ -211,7 +215,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 page.url.startsWith('/certification-program') && activeItemStyles,
                                             )}
                                         >
-                                            Sertifikasi
+                                            {t('nav.certification', 'Sertifikasi')}
                                         </Link>
                                     </NavigationMenuLink>
                                     {page.url.startsWith('/certification-program') && (
@@ -228,7 +232,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 page.url.startsWith('/check-certificate') && activeItemStyles,
                                             )}
                                         >
-                                            Cek Sertifikat
+                                            {t('nav.checkCertificate', 'Cek Sertifikat')}
                                         </Link>
                                     </NavigationMenuLink>
                                     {page.url.startsWith('/check-certificate') && (
@@ -247,7 +251,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     page.url.startsWith('/profile') && activeItemStyles,
                                                 )}
                                             >
-                                                Profil Saya
+                                                {t('nav.myProfile', 'Profil Saya')}
                                             </Link>
                                         </NavigationMenuLink>
                                         {page.url.startsWith('/profile') && (
@@ -260,6 +264,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     </div>
 
                     <div className="ml-4 flex items-center space-x-2">
+                        <LanguageSwitcher variant="segmented" />
+
                         {auth.user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -279,10 +285,10 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                         ) : (
                             <>
                                 <Button variant="outline" asChild>
-                                    <Link href={route('login')}>Masuk</Link>
+                                    <Link href={route('login')}>{t('nav.login', 'Masuk')}</Link>
                                 </Button>
                                 <Button variant="default" asChild className="hidden lg:inline-flex">
-                                    <Link href={route('register')}>Daftar</Link>
+                                    <Link href={route('register')}>{t('nav.register', 'Daftar')}</Link>
                                 </Button>
                             </>
                         )}
@@ -303,7 +309,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             )}
                         >
                             <Home className="mb-1 h-5 w-6" />
-                            <span className="text-center text-xs leading-none font-medium">Beranda</span>
+                            <span className="text-center text-xs leading-none font-medium">{t('nav.home', 'Beranda')}</span>
                         </Link>
 
                         {/* Program & Layanan */}
@@ -318,12 +324,12 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     )}
                                 >
                                     <Album className="mb-1 h-5 w-6" />
-                                    <span className="text-center text-xs leading-none font-medium">Program & Layanan</span>
+                                    <span className="text-center text-xs leading-none font-medium">{t('nav.programsAndServices', 'Program & Layanan')}</span>
                                 </button>
                             </PopoverTrigger>
                             <PopoverContent side="top" align="center" className="mb-2 w-72 p-3 sm:w-80" sideOffset={8}>
                                 <div className="space-y-1">
-                                    <h4 className="mb-3 px-2 text-sm font-semibold">Program & Layanan</h4>
+                                    <h4 className="mb-3 px-2 text-sm font-semibold">{t('nav.programsAndServices', 'Program & Layanan')}</h4>
                                     {layananMenu.map((item) => {
                                         const isActive = page.url.startsWith(item.href);
                                         return (
@@ -344,8 +350,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     )}
                                                 />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="mb-1 text-sm leading-none font-medium">{item.title}</p>
-                                                    <p className="text-muted-foreground line-clamp-2 text-xs">{item.description}</p>
+                                                    <p className="mb-1 text-sm leading-none font-medium">{t(item.titleKey, item.defaultTitle)}</p>
+                                                    <p className="text-muted-foreground line-clamp-2 text-xs">{t(item.descKey, item.defaultDesc)}</p>
                                                 </div>
                                             </Link>
                                         );
@@ -366,12 +372,12 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     )}
                                 >
                                     <FileText className="mb-1 h-5 w-6" />
-                                    <span className="text-center text-xs leading-none font-medium">Publikasi</span>
+                                    <span className="text-center text-xs leading-none font-medium">{t('nav.publications', 'Publikasi')}</span>
                                 </button>
                             </PopoverTrigger>
                             <PopoverContent side="top" align="center" className="mb-2 w-72 p-3 sm:w-80" sideOffset={8}>
                                 <div className="space-y-1">
-                                    <h4 className="mb-3 px-2 text-sm font-semibold">Publikasi</h4>
+                                    <h4 className="mb-3 px-2 text-sm font-semibold">{t('nav.publications', 'Publikasi')}</h4>
                                     {publikasiMenu.map((item) => {
                                         const isActive = page.url.startsWith(item.href);
                                         return (
@@ -391,8 +397,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                     )}
                                                 />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="mb-1 text-sm leading-none font-medium">{item.title}</p>
-                                                    <p className="text-muted-foreground line-clamp-2 text-xs">{item.description}</p>
+                                                    <p className="mb-1 text-sm leading-none font-medium">{t(item.titleKey, item.defaultTitle)}</p>
+                                                    <p className="text-muted-foreground line-clamp-2 text-xs">{t(item.descKey, item.defaultDesc)}</p>
                                                 </div>
                                             </Link>
                                         );
@@ -412,7 +418,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                             )}
                         >
                             <BriefcaseBusiness className="mb-1 h-5 w-6" />
-                            <span className="text-center text-xs leading-none font-medium">Tentang Kami</span>
+                            <span className="text-center text-xs leading-none font-medium">{t('nav.about', 'Tentang Kami')}</span>
                         </Link>
 
                         {/* Profil (if logged in) */}
@@ -427,7 +433,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 )}
                             >
                                 <User className="mb-1 h-5 w-6" />
-                                <span className="text-center text-xs leading-none font-medium">Profil</span>
+                                <span className="text-center text-xs leading-none font-medium">{t('nav.profile', 'Profil')}</span>
                             </Link>
                         )}
                     </div>

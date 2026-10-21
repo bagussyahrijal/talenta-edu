@@ -8,18 +8,18 @@ export default function FeatureSection() {
 
     const items = [
         {
-            title: t('webinar.feature.item1Title'),
-            subtitle: t('webinar.feature.item1Desc'),
+            title: t('webinar.feature.item1Title', 'Dipandu Praktisi Profesional'),
+            subtitle: t('webinar.feature.item1Desc', 'Belajar langsung dari mentor berpengalaman di bidangnya. Dapatkan insight yang aplikatif dan relevan.'),
             image: '/assets/images/feature-webinar-1.webp',
         },
         {
-            title: t('webinar.feature.item2Title'),
-            subtitle: t('webinar.feature.item2Desc'),
+            title: t('webinar.feature.item2Title', 'Topik yang Selalu Update'),
+            subtitle: t('webinar.feature.item2Desc', 'Topik disesuaikan dengan kebutuhan industri dan perkembangan teknologi terbaru. Mulai dari tools freelancer, UI/UX, web development, hingga AI.'),
             image: '/assets/images/feature-webinar-2.webp',
         },
         {
-            title: t('webinar.feature.item3Title'),
-            subtitle: t('webinar.feature.item3Desc'),
+            title: t('webinar.feature.item3Title', 'Cocok untuk Semua Tingkatan'),
+            subtitle: t('webinar.feature.item3Desc', 'Baik kamu pemula atau profesional, webinar kami didesain agar mudah dipahami dan bisa langsung dipraktikkan.'),
             image: '/assets/images/feature-webinar-3.webp',
         },
     ];
@@ -35,10 +35,10 @@ export default function FeatureSection() {
     return (
         <section className="mx-auto w-full max-w-7xl px-4">
             <p className="text-primary border-primary bg-background mx-auto mb-4 w-fit rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                {t('webinar.feature.badge')}
+                {t('webinar.feature.badge', 'Webinar Talenta')}
             </p>
             <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-2xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                {t('webinar.feature.title')}
+                {t('webinar.feature.title', 'Solusi #1 Kembangkan Diri dan Koneksi')}
             </h2>
             <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
                 <div className="my-12 space-y-2">

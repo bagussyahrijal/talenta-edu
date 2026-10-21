@@ -29,7 +29,16 @@
     "transactions": "Riwayat Transaksi",
     "settings": "Pengaturan",
     "logout": "Keluar",
-    "userPage": "Halaman Utama"
+    "userPage": "Halaman Utama",
+    "publications": "Publikasi",
+    "gallery": "Galeri",
+    "galleryDesc": "Kumpulan foto kegiatan dan event",
+    "alumni": "Alumni",
+    "alumniDesc": "Kisah sukses alumni setelah mengikuti program kami",
+    "review": "Review",
+    "reviewDesc": "Testimoni dari peserta tentang pengalaman mereka",
+    "about": "Tentang Kami",
+    "certificate": "Sertifikat"
   },
   "actions": {
     "save": "Simpan",
@@ -44,7 +53,8 @@
     "viewDetails": "Lihat Detail",
     "searchProducts": "Cari Produk...",
     "search": "Cari...",
-    "learnMore": "Pelajari Sekarang"
+    "learnMore": "Pelajari Sekarang",
+    "startLearning": "Mulai Belajar Sekarang"
   },
   "status": {
     "paid": "Lunas",
@@ -79,9 +89,19 @@
       "helpCenter": "Pusat Bantuan",
       "article": "Artikel & Blog",
       "terms": "Syarat & Ketentuan",
-      "privacy": "Kebijakan Privasi"
+      "privacy": "Kebijakan Privasi",
+      "about": "Tentang Kami"
     },
-    "copyright": "Copyright © Talentaacademy, All rights reserved."
+    "copyright": "Copyright © Talentaacademy, All rights reserved.",
+    "menu": "Menu",
+    "mainMenu": "Menu Utama",
+    "contact": "Kontak",
+    "contactUs": "Hubungi Kami",
+    "allRightsReserved": "All rights reserved.",
+    "cta": {
+      "title": "Wujudkan Karir Impian, Mulai dari Sini! ✨",
+      "desc": "Bergabunglah dengan ribuan profesional yang telah mengakselerasi karir mereka."
+    }
   },
   "search": {
     "placeholder": "Cari kelas, bootcamp, atau webinar...",

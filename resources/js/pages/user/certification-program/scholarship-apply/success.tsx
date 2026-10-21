@@ -20,9 +20,9 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
 
     return (
         <UserLayout>
-            <Head title={t('certificationProgram.scholarshipSuccess.headTitle', { title: program.title })} />
+            <Head title={t('certificationProgram.scholarshipSuccess.headTitle', 'Pengajuan Berhasil - {{title}}', { title: program.title })} />
 
-            <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-zinc-900 dark:to-zinc-800">
+            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
                 <div className="mx-auto w-full max-w-3xl px-4 py-12">
                     {/* Success Icon */}
                     <div className="mb-8 flex flex-col items-center text-center">
@@ -30,10 +30,10 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
                             <CheckCircle2 className="h-16 w-16 text-white" />
                         </div>
                         <h1 className="mb-2 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
-                            {t('certificationProgram.scholarshipSuccess.title')}
+                            {t('certificationProgram.scholarshipSuccess.title', 'Pengajuan Berhasil! 🎉')}
                         </h1>
                         <p className="text-lg text-gray-600 dark:text-gray-400">
-                            {t('certificationProgram.scholarshipSuccess.subtitle')}
+                            {t('certificationProgram.scholarshipSuccess.subtitle', 'Terima kasih telah mendaftar program beasiswa')}
                         </p>
                     </div>
 
@@ -42,54 +42,47 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
                         <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
                             <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
                                 <Trophy className="h-5 w-5" />
-                                {t('certificationProgram.scholarshipSuccess.stepsTitle')}
+                                {t('certificationProgram.scholarshipSuccess.stepsTitle', 'Apa Langkah Selanjutnya?')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4 pt-6">
-                            <div className="space-y-4">
-                                {/* Step 1 */}
-                                <div className="flex gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30">
-                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
-                                        1
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                                            {t('certificationProgram.scholarshipSuccess.step1Title')}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {t('certificationProgram.scholarshipSuccess.step1Desc')}
-                                        </p>
-                                    </div>
+                            <div className="flex gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                                    1
                                 </div>
-
-                                {/* Step 2 */}
-                                <div className="flex gap-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950/30">
-                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-yellow-600 text-sm font-bold text-white">
-                                        2
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                                            {t('certificationProgram.scholarshipSuccess.step2Title')}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {t('certificationProgram.scholarshipSuccess.step2Desc')}
-                                        </p>
-                                    </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {t('certificationProgram.scholarshipSuccess.step1Title', 'Bergabung dengan Grup Sosialisasi')}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {t('certificationProgram.scholarshipSuccess.step1Desc', 'Segera masuk ke grup sosialisasi agar tidak ketinggalan info jadwal, teknis seleksi, dan update penting lainnya.')}
+                                    </p>
                                 </div>
-
-                                {/* Step 3 */}
-                                <div className="flex gap-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-900 dark:bg-purple-950/30">
-                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-600 text-sm font-bold text-white">
-                                        3
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                                            {t('certificationProgram.scholarshipSuccess.step3Title')}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {t('certificationProgram.scholarshipSuccess.step3Desc')}
-                                        </p>
-                                    </div>
+                            </div>
+                            <div className="flex gap-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950/30">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-yellow-600 text-sm font-bold text-white">
+                                    2
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {t('certificationProgram.scholarshipSuccess.step2Title', 'Ikuti Sosialisasi dan Seleksi')}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {t('certificationProgram.scholarshipSuccess.step2Desc', 'Kami akan menyelenggarakan sosialisasi program, kemudian dilanjutkan dengan tahap seleksi peserta.')}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-900 dark:bg-purple-950/30">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-600 text-sm font-bold text-white">
+                                    3
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                                        {t('certificationProgram.scholarshipSuccess.step3Title', 'Tunggu Pengumuman Hasil Seleksi')}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {t('certificationProgram.scholarshipSuccess.step3Desc', 'Hasil seleksi akan diumumkan melalui WhatsApp pribadi oleh admin kami. Pastikan nomor WhatsApp Anda aktif.')}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
@@ -99,15 +92,15 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
                     <div className="mb-6 rounded-xl border-0 shadow-lg dark:bg-zinc-800">
                         <div className="rounded-t-xl bg-gradient-to-r from-green-500 to-emerald-500 p-4">
                             <div className="flex items-center gap-2 text-white">
-                                <MessageCircle className="h-5 w-5" /> {t('certificationProgram.scholarshipSuccess.groupTitle')}
+                                <MessageCircle className="h-5 w-5" /> {t('certificationProgram.scholarshipSuccess.groupTitle', 'Grup Sosialisasi Beasiswa')}
                             </div>
                             <CardDescription className="text-green-100">
-                                {t('certificationProgram.scholarshipSuccess.groupSubtitle')}
+                                {t('certificationProgram.scholarshipSuccess.groupSubtitle', 'Dapatkan update terbaru, jadwal sosialisasi, dan arahan lanjutan')}
                             </CardDescription>
                         </div>
                         <div className="space-y-4 p-6">
                             <p className="text-sm text-gray-700 dark:text-gray-300">
-                                {t('certificationProgram.scholarshipSuccess.groupDesc')}
+                                {t('certificationProgram.scholarshipSuccess.groupDesc', 'Setelah form berhasil dikirim, silakan masuk ke grup sosialisasi agar Anda tidak tertinggal informasi penting terkait program beasiswa.')}
                             </p>
                             {program.socialization_group_url ? (
                                 <Button
@@ -120,13 +113,13 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2"
                                     >
-                                        <MessageCircle className="h-4 w-4" /> {t('certificationProgram.scholarshipSuccess.btnJoinGroup')}
+                                        <MessageCircle className="h-4 w-4" /> {t('certificationProgram.scholarshipSuccess.btnJoinGroup', 'Masuk Grup Sosialisasi')}
                                         <ArrowRight className="h-4 w-4" />
                                     </a>
                                 </Button>
                             ) : (
                                 <div className="rounded-lg border border-dashed border-green-300 bg-green-50 p-4 text-sm text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300">
-                                    {t('certificationProgram.scholarshipSuccess.groupNotAvailable')}
+                                    {t('certificationProgram.scholarshipSuccess.groupNotAvailable', 'Link grup sosialisasi belum tersedia. Silakan cek pesan WhatsApp dari admin untuk arahan selanjutnya.')}
                                 </div>
                             )}
                         </div>
@@ -135,31 +128,25 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
                     {/* FAQ */}
                     <Card className="border-0 shadow-lg dark:bg-zinc-800">
                         <CardHeader>
-                            <CardTitle>{t('certificationProgram.scholarshipSuccess.faqTitle')}</CardTitle>
+                            <CardTitle>{t('certificationProgram.scholarshipSuccess.faqTitle', 'Pertanyaan yang Sering Diajukan')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                    {t('certificationProgram.scholarshipSuccess.faq1Q')}
-                                </h4>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{t('certificationProgram.scholarshipSuccess.faq1Q', 'Berapa lama proses seleksi?')}</h4>
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                    {t('certificationProgram.scholarshipSuccess.faq1A')}
+                                    {t('certificationProgram.scholarshipSuccess.faq1A', 'Proses seleksi membutuhkan waktu 3-5 hari kerja. Hasil akan diumumkan melalui WhatsApp pribadi oleh admin kami.')}
                                 </p>
                             </div>
                             <div className="border-t border-gray-200 pt-4 dark:border-zinc-700">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                    {t('certificationProgram.scholarshipSuccess.faq2Q')}
-                                </h4>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{t('certificationProgram.scholarshipSuccess.faq2Q', 'Bagaimana jika saya tidak diterima?')}</h4>
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                    {t('certificationProgram.scholarshipSuccess.faq2A')}
+                                    {t('certificationProgram.scholarshipSuccess.faq2A', 'Anda tetap dapat mengikuti program reguler dengan harga normal. Kami juga akan memberikan informasi mengenai kesempatan beasiswa di program lain.')}
                                 </p>
                             </div>
                             <div className="border-t border-gray-200 pt-4 dark:border-zinc-700">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                    {t('certificationProgram.scholarshipSuccess.faq3Q')}
-                                </h4>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{t('certificationProgram.scholarshipSuccess.faq3Q', 'Apakah data saya aman?')}</h4>
                                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                    {t('certificationProgram.scholarshipSuccess.faq3A', { title: program.title })}
+                                    {t('certificationProgram.scholarshipSuccess.faq3A', 'Ya, data Anda dijaga dengan keamanan tingkat enterprise. Kami hanya menggunakan data Anda untuk keperluan pendaftaran dan seleksi beasiswa {{title}}.', { title: program.title })}
                                 </p>
                             </div>
                         </CardContent>
@@ -168,26 +155,22 @@ export default function ScholarshipSuccess({ program }: { program: Program }) {
                     {/* Actions */}
                     <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                         <Button asChild variant="outline" className="flex-1 border-2">
-                            <Link href={route('certification-programs.detail', program.slug)}>
-                                {t('certificationProgram.scholarshipSuccess.btnBackToDetail')}
-                            </Link>
+                            <Link href={route('certification-programs.detail', program.slug)}>{t('certificationProgram.scholarshipSuccess.btnBackToDetail', '← Kembali ke Detail Program')}</Link>
                         </Button>
                         <Button asChild className="flex-1">
-                            <Link href='/certification-program'>
-                                {t('certificationProgram.scholarshipSuccess.btnExplorePrograms')}
-                            </Link>
+                            <Link href='/certification-program'>{t('certificationProgram.scholarshipSuccess.btnExplorePrograms', 'Jelajahi Program Lain')}</Link>
                         </Button>
                     </div>
 
                     {/* Support */}
                     <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-4 text-center dark:border-blue-900 dark:bg-blue-950/30">
                         <p className="text-sm text-gray-700 dark:text-gray-300">
-                            {t('certificationProgram.scholarshipSuccess.supportText')}{' '}
+                            {t('certificationProgram.scholarshipSuccess.supportText', 'Ada pertanyaan atau butuh bantuan?')}{' '}
                             <a
                                 href="mailto:talentaskill.academic@gmail.com"
                                 className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
                             >
-                                {t('certificationProgram.scholarshipSuccess.contactUs')}
+                                {t('certificationProgram.scholarshipSuccess.contactUs', 'Hubungi kami')}
                             </a>
                         </p>
                     </div>

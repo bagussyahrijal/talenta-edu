@@ -29,7 +29,16 @@
     "transactions": "Transaction History",
     "settings": "Settings",
     "logout": "Log Out",
-    "userPage": "User Page"
+    "userPage": "User Page",
+    "publications": "Publications",
+    "gallery": "Gallery",
+    "galleryDesc": "Collection of activity and event photos",
+    "alumni": "Alumni",
+    "alumniDesc": "Success stories from our alumni after completing our programs",
+    "review": "Reviews",
+    "reviewDesc": "Testimonials from participants about their learning experiences",
+    "about": "About Us",
+    "certificate": "Certificates"
   },
   "actions": {
     "save": "Save",
@@ -44,7 +53,8 @@
     "viewDetails": "View Details",
     "searchProducts": "Search Products...",
     "search": "Search...",
-    "learnMore": "Learn More"
+    "learnMore": "Learn More",
+    "startLearning": "Start Learning Now"
   },
   "status": {
     "paid": "Paid",
@@ -79,9 +89,19 @@
       "helpCenter": "Help Center",
       "article": "Articles & Blog",
       "terms": "Terms & Conditions",
-      "privacy": "Privacy Policy"
+      "privacy": "Privacy Policy",
+      "about": "About Us"
     },
-    "copyright": "Copyright © Talentaacademy, All rights reserved."
+    "copyright": "Copyright © Talentaacademy, All rights reserved.",
+    "menu": "Menu",
+    "mainMenu": "Main Menu",
+    "contact": "Contact",
+    "contactUs": "Contact Us",
+    "allRightsReserved": "All rights reserved.",
+    "cta": {
+      "title": "Build Your Dream Career, Start Here! ✨",
+      "desc": "Join thousands of professionals who have accelerated their careers."
+    }
   },
   "search": {
     "placeholder": "Search courses, bootcamps, or webinars...",

@@ -89,13 +89,14 @@ const MentorCard = ({ mentor }: { mentor: Mentor }) => {
 
             {/* Mentor Role */}
             <p className="absolute bottom-[20px] left-0 w-full px-6 text-left font-normal text-[14px] text-white/90">
-                {mentor.role}
+                {mentor.role === 'Mentor Perpajakan' ? t('about.dashboard.roleTax', mentor.role) : mentor.role}
             </p>
         </section>
     );
 };
 
 export default function MentorSection() {
+    const { t } = useTranslation('user');
     // Pisahkan data menjadi dua baris
     const firstRow = mentorsData.slice(0, 4);
     const secondRow = mentorsData.slice(4);
@@ -106,7 +107,7 @@ export default function MentorSection() {
                 {/* Header */}
                 <div className="mb-10 sm:mb-16 text-center">
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-literata">
-                        Meet Our Mentor
+                        {t('about.dashboard.meetMentorTitle', 'Meet Our Mentor')}
                     </h2>
                 </div>
 
