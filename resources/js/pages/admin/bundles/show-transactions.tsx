@@ -15,7 +15,7 @@ export default function BundleTransaction({ transactions, bundleId }: BundleTran
                 <h2 className="text-lg font-medium">Transaksi & Peserta</h2>
                 {transactions.length > 0 && (
                     <div className="text-muted-foreground text-sm">
-                        Total Peserta: <span className="text-foreground font-semibold">{paidTransactions.length}</span>
+                        Total Transaksi: <span className="text-foreground font-semibold">{transactions.length}</span>
                     </div>
                 )}
             </div>

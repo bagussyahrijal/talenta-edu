@@ -9,7 +9,14 @@ interface CourseTransactionProps {
 export default function CourseTransaction({ transactions, courseId }: CourseTransactionProps) {
     return (
         <div className="h-full space-y-6 rounded-lg border p-4">
-            <h2 className="text-lg font-medium">Transaksi</h2>
+            <div className="flex items-center justify-between">
+                <h2 className="text-lg font-medium">Transaksi</h2>
+                {transactions && transactions.length > 0 && (
+                    <div className="text-muted-foreground text-sm">
+                        Total Transaksi: <span className="text-foreground font-semibold">{transactions.length}</span>
+                    </div>
+                )}
+            </div>
             {transactions && transactions.length > 0 ? (
                 <DataTable columns={columns} data={transactions} courseId={courseId} />
             ) : (

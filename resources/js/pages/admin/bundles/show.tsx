@@ -244,8 +244,8 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
                             )}
                             <TabsTrigger value="transactions">
                                 Transaksi
-                                {totalEnrollments > 0 && (
-                                    <span className="bg-primary/10 ml-1 rounded-full px-2 py-0.5 text-xs">{paidEnrollments}</span>)}
+                                {transactions.length > 0 && (
+                                    <span className="bg-primary/10 ml-1 rounded-full px-2 py-0.5 text-xs">{transactions.length}</span>)}
                             </TabsTrigger>
                         </TabsList>
 

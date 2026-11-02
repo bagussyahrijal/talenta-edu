@@ -13,8 +13,7 @@ export default function CertificationProgramTransaction({ transactions, programI
                 <h2 className="text-lg font-medium">Data Transaksi Pembayaran</h2>
                 {transactions.length > 0 && (
                     <div className="text-muted-foreground text-sm">
-                        Total Transaksi Berhasil:{' '}
-                        <span className="text-foreground font-semibold">{transactions.filter((t) => t.status === 'paid').length}</span>
+                        Total Transaksi: <span className="text-foreground font-semibold">{transactions.length}</span>
                     </div>
                 )}
             </div>

@@ -184,17 +184,19 @@ class InstallmentController extends Controller
             : ($dpTerm->due_date ? Carbon::parse($dpTerm->due_date) : null);
 
         $now = Carbon::now('Asia/Jakarta');
-        foreach ($terms as $term) {
-            $termDueDate = ($term->term_number === 1 && $dpDueDate)
-                ? $dpDueDate
-                : ($term->due_date ? Carbon::parse($term->due_date) : null);
-
-            if ($termDueDate && $now->gt($termDueDate->copy()->endOfDay())) {
-                $termLabel = $term->term_number === 1 ? 'pertama (DP)' : 'ke-' . $term->term_number;
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Opsi pembayaran cicilan untuk program ini telah ditutup karena batas waktu termin ' . $termLabel . ' telah terlewati.',
-                ], 422);
+        if ($type !== 'course') {
+    foreach ($terms as $term) {
+                $termDueDate = ($term->term_number === 1 && $dpDueDate)
+                    ? $dpDueDate
+                    : ($term->due_date ? Carbon::parse($term->due_date) : null);
+    
+                if ($termDueDate && $now->gt($termDueDate->copy()->endOfDay())) {
+                    $termLabel = $term->term_number === 1 ? 'pertama (DP)' : 'ke-' . $term->term_number;
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Opsi pembayaran cicilan untuk program ini telah ditutup karena batas waktu termin ' . $termLabel . ' telah terlewati.',
+                    ], 422);
+                }
             }
         }
 
@@ -247,9 +249,26 @@ class InstallmentController extends Controller
             $firstChildInvoice = null;
             foreach ($terms as $term) {
                 $childCode = $parentCode . '-T' . $term->term_number;
-                $childDueDate = ($term->term_number === 1 && $dpDueDate)
-                    ? $dpDueDate
-                    : ($term->due_date ? Carbon::parse($term->due_date) : null);
+                if ($type === 'course') {
+                    if ($term->term_number === 1) {
+                        $childDueDate = Carbon::now('Asia/Jakarta')->endOfDay();
+                    } else {
+                        $offsetDays = 0;
+                        if ($dpTerm && $dpTerm->due_date && $term->due_date) {
+                            $t1 = Carbon::parse($dpTerm->due_date);
+                            $tCurrent = Carbon::parse($term->due_date);
+                            $diff = $t1->diffInDays($tCurrent, false);
+                            $offsetDays = $diff > 0 ? $diff : ($term->term_number - 1) * 30;
+                        } else {
+                            $offsetDays = ($term->term_number - 1) * 30;
+                        }
+                        $childDueDate = Carbon::now('Asia/Jakarta')->addDays($offsetDays)->endOfDay();
+                    }
+                } else {
+                    $childDueDate = ($term->term_number === 1 && $dpDueDate)
+                        ? $dpDueDate
+                        : ($term->due_date ? Carbon::parse($term->due_date) : null);
+                }
 
                 $child = Invoice::create([
                     'user_id' => $userId,
@@ -451,16 +470,19 @@ class InstallmentController extends Controller
         }
     }
 
-    private function formatPhoneNumber(string $phoneNumber): string
+    private function formatPhoneNumber(?string $phoneNumber): string
     {
+        if (empty($phoneNumber)) {
+            return '';
+        }
+
         $phoneNumber = preg_replace('/[^0-9]/', '', $phoneNumber);
+        if (empty($phoneNumber)) {
+            return '';
+        }
 
         if (substr($phoneNumber, 0, 1) == '0') {
             $phoneNumber = '62' . substr($phoneNumber, 1);
-        }
-
-        if (substr($phoneNumber, 0, 2) != '62') {
-            $phoneNumber = '62' . $phoneNumber;
         }
 
         return $phoneNumber;
@@ -481,21 +503,30 @@ class InstallmentController extends Controller
                 'webinarItems.webinar',
                 'certificationProgramItems.certificationProgram',
                 'bundleEnrollments.bundle',
-            ])->findOrFail($id);
+            ])->find($id);
+
+            if (!$invoice) {
+                return response()->json(['success' => false, 'message' => 'Data tagihan/invoice tidak ditemukan.'], 404);
+            }
 
             $parentInvoice = $invoice->parent_invoice_id ? $invoice->parentInvoice : $invoice;
             $termInvoice = $invoice->parent_invoice_id ? $invoice : $parentInvoice->nextUnpaidTerm();
 
-            if (!$termInvoice) {
-                return response()->json(['success' => false, 'message' => 'Semua termin cicilan untuk invoice ini sudah lunas.'], 422);
+            // Cek apakah invoice lunas / termin sudah lunas
+            if (!$termInvoice || $termInvoice->status === 'paid' || $parentInvoice->isFullyPaid()) {
+                return response()->json(['success' => false, 'message' => 'Invoice atau termin cicilan ini sudah lunas, tidak dapat mengirimkan pengingat.'], 422);
             }
 
-            $user = $parentInvoice->user;
-            if (!$user || !$user->phone_number) {
+            $user = $invoice->user ?? $parentInvoice?->user;
+            $rawPhone = $user?->phone_number;
+            if (!$user || empty($rawPhone) || !is_string($rawPhone) || trim($rawPhone) === '') {
                 return response()->json(['success' => false, 'message' => 'Nomor WhatsApp peserta tidak ditemukan atau belum diisi.'], 422);
             }
 
-            $phoneNumber = $this->formatPhoneNumber($user->phone_number);
+            $phoneNumber = $this->formatPhoneNumber($rawPhone);
+            if (empty($phoneNumber) || strlen($phoneNumber) < 8) {
+                return response()->json(['success' => false, 'message' => 'Nomor WhatsApp peserta tidak valid.'], 422);
+            }
             $termNumber = $termInvoice->installment_number;
             $totalTerms = $parentInvoice->installmentTerms()->count();
             $termAmount = ($termInvoice->status !== 'paid' && $termInvoice->amount == $termInvoice->nett_amount)
@@ -522,7 +553,14 @@ class InstallmentController extends Controller
                 $message .= "Terima kasih!\n*Talenta Edu Support*";
             }
 
-            self::sendText([['phone' => $phoneNumber, 'message' => $message, 'isGroup' => 'false']]);
+            $sent = self::sendText([['phone' => $phoneNumber, 'message' => $message, 'isGroup' => 'false']]);
+
+            if (!$sent) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengirim pengingat WhatsApp melalui gateway Wablas. Pastikan koneksi WhatsApp terhubung.'
+                ], 422);
+            }
 
             return response()->json([
                 'success' => true,
@@ -532,7 +570,7 @@ class InstallmentController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Manual installment reminder failed', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Gagal mengirim pengingat: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal mengirim pengingat: ' . $e->getMessage()], 422);
         }
     }
 

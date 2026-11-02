@@ -84,7 +84,16 @@ class WebinarController extends Controller
         $webinarsWithRecording = (clone $baseStats)->whereNotNull('recording_url')->where('recording_url', '!=', '')->count();
         $webinarsWithoutRecording = max(0, $totalWebinars - $webinarsWithRecording);
 
-        $totalParticipants = Invoice::where('status', 'paid')
+        $totalParticipants = Invoice::where(function ($q) {
+                $q->whereIn('status', ['paid', 'completed'])
+                    ->orWhere(function ($iq) {
+                        $iq->where('status', 'installment_pending')
+                            ->whereHas('installmentTerms', function ($tq) {
+                                $tq->where('installment_number', 1)->where('status', 'paid');
+                            });
+                    });
+            })
+            ->whereNull('parent_invoice_id')
             ->whereHas('webinarItems')
             ->count();
 

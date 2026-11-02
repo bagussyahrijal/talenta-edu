@@ -98,7 +98,16 @@ class BootcampController extends Controller
         $completedBootcamps = (clone $baseStats)->whereNotNull('end_date')->where('end_date', '<', $now)->count();
         $ongoingBootcamps = max(0, $totalBootcamps - $completedBootcamps);
 
-        $totalEnrollments = Invoice::where('status', 'paid')
+        $totalEnrollments = Invoice::where(function ($q) {
+                $q->whereIn('status', ['paid', 'completed'])
+                    ->orWhere(function ($iq) {
+                        $iq->where('status', 'installment_pending')
+                            ->whereHas('installmentTerms', function ($tq) {
+                                $tq->where('installment_number', 1)->where('status', 'paid');
+                            });
+                    });
+            })
+            ->whereNull('parent_invoice_id')
             ->whereHas('bootcampItems')
             ->count();
 

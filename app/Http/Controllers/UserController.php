@@ -318,9 +318,7 @@ class UserController extends Controller
             ->latest()
             ->paginate($perPage, ['*'], 'invoices_page', $invoicesPage);
 
-        $paidInvoiceIds = Invoice::where('user_id', $id)
-            ->where('status', 'paid')
-            ->pluck('id');
+        $paidInvoiceIds = Invoice::purchasedByUser($id)->pluck('id');
 
         $courseEnrollments = EnrollmentCourse::whereIn('invoice_id', $paidInvoiceIds)
             ->with([

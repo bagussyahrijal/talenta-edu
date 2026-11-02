@@ -165,7 +165,7 @@ export default function ShowWebinar({ webinar, transactions, participants, ratin
                                 <TabsTrigger value="transaksi">
                                     Transaksi
                                     {transactions.length > 0 && (
-                                        <span className="bg-primary/10 ml-1 rounded-full px-2 py-0.5 text-xs">{paidTransactions.length}</span>
+                                        <span className="bg-primary/10 ml-1 rounded-full px-2 py-0.5 text-xs">{transactions.length}</span>
                                     )}
                                 </TabsTrigger>
                             )}

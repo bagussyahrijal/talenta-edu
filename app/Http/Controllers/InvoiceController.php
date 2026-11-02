@@ -1667,10 +1667,91 @@ class InvoiceController extends Controller
      */
     private function activateInstallmentEnrollments(Invoice $parentInvoice): void
     {
-        // Jika invoice adalah bundling, buat individual enrollments untuk setiap item di dalam bundle
+        $relations = [
+            'courseItems',
+            'bootcampItems',
+            'webinarItems',
+            'certificationProgramItems',
+            'bundleEnrollments.bundle.bundleItems.bundleable',
+        ];
+        if (method_exists($parentInvoice, 'privateItems')) {
+            $relations[] = 'privateItems';
+        }
+        $parentInvoice->loadMissing($relations);
+
+        $userId = $parentInvoice->user_id;
+        $certMethod = method_exists($this, 'addToCertificateParticipantsHelper')
+            ? 'addToCertificateParticipantsHelper'
+            : (method_exists($this, 'addToCertificateParticipants') ? 'addToCertificateParticipants' : null);
+
+        if ($parentInvoice->courseItems && $parentInvoice->courseItems->count() > 0) {
+            foreach ($parentInvoice->courseItems as $item) {
+                $item->update([
+                    'completed_at' => Carbon::now('Asia/Jakarta')
+                ]);
+                if ($certMethod) {
+                    $this->$certMethod('course', $item->course_id, $userId);
+                }
+            }
+        }
+
+        if ($parentInvoice->bootcampItems && $parentInvoice->bootcampItems->count() > 0) {
+            foreach ($parentInvoice->bootcampItems as $item) {
+                $item->update([
+                    'completed_at' => Carbon::now('Asia/Jakarta')
+                ]);
+                if ($certMethod) {
+                    $this->$certMethod('bootcamp', $item->bootcamp_id, $userId);
+                }
+            }
+        }
+
+        if ($parentInvoice->webinarItems && $parentInvoice->webinarItems->count() > 0) {
+            foreach ($parentInvoice->webinarItems as $item) {
+                $item->update([
+                    'completed_at' => Carbon::now('Asia/Jakarta')
+                ]);
+                if ($certMethod) {
+                    $this->$certMethod('webinar', $item->webinar_id, $userId);
+                }
+            }
+        }
+
+        if ($parentInvoice->certificationProgramItems && $parentInvoice->certificationProgramItems->count() > 0) {
+            foreach ($parentInvoice->certificationProgramItems as $item) {
+                $item->update([
+                    'completed_at' => Carbon::now('Asia/Jakarta')
+                ]);
+            }
+        }
+
+        if (isset($parentInvoice->privateItems) && $parentInvoice->privateItems && $parentInvoice->privateItems->count() > 0) {
+            foreach ($parentInvoice->privateItems as $item) {
+                $item->update([
+                    'completed_at' => Carbon::now('Asia/Jakarta')
+                ]);
+            }
+        }
+
         if ($parentInvoice->bundleEnrollments && $parentInvoice->bundleEnrollments->count() > 0) {
             foreach ($parentInvoice->bundleEnrollments as $bundleEnrollment) {
-                $bundleEnrollment->createIndividualEnrollments();
+                $bundleEnrollment->update([
+                    'completed_at' => Carbon::now('Asia/Jakarta')
+                ]);
+
+                if (method_exists($bundleEnrollment, 'createIndividualEnrollments')) {
+                    $bundleEnrollment->createIndividualEnrollments();
+                }
+
+                $bundle = $bundleEnrollment->bundle;
+                if ($bundle && $bundle->bundleItems && $certMethod) {
+                    foreach ($bundle->bundleItems as $bundleItem) {
+                        $type = method_exists($bundleItem, 'getTypeSlug') ? $bundleItem->getTypeSlug() : null;
+                        if ($type) {
+                            $this->$certMethod($type, $bundleItem->bundleable_id, $userId);
+                        }
+                    }
+                }
             }
         }
 
